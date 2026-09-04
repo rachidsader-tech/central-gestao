@@ -1,40 +1,501 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Central de Gestão — Transformação KAZ</title>
 <style>
-*{box-sizing:border-box;scroll-behavior:smooth}body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:#f5f6f8;color:#15171a}.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}.side{background:#111827;color:#fff;padding:22px 15px;position:sticky;top:0;height:100vh}.brand{font-size:18px;font-weight:800;margin:4px 9px 28px}.brand small{display:block;color:#9ca3af;font-size:11px;font-weight:500;margin-top:3px}.side button{display:block;width:100%;border:0;background:transparent;color:#cbd5e1;text-align:left;padding:11px 13px;border-radius:9px;font-size:14px;cursor:pointer;margin:3px 0}.side button:hover,.side button.active{background:#1f2937;color:#fff}
-.top{background:#fff;border-bottom:1px solid #e5e7eb;padding:22px 28px;display:flex;justify-content:space-between;align-items:center}.top h1{margin:0;font-size:23px}.top p{margin:4px 0 0;color:#6b7280;font-size:12px}.content{padding:26px}.program{background:#111827;color:#fff;border-radius:14px;padding:20px;margin-bottom:18px;display:flex;justify-content:space-between;gap:18px;align-items:center}.program h2{margin:0 0 5px;font-size:20px}.program p{margin:0;color:#cbd5e1;font-size:13px}.program .count{font-size:28px;font-weight:800}
-.panel,.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px}.panel{padding:18px}.project-row{width:100%;display:grid;grid-template-columns:1.35fr .95fr 1.35fr 1.4fr auto;gap:16px;align-items:center;text-align:left;border:0;border-top:1px solid #eef0f2;background:#fff;padding:15px 4px;cursor:pointer}.project-row:first-child{border-top:0}.project-row span{display:block;color:#6b7280;font-size:11px}.project-row b{font-size:13px}.pill{padding:6px 9px;border-radius:999px;font-size:11px;white-space:nowrap}.green{background:#dcfce7;color:#166534}.amber{background:#fef3c7;color:#92400e}.red{background:#fee2e2;color:#991b1b}.gray{background:#e5e7eb;color:#374151}
-.anchor{position:sticky;top:0;z-index:5;background:rgba(245,246,248,.96);backdrop-filter:blur(8px);padding:10px 0;border-bottom:1px solid #e5e7eb;display:flex;gap:8px;flex-wrap:wrap}.anchor button{border:1px solid #d1d5db;background:#fff;border-radius:999px;padding:8px 11px;cursor:pointer}.section{scroll-margin-top:65px;margin-top:18px}.section-title{display:flex;justify-content:space-between;align-items:end;margin-bottom:10px}.section-title h2{margin:0;font-size:18px}.section-title p{margin:3px 0 0;color:#6b7280;font-size:12px}
-.info-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px}.info-card{padding:15px}.info-card span{display:block;color:#6b7280;font-size:11px;margin-bottom:5px}.objective{grid-column:span 2}.current-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.current-grid .card{padding:15px}.current-grid span{display:block;color:#6b7280;font-size:11px}.current-grid b{font-size:15px}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.person,.task,.mile,.blocker{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-top:1px solid #eef0f2}.person:first-child,.task:first-child,.mile:first-child,.blocker:first-child{border-top:0}.person span,.task span,.mile span,.blocker span{color:#6b7280;font-size:12px}.timeline{position:relative;padding-left:28px}.timeline:before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:1px;background:#e5e7eb}.entry{position:relative;padding-bottom:22px}.entry:before{content:"";position:absolute;left:-24px;top:4px;width:9px;height:9px;border-radius:50%;background:#111827}.date{font-size:11px;color:#9ca3af}.entry h3{font-size:14px;margin:4px 0}.entry p{font-size:13px;color:#4b5563;line-height:1.45;margin:0}.back{border:0;background:transparent;color:#4b5563;cursor:pointer;margin-bottom:12px}.hidden{display:none}
-@media(max-width:900px){.app{grid-template-columns:1fr}.side{display:none}.project-row,.info-grid,.current-grid,.two{grid-template-columns:1fr}.objective{grid-column:auto}}
+*{box-sizing:border-box;scroll-behavior:smooth}body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:#f5f6f8;color:#15171a}.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}.side{background:#111827;color:#fff;padding:22px 15px;position:sticky;top:0;height:100vh}.brand{font-size:18px;font-weight:800;margin:4px 9px 28px}.brand small{display:block;color:#9ca3af;font-size:11px;font-weight:500;margin-top:3px}.side button{display:block;width:100%;border:0;background:transparent;color:#cbd5e1;text-align:left;padding:11px 13px;border-radius:9px;font-size:14px;cursor:pointer;margin:3px 0}.side button:hover,.side button.active{background:#1f2937;color:#fff}.top{background:#fff;border-bottom:1px solid #e5e7eb;padding:22px 28px;display:flex;justify-content:space-between;align-items:center}.top h1{margin:0;font-size:23px}.top p{margin:4px 0 0;color:#6b7280;font-size:12px}.content{padding:26px}
+.program{background:#111827;color:#fff;border-radius:14px;padding:20px;margin-bottom:18px;display:flex;justify-content:space-between;gap:18px;align-items:center}.program h2{margin:0 0 5px;font-size:20px}.program p{margin:0;color:#cbd5e1;font-size:13px}.program .count{font-size:28px;font-weight:800}.panel,.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px}.panel{padding:18px}
+.project-row{width:100%;display:grid;grid-template-columns:1.35fr .95fr 1.35fr 1.4fr auto;gap:16px;align-items:center;text-align:left;border:0;border-top:1px solid #eef0f2;background:#fff;padding:15px 4px;cursor:pointer}.project-row:first-child{border-top:0}.project-row span{display:block;color:#6b7280;font-size:11px}.project-row b{font-size:13px}.pill{padding:6px 9px;border-radius:999px;font-size:11px;white-space:nowrap}.green{background:#dcfce7;color:#166534}.amber{background:#fef3c7;color:#92400e}.red{background:#fee2e2;color:#991b1b}.gray{background:#e5e7eb;color:#374151}.blue{background:#dbeafe;color:#1e40af}
+.anchor{position:sticky;top:0;z-index:5;background:rgba(245,246,248,.96);backdrop-filter:blur(8px);padding:10px 0;border-bottom:1px solid #e5e7eb;display:flex;gap:8px;flex-wrap:wrap}.anchor button{border:1px solid #d1d5db;background:#fff;border-radius:999px;padding:8px 11px;cursor:pointer}
+.section{scroll-margin-top:65px;margin-top:18px}.section-title{display:flex;justify-content:space-between;align-items:end;margin-bottom:10px}.section-title h2{margin:0;font-size:18px}.section-title p{margin:3px 0 0;color:#6b7280;font-size:12px}.info-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px}.info-card{padding:15px}.info-card span{display:block;color:#6b7280;font-size:11px;margin-bottom:5px}.objective{grid-column:span 2}.wide{grid-column:span 2}.current-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.current-grid .card{padding:15px}.current-grid span{display:block;color:#6b7280;font-size:11px}.current-grid b{font-size:15px}
+.front-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.front-card{padding:14px}.front-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.front-card h3{font-size:14px;margin:0}.front-card .meta{font-size:11px;color:#6b7280;margin-top:7px}.front-card .next{font-size:12px;color:#374151;margin-top:8px;line-height:1.4}
+.person,.task,.file{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-top:1px solid #eef0f2}.person:first-child,.task:first-child,.file:first-child{border-top:0}.person span,.task span,.file span{color:#6b7280;font-size:12px}.task .left span{display:block;margin-top:3px}.timeline{position:relative;padding-left:28px}.timeline:before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:1px;background:#e5e7eb}.entry{position:relative;padding-bottom:22px}.entry:before{content:"";position:absolute;left:-24px;top:4px;width:9px;height:9px;border-radius:50%;background:#111827}.date{font-size:11px;color:#9ca3af}.entry h3{font-size:14px;margin:4px 0}.entry p{font-size:13px;color:#4b5563;line-height:1.45;margin:0}.back{border:0;background:transparent;color:#4b5563;cursor:pointer;margin-bottom:12px}.hidden{display:none}
+
+.agenda-toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.agenda-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.agenda-tabs button{border:1px solid #d1d5db;background:#fff;border-radius:999px;padding:8px 11px;cursor:pointer}
+.agenda-tabs button.active{background:#111827;color:#fff;border-color:#111827}
+.agenda-day{margin-top:14px}
+.agenda-day h3{font-size:14px;margin:0 0 8px;color:#374151}
+.event-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;display:grid;grid-template-columns:90px 1fr auto;gap:14px;align-items:start;margin-bottom:9px}
+.event-time{font-weight:800;font-size:14px}
+.event-title{font-weight:700;font-size:14px}
+.event-meta{font-size:12px;color:#6b7280;margin-top:4px}
+.event-project{display:inline-block;margin-top:7px;background:#f3f4f6;padding:4px 7px;border-radius:999px;font-size:10px;color:#374151}
+.event-actions button{border:0;background:#f3f4f6;border-radius:8px;padding:7px 9px;cursor:pointer}
+.empty-agenda{background:#fff;border:1px dashed #d1d5db;border-radius:12px;padding:22px;color:#6b7280;font-size:13px;text-align:center}
+
+.notes-toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.notes-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.note-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:15px}
+.note-card h3{margin:0;font-size:14px}
+.note-card p{font-size:13px;color:#4b5563;line-height:1.45;margin:8px 0 0}
+.note-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.note-chip{background:#f3f4f6;border-radius:999px;padding:4px 7px;font-size:10px;color:#374151}
+.note-actions{margin-top:12px;display:flex;gap:7px}
+.note-actions button{border:0;background:#f3f4f6;border-radius:8px;padding:7px 9px;cursor:pointer}
+.note-pin{font-size:10px;color:#92400e;background:#fef3c7;border-radius:999px;padding:4px 7px}
+.notes-input{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:14px}
+.notes-input input{border:1px solid #d1d5db;border-radius:9px;padding:10px 12px}
+@media(max-width:900px){.notes-grid{grid-template-columns:1fr}.app{grid-template-columns:1fr}.side{display:none}.project-row,.info-grid,.current-grid,.front-grid{grid-template-columns:1fr}.objective,.wide{grid-column:auto}}
 </style></head><body>
-<div class="app"><aside class="side"><div class="brand">Central de Gestão<small>Transformação KAZ</small></div><button class="active" onclick="showProjects()">Projetos</button><button onclick="alert('Central geral de pendências entra na próxima etapa.')">Pendências</button><button onclick="alert('Visão geral de pessoas entra na próxima etapa.')">Pessoas</button><button onclick="alert('Repositório geral entra na próxima etapa.')">Arquivos</button></aside>
+<div class="app"><aside class="side"><div class="brand">Central de Gestão<small>Transformação KAZ</small></div><button class="active" onclick="showProjects()">Projetos</button><button onclick="showAgenda()">Agenda</button><button onclick="showNotes()">Notas</button><button onclick="alert('Central geral de pendências entra na próxima etapa.')">Pendências</button><button onclick="alert('Visão geral de pessoas entra na próxima etapa.')">Pessoas</button><button onclick="alert('Repositório geral entra na próxima etapa.')">Arquivos</button></aside>
 <main><header class="top"><div><h1 id="topTitle">Transformação KAZ</h1><p id="topSub">Programa de gestão dos 7 projetos estruturantes</p></div><button onclick="resetBase()" style="border:0;border-radius:9px;padding:10px 13px;cursor:pointer">Restaurar base oficial</button></header>
 <div class="content"><div id="listView"><section class="program"><div><h2>Transformação KAZ</h2><p>Programa guarda-chuva. Os sete projetos abaixo formam a estrutura oficial da Central de Gestão.</p></div><div><div class="count">7</div><div style="font-size:11px;color:#9ca3af">projetos</div></div></section><section class="panel"><div id="projectList"></div></section></div>
+
+
+<div id="notesView" class="hidden">
+  <div class="notes-toolbar">
+    <div>
+      <h2 style="margin:0">Notas</h2>
+      <p style="margin:3px 0 0;color:#6b7280;font-size:12px">Caixa de entrada para ideias, lembretes e coisas em andamento.</p>
+    </div>
+    <button onclick="addQuickNote()" style="border:0;border-radius:9px;padding:10px 13px;background:#111827;color:#fff;cursor:pointer">＋ Nova nota</button>
+  </div>
+  <div class="notes-input">
+    <input id="quickNoteInput" placeholder="Anote rápido para não esquecer..." onkeydown="if(event.key==='Enter')addQuickNote()">
+    <button onclick="addQuickNote()" style="border:0;border-radius:9px;padding:10px 13px;background:#111827;color:#fff;cursor:pointer">Salvar</button>
+  </div>
+  <div id="notesList" class="notes-grid"></div>
+</div>
+<div id="agendaView" class="hidden">
+  <div class="agenda-toolbar">
+    <div>
+      <h2 style="margin:0">Agenda</h2>
+      <p style="margin:3px 0 0;color:#6b7280;font-size:12px">Todos os seus compromissos, vinculados ou não a projetos.</p>
+    </div>
+    <button onclick="alert('Cadastro real entra quando conectarmos o banco / Google Calendar.')" style="border:0;border-radius:9px;padding:10px 13px;background:#111827;color:#fff;cursor:pointer">＋ Novo compromisso</button>
+  </div>
+  <div class="agenda-tabs">
+    <button class="active" onclick="renderAgenda('today',this)">Hoje</button>
+    <button onclick="renderAgenda('week',this)">Semana</button>
+    <button onclick="renderAgenda('all',this)">Todos</button>
+  </div>
+  <div id="agendaList" style="margin-top:14px"></div>
+</div>
 <div id="detailView" class="hidden"><button class="back" onclick="showProjects()">← Voltar para Transformação KAZ</button><div style="display:flex;justify-content:space-between;gap:20px;align-items:flex-start"><div><div id="area" style="font-size:11px;color:#6b7280;text-transform:uppercase"></div><h1 id="name" style="margin:4px 0 7px"></h1><p id="headline" style="margin:0;color:#4b5563"></p></div><span id="health" class="pill"></span></div>
-<div class="anchor"><button onclick="go('info')">Informações</button><button onclick="go('andamento')">Andamento</button><button onclick="go('marcos')">Marcos</button><button onclick="go('bloqueios')">Bloqueios</button><button onclick="go('pessoas')">Pessoas</button><button onclick="go('pendencias')">Pendências</button><button onclick="go('diario')">Diário</button><button onclick="go('arquivos')">Arquivos</button></div>
-<section id="info" class="section"><div class="section-title"><div><h2>Informações do projeto</h2><p>Contexto e definição</p></div></div><div class="info-grid"><div class="card info-card objective"><span>Objetivo</span><div id="objective"></div></div><div class="card info-card"><span>Critério de conclusão</span><div id="done"></div></div><div class="card info-card"><span>Responsável / bola com</span><b id="owner"></b></div><div class="card info-card"><span>Prioridade</span><b id="priority"></b></div><div class="card info-card"><span>Status</span><b id="status"></b></div><div class="card info-card"><span>Prazo</span><b id="deadline"></b></div><div class="card info-card"><span>Precisa de você</span><b id="needs"></b></div></div></section>
+<div class="anchor"><button onclick="go('info')">Informações</button><button onclick="go('andamento')">Andamento</button><button onclick="go('frentes')">Frentes</button><button onclick="go('pendencias')">Pendências</button><button onclick="go('pessoas')">Pessoas</button><button onclick="go('diario')">Diário</button><button onclick="go('arquivos')">Arquivos</button></div>
+<section id="info" class="section"><div class="section-title"><div><h2>Informações do projeto</h2><p>Contexto e definição</p></div></div><div class="info-grid"><div class="card info-card objective"><span>Objetivo</span><div id="objective"></div></div><div class="card info-card"><span>Critério de conclusão</span><div id="done"></div></div><div class="card info-card"><span>Responsável / bola com</span><b id="owner"></b></div><div class="card info-card"><span>Prioridade</span><b id="priority"></b></div><div class="card info-card"><span>Status</span><b id="status"></b></div><div class="card info-card"><span id="deadlineLabel">Meta / prazo</span><b id="deadline"></b></div><div class="card info-card wide"><span>Precisa de você</span><b id="needs"></b></div></div></section>
 <section id="andamento" class="section"><div class="section-title"><div><h2>Andamento</h2><p>Onde está agora e qual é a próxima ação</p></div></div><div class="current-grid"><div class="card"><span>Movimento atual</span><b id="movement"></b><div id="current" style="margin-top:6px;font-size:13px;color:#4b5563"></div></div><div class="card"><span>Próxima ação</span><b id="next"></b></div></div></section>
-<section id="marcos" class="section"><div class="section-title"><div><h2>Marcos</h2><p>Principais etapas</p></div></div><div class="panel" id="milestones"></div></section>
-<section id="bloqueios" class="section"><div class="section-title"><div><h2>Bloqueios / riscos</h2><p>O que pode impedir avanço</p></div></div><div class="panel" id="blockers"></div></section>
+<section id="frentes" class="section"><div class="section-title"><div><h2>Frentes</h2><p>Pacotes de trabalho que compõem o projeto</p></div></div><div id="fronts" class="front-grid"></div></section>
+<section id="pendencias" class="section"><div class="section-title"><div><h2>Pendências</h2><p>Ações abertas, vinculadas às frentes</p></div></div><div class="panel" id="tasks"></div></section>
 <section id="pessoas" class="section"><div class="section-title"><div><h2>Pessoas</h2><p>Responsáveis e envolvidos</p></div></div><div class="panel" id="people"></div></section>
-<section id="pendencias" class="section"><div class="section-title"><div><h2>Pendências</h2><p>Ações abertas</p></div></div><div class="panel" id="tasks"></div></section>
 <section id="diario" class="section"><div class="section-title"><div><h2>Diário</h2><p>Histórico do projeto</p></div></div><div class="panel"><div class="timeline" id="history"></div></div></section>
-<section id="arquivos" class="section"><div class="section-title"><div><h2>Arquivos</h2><p>Documentos e referências</p></div></div><div class="panel" id="files"></div></section></div></div></main></div>
+<section id="arquivos" class="section"><div class="section-title"><div><h2>Arquivos</h2><p>Documentos e referências vinculados ao projeto</p></div></div><div class="panel" id="files"></div></section></div></div></main></div>
 <script>
-const SEED=[{"id": "annexo", "name": "ANNEXO", "area": "Operação / Obra", "health": "Crítico", "status": "Urgente", "movement": "Execução crítica", "owner": "Cris", "needs_user": true, "priority": "Alta", "deadline": "25/09/2026", "objective": "Concluir a implantação física e operacional do ANNEXO para entrada em funcionamento e realização dos primeiros eventos.", "done": "Espaço pronto para operar, instalações testadas, acabamentos concluídos e primeiro evento realizado com segurança.", "current": "Obra em fase crítica, com coordenação centralizada em Cris e foco nas frentes físicas que impactam a abertura.", "next": "Fechar elétrica, iluminação, fachada, cozinha e ar-condicionado e consolidar a lista final de pendências.", "blockers": ["Pendências de elétrica e iluminação", "Acabamentos e fachada", "Cozinha / infraestrutura", "Ar-condicionado", "Prazo curto para abertura"], "milestones": ["Fechar frentes críticas da obra", "Testar instalações e operação", "Preparar mobiliário e acabamentos finais", "Preparar primeiro evento"], "people": [["Cris", "Coordenação / liderança da obra"], ["Maísa", "Apoio de arquitetura"], ["Ricardo", "Execução / obra"], ["Rachid", "Direção e decisões"]], "tasks": [["Consolidar lista final de pendências críticas", "Cris", "Imediato", "Alta", "Em andamento"], ["Fechar elétrica e iluminação", "Cris / Ricardo", "Imediato", "Alta", "Pendente"], ["Fechar fachada e acabamentos", "Cris / Maísa", "Antes da abertura", "Alta", "Pendente"], ["Validar cozinha e ar-condicionado", "Cris", "Antes da abertura", "Alta", "Pendente"], ["Preparar espaço para primeiro evento", "Equipe", "Após obra crítica", "Alta", "Pendente"]], "updates": [["04/09/2026", "Projeto em atenção máxima", "A obra segue como frente crítica da Central. Cris está centralizando a coordenação e as pendências físicas que impactam diretamente a abertura.", "Fechar frentes críticas e consolidar pendências"], ["03/09/2026", "Coordenação centralizada", "Cris assumiu a liderança operacional da obra, com acesso e presença recorrente. Maísa segue apoiando e Ricardo permanece na execução.", "Reorganizar cronograma e responsáveis"]], "files": [["Referências de acabamento", "Referência", "03/09/2026", "Arquitetura"], ["Conversas e registros da obra", "Histórico", "28/08–03/09", "Coordenação"]]}, {"id": "bar", "name": "Bar", "area": "Operação / Gastronomia", "health": "Atenção", "status": "Estruturação", "movement": "Conceito e operação", "owner": "A confirmar", "needs_user": true, "priority": "Média", "deadline": "A confirmar", "objective": "Estruturar o projeto de bar da operação, incluindo conceito, serviço, coquetelaria, fornecedores, equipamentos e integração com os eventos.", "done": "Bar com conceito, ficha de operação, fornecedores, equipamentos, custos e padrão de serviço definidos.", "current": "O projeto está reconhecido como uma das frentes estruturantes da Transformação KAZ, mas o responsável e o cronograma ainda precisam ser reconstituídos do histórico original.", "next": "Confirmar responsável, escopo operacional e cronograma do Bar.", "blockers": ["Responsável principal ainda não confirmado", "Cronograma original não recuperado", "Pendências específicas ainda precisam ser reconstituídas"], "milestones": ["Definir conceito e padrão de serviço", "Definir estrutura física/equipamentos", "Fechar fornecedores e insumos", "Definir operação e custos"], "people": [["Rachid", "Direção / definição de conceito"], ["Responsável do Bar", "A confirmar"]], "tasks": [["Confirmar responsável principal do Bar", "Rachid", "Próxima revisão", "Alta", "Pendente"], ["Recuperar pendências originais do Bar", "Central de Gestão", "Próxima revisão", "Média", "Pendente"], ["Consolidar estrutura de operação e custos", "Responsável do Bar", "Após confirmação", "Média", "Pendente"]], "updates": [["04/09/2026", "Projeto restabelecido na Central", "Bar voltou ao conjunto oficial dos sete projetos. A estrutura básica foi recomposta sem inventar responsáveis ou prazos não recuperados.", "Confirmar responsável e cronograma original"]], "files": []}, {"id": "financeiro-contabil", "name": "Financeiro / Contábil", "area": "Financeiro", "health": "Atenção", "status": "Estruturação", "movement": "Fluxos e controles", "owner": "Vini / a confirmar", "needs_user": true, "priority": "Alta", "deadline": "A confirmar", "objective": "Organizar os fluxos financeiro e contábil ligados à nova operação, com responsabilidades, aprovações, tabelas, controles e integração com os demais sistemas.", "done": "Fluxos financeiro/contábil formalizados, responsáveis definidos, controles recorrentes operando e dados integrados à gestão.", "current": "Há uma base operacional recuperada: Vini participa do financeiro no fluxo da venda à entrega e os valores precisam seguir tabela pré-cadastrada e regras de exceção. A estrutura contábil mais ampla ainda precisa ser reconstituída.", "next": "Consolidar o fluxo financeiro atual e recuperar as pendências contábeis originais.", "blockers": ["Escopo contábil completo ainda não recuperado", "Responsáveis além de Vini precisam ser confirmados", "Regras de exceção de preço precisam estar formalizadas"], "milestones": ["Formalizar fluxo financeiro da venda à entrega", "Consolidar tabela de valores e exceções", "Definir responsabilidades contábeis", "Criar rotina de acompanhamento e fechamento"], "people": [["Vini", "Financeiro"], ["Rachid", "Direção / decisões"], ["Vancler", "Compras / tabela - quando aplicável"]], "tasks": [["Documentar fluxo financeiro atual", "Vini", "Próxima revisão", "Alta", "Pendente"], ["Consolidar tabela de valores e regras de exceção", "Vini / gestão", "Próxima revisão", "Alta", "Pendente"], ["Recuperar escopo contábil original", "Central de Gestão", "Próxima revisão", "Média", "Pendente"]], "updates": [["04/09/2026", "Fluxo financeiro parcialmente reconstruído", "Foi recuperado que o financeiro entra após definição de escopo/valores e antes da continuidade operacional. Vini é uma pessoa-chave nesse fluxo.", "Consolidar fluxo e recuperar frente contábil"]], "files": []}, {"id": "enjoy-albuns", "name": "Enjoy / Álbuns", "area": "Operação / Produto", "health": "Atenção", "status": "Em desenvolvimento", "movement": "Fluxo operacional / sistema", "owner": "Equipe de Álbuns", "needs_user": false, "priority": "Alta", "deadline": "A confirmar", "objective": "Prever volume mensal da gráfica e controlar o fluxo completo de escolha de fotos, tratamento, diagramação, impressão, início de venda e venda.", "done": "Fluxo completo operando por contrato/turma, com responsáveis, templates, alertas e status atualizados até a venda.", "current": "Regras do montador, tratamento e templates já foram definidas. A próxima validação é operacional, especialmente tela do montador e responsabilidades por turma.", "next": "Validar tela do montador e fluxo real por turma.", "blockers": ["Responsáveis por templates por turma precisam ser fechados", "Validação operacional das telas", "Integração do fluxo com volume mensal da gráfica"], "milestones": ["Escolha e download de fotos", "Tratamento automático e retorno", "Diagramação e upload final", "Impressão", "Venda iniciada e vendido"], "people": [["Equipe de Álbuns", "Operação"], ["Diagramadores", "Montagem"], ["Editores", "Tratamento"], ["Responsável de templates", "Por turma - a definir"]], "tasks": [["Validar tela do montador", "Equipe de Álbuns", "Próxima revisão", "Alta", "Pendente"], ["Definir responsável de templates por turma", "Equipe de Álbuns", "Próxima revisão", "Alta", "Pendente"], ["Testar fluxo completo com uma turma real", "Equipe de Álbuns", "Após validação", "Alta", "Pendente"], ["Validar alertas de atraso e previsão mensal", "Equipe de Álbuns", "Após piloto", "Média", "Pendente"]], "updates": [["28/08/2026", "Regras operacionais consolidadas", "Montador não altera tratamento; se houver problema, aciona editor. Múltiplos templates podem existir por evento e templates precisam ter responsável por turma.", "Validar tela do montador e piloto real"]], "files": [["Regras do fluxo de álbuns", "Documento", "28/08/2026", "Operação"]]}, {"id": "sistema-vendas", "name": "Sistema de Vendas", "area": "Comercial / Sistema", "health": "Atenção", "status": "Implantação", "movement": "Implantação real", "owner": "Ana / Coordenadores", "needs_user": true, "priority": "Alta", "deadline": "Imediato", "objective": "Colocar o Comercial da KAZ dentro de um fluxo único e registrado no sistema, com rotina clara de captação, reunião, orçamento, acompanhamento e responsabilidade por carteira.", "done": "Carteira real operando integralmente no sistema, coordenadores acompanhando rotina e informações comerciais registradas de forma consistente.", "current": "O sistema é o núcleo do novo modelo comercial. O foco está em colocar a operação real no fluxo, com vendedores registrando informações relevantes e coordenadores acompanhando.", "next": "Colocar 100% da operação comercial real dentro do sistema.", "blockers": ["Adoção incompleta do sistema pela equipe", "Dependência de hábito manual/WhatsApp", "Necessidade de rotina clara dos coordenadores"], "milestones": ["Carteiras comerciais redesenhadas", "Rotina de captação/reunião/orçamento definida", "Operação real registrada", "100% Comercial no sistema"], "people": [["Ana", "Rotina / sistema"], ["Coordenadores", "Estratégia e acompanhamento"], ["Vendedores", "Captação e relacionamento"], ["Rachid", "Direção / implantação"]], "tasks": [["Concluir adoção do sistema pelo Comercial", "Ana / Coordenadores", "Imediato", "Alta", "Em andamento"], ["Cobrar registro de reuniões e informações relevantes", "Coordenadores", "Diário", "Alta", "Pendente"], ["Formalizar rotina dos coordenadores", "Ana / Coordenadores", "Imediato", "Alta", "Pendente"], ["Validar carteira real operando no fluxo", "Rachid / Ana", "Próxima revisão", "Alta", "Pendente"]], "updates": [["04/09/2026", "Implantação segue como prioridade", "O sistema permanece como núcleo da transformação comercial. A principal meta é tirar o fluxo do campo conceitual e colocar a operação real dentro dele.", "Colocar operação real no sistema"], ["02/09/2026", "Fluxo comercial consolidado", "Rotina de captação, visitas, reuniões, orçamento, acompanhamento e registro no sistema foi detalhada. Coordenadores passam a ter papel mais ativo de supervisão.", "Implantar com carteira real"]], "files": [["Ata da reunião do Sistema de Vendas", "Ata", "02/09/2026", "Reunião"], ["Fluxo comercial e operacional", "Documento", "02/09/2026", "Processo"]]}, {"id": "sistema-entrega", "name": "Sistema de Entrega", "area": "Operação / Sistema", "health": "Atenção", "status": "Estruturação", "movement": "Fluxo da venda à entrega", "owner": "Operação / a confirmar", "needs_user": false, "priority": "Alta", "deadline": "A confirmar", "objective": "Organizar o fluxo operacional completo após a venda, distribuindo responsabilidades entre assessor, financeiro, local, detalhamento, compras e execução.", "done": "Fluxo pós-venda operando no sistema, com responsáveis por etapa, informações completas e passagem organizada até a execução do evento.", "current": "O fluxo foi recuperado com boa clareza: comissão confirma → assessor define escopo e valores → financeiro → escolha de local → detalhamento → compras → execução.", "next": "Transformar esse fluxo em etapas operacionais do sistema e testar com um caso real.", "blockers": ["Responsável geral do sistema de entrega ainda precisa ser confirmado", "Passagens entre áreas precisam ser testadas em operação real", "Dependências de tabela e compras precisam estar integradas"], "milestones": ["Comissão confirma", "Assessor define escopo e valores", "Financeiro valida", "Ju Hirota escolhe local", "Juliana detalha cardápio/cronograma", "Compras consolida lista", "Execução do evento"], "people": [["Assessor", "Definição de escopo e valores"], ["Vini", "Financeiro"], ["Ju Hirota", "Escolha de local"], ["Juliana", "Detalhamento"], ["Vancler", "Compras / tabela"], ["Oscar", "Especificações"], ["Raquel", "Pós-venda"]], "tasks": [["Desenhar etapas do fluxo no sistema", "Operação", "Próxima revisão", "Alta", "Pendente"], ["Definir responsável geral do Sistema de Entrega", "Rachid", "Próxima revisão", "Alta", "Pendente"], ["Testar fluxo com um evento real", "Operação", "Após desenho", "Alta", "Pendente"], ["Validar regras de tabela e exceções", "Vini / Vancler", "Após desenho", "Média", "Pendente"]], "updates": [["02/09/2026", "Fluxo da venda à entrega consolidado", "Foi definido o encadeamento entre comissão, assessor, financeiro, local, detalhamento, compras e execução. O próximo passo é transformar isso em operação de sistema.", "Modelar etapas e testar com caso real"]], "files": [["Fluxo operacional da venda à entrega", "Documento", "02/09/2026", "Processo"]]}, {"id": "sistema-comissao", "name": "Sistema da Comissão", "area": "Comercial / Relacionamento", "health": "Atenção", "status": "Estruturação", "movement": "Entrada e passagem para operação", "owner": "Coordenadores / a confirmar", "needs_user": true, "priority": "Alta", "deadline": "A confirmar", "objective": "Organizar a relação com as comissões e transformar a confirmação do evento em uma entrada estruturada para o fluxo operacional.", "done": "Comissão com interação registrada, informações completas no sistema e passagem organizada para assessor/produção sem perda de contexto.", "current": "A comissão é o gatilho inicial do fluxo de entrega: confirma o evento e precisa alimentar o sistema com briefing e informações relevantes. O detalhamento completo do módulo ainda precisa ser recuperado.", "next": "Formalizar quais informações a comissão deve registrar e como ocorre a passagem para o assessor.", "blockers": ["Campos obrigatórios e responsabilidades ainda precisam ser formalizados", "Responsável principal do módulo a confirmar", "Integração com Comercial e Entrega precisa ser testada"], "milestones": ["Confirmação do evento", "Registro de briefing e informações relevantes", "Passagem estruturada para assessor", "Acompanhamento de pendências da comissão"], "people": [["Comissão", "Cliente / origem das informações"], ["Coordenadores", "Acompanhamento"], ["Vendedores", "Relacionamento"], ["Assessor", "Recebe escopo após confirmação"]], "tasks": [["Definir informações mínimas obrigatórias da comissão", "Coordenadores / Vendedores", "Próxima revisão", "Alta", "Pendente"], ["Definir passagem para o assessor", "Operação", "Próxima revisão", "Alta", "Pendente"], ["Recuperar campos e regras originais do módulo", "Central de Gestão", "Próxima revisão", "Média", "Pendente"]], "updates": [["04/09/2026", "Projeto reconstruído a partir do fluxo operacional", "Foi recuperado o papel da comissão como ponto de confirmação e origem das informações que alimentam a operação.", "Formalizar campos obrigatórios e passagem ao assessor"]], "files": []}]; const KEY='central-gestao-v15-kaz'; let projects;
+const SEED=[{"id": "annexo", "name": "ANNEXO", "area": "Operação / Obra", "health": "Crítico", "status": "Urgente", "movement": "Execução crítica", "owner": "Cris", "priority": "Alta", "deadline": "25/09/2026", "deadline_label": "Meta de abertura / 1º evento", "needs_user": "Aprovar decisões críticas de acabamento, prioridades e eventuais exceções de custo/prazo.", "objective": "Concluir a implantação física e operacional do ANNEXO para entrada em funcionamento e realização dos primeiros eventos.", "done": "Espaço pronto para operar, instalações testadas, acabamentos concluídos e primeiro evento realizado com segurança.", "current": "Obra em fase crítica, com coordenação centralizada em Cris e foco nas frentes físicas que impactam a abertura.", "next": "Fechar as frentes críticas e consolidar a lista única de pendências até a abertura.", "fronts": [{"name": "Elétrica", "status": "Crítico", "owner": "Cris / Ricardo", "next": "Fechar pendências elétricas e testar circuitos prioritários."}, {"name": "Iluminação", "status": "Crítico", "owner": "Cris / Ricardo", "next": "Concluir instalação, testes e ajustes de iluminação."}, {"name": "Ar-condicionado", "status": "Atenção", "owner": "Cris", "next": "Validar instalação, funcionamento e pendências finais."}, {"name": "Fachada / Comunicação visual", "status": "Atenção", "owner": "Cris / Maísa", "next": "Fechar acabamentos e elementos visuais da fachada."}, {"name": "Cozinha / Infraestrutura", "status": "Atenção", "owner": "Cris", "next": "Validar infraestrutura, pontos e funcionamento da cozinha."}, {"name": "Acabamentos / Mobiliário", "status": "Atenção", "owner": "Cris / Maísa", "next": "Concluir acabamentos e preparar mobiliário final."}, {"name": "Segurança / Acessibilidade", "status": "Atenção", "owner": "A confirmar", "next": "Validar itens obrigatórios antes da abertura."}, {"name": "Preparação operacional", "status": "Pendente", "owner": "Equipe", "next": "Preparar espaço, testes e rotina para o primeiro evento."}], "people": [["Cris", "Coordenação / liderança da obra"], ["Maísa", "Apoio de arquitetura"], ["Ricardo", "Execução / obra"], ["Rachid", "Direção e decisões"]], "tasks": [["Consolidar lista única de pendências críticas", "Cris", "Imediato", "Alta", "Em andamento", "Geral"], ["Fechar elétrica", "Cris / Ricardo", "Imediato", "Alta", "Pendente", "Elétrica"], ["Fechar iluminação", "Cris / Ricardo", "Imediato", "Alta", "Pendente", "Iluminação"], ["Validar ar-condicionado", "Cris", "Antes da abertura", "Alta", "Pendente", "Ar-condicionado"], ["Fechar fachada e comunicação visual", "Cris / Maísa", "Antes da abertura", "Alta", "Pendente", "Fachada / Comunicação visual"], ["Validar cozinha e infraestrutura", "Cris", "Antes da abertura", "Alta", "Pendente", "Cozinha / Infraestrutura"], ["Concluir acabamentos e mobiliário", "Cris / Maísa", "Antes da abertura", "Alta", "Pendente", "Acabamentos / Mobiliário"], ["Validar segurança e acessibilidade", "A confirmar", "Antes da abertura", "Alta", "Pendente", "Segurança / Acessibilidade"], ["Preparar espaço para primeiro evento", "Equipe", "Após frentes críticas", "Alta", "Pendente", "Preparação operacional"]], "updates": [["04/09/2026", "Projeto em atenção máxima", "A obra segue como frente crítica da Central. Cris está centralizando a coordenação e as pendências físicas que impactam diretamente a abertura.", "Fechar frentes críticas e consolidar pendências"], ["03/09/2026", "Coordenação centralizada", "Cris assumiu a liderança operacional da obra, com acesso e presença recorrente. Maísa segue apoiando e Ricardo permanece na execução.", "Reorganizar cronograma e responsáveis"]], "files": [{"name": "Referências de acabamento", "type": "Referência", "date": "03/09/2026", "source": "Arquitetura", "link": ""}, {"name": "Conversas e registros da obra", "type": "Histórico", "date": "28/08–03/09", "source": "Coordenação", "link": ""}]}, {"id": "bar", "name": "Bar", "area": "Operação / Gastronomia", "health": "Atenção", "status": "Estruturação", "movement": "Conceito e operação", "owner": "A confirmar", "priority": "Média", "deadline": "A confirmar", "deadline_label": "Meta / prazo", "needs_user": "Confirmar responsável principal e escopo do projeto.", "objective": "Estruturar o projeto de bar da operação, incluindo conceito, serviço, coquetelaria, fornecedores, equipamentos e integração com os eventos.", "done": "Bar com conceito, ficha de operação, fornecedores, equipamentos, custos e padrão de serviço definidos.", "current": "O projeto está reconhecido como uma das frentes estruturantes da Transformação KAZ, mas o responsável e o cronograma ainda precisam ser reconstituídos do histórico original.", "next": "Confirmar responsável, escopo operacional e cronograma do Bar.", "fronts": [{"name": "Conceito e serviço", "status": "A revisar", "owner": "Rachid", "next": "Recuperar definição original do conceito."}, {"name": "Estrutura e equipamentos", "status": "A revisar", "owner": "A confirmar", "next": "Consolidar necessidades físicas e equipamentos."}, {"name": "Fornecedores e insumos", "status": "A revisar", "owner": "A confirmar", "next": "Recuperar fornecedores e critérios de compra."}, {"name": "Operação e custos", "status": "A revisar", "owner": "A confirmar", "next": "Formalizar rotina e estrutura de custos."}], "people": [["Rachid", "Direção / definição de conceito"], ["Responsável do Bar", "A confirmar"]], "tasks": [["Confirmar responsável principal do Bar", "Rachid", "Próxima revisão", "Alta", "Pendente", "Geral"], ["Recuperar pendências originais do Bar", "Central de Gestão", "Próxima revisão", "Média", "Pendente", "Geral"]], "updates": [["04/09/2026", "Projeto restabelecido na Central", "Bar voltou ao conjunto oficial dos sete projetos. A estrutura básica foi recomposta sem inventar responsáveis ou prazos não recuperados.", "Confirmar responsável e cronograma original"]], "files": []}, {"id": "financeiro-contabil", "name": "Financeiro / Contábil", "area": "Financeiro", "health": "Atenção", "status": "Estruturação", "movement": "Fluxos e controles", "owner": "Vini / a confirmar", "priority": "Alta", "deadline": "A confirmar", "deadline_label": "Meta / prazo", "needs_user": "Validar escopo contábil e responsáveis além do financeiro operacional.", "objective": "Organizar os fluxos financeiro e contábil ligados à nova operação, com responsabilidades, aprovações, tabelas, controles e integração com os demais sistemas.", "done": "Fluxos financeiro/contábil formalizados, responsáveis definidos, controles recorrentes operando e dados integrados à gestão.", "current": "Há uma base operacional recuperada: Vini participa do financeiro no fluxo da venda à entrega e os valores precisam seguir tabela pré-cadastrada e regras de exceção.", "next": "Consolidar o fluxo financeiro atual e recuperar as pendências contábeis originais.", "fronts": [{"name": "Fluxo financeiro", "status": "Em estruturação", "owner": "Vini", "next": "Documentar entradas, aprovações e passagem para operação."}, {"name": "Tabela de valores", "status": "Em estruturação", "owner": "Vini / Vancler", "next": "Consolidar tabela e regras de exceção."}, {"name": "Contábil", "status": "A revisar", "owner": "A confirmar", "next": "Recuperar escopo e responsáveis."}, {"name": "Fechamentos / controles", "status": "A revisar", "owner": "A confirmar", "next": "Definir rotina e indicadores recorrentes."}], "people": [["Vini", "Financeiro"], ["Rachid", "Direção / decisões"], ["Vancler", "Compras / tabela - quando aplicável"]], "tasks": [["Documentar fluxo financeiro atual", "Vini", "Próxima revisão", "Alta", "Pendente", "Fluxo financeiro"], ["Consolidar tabela de valores e exceções", "Vini / Vancler", "Próxima revisão", "Alta", "Pendente", "Tabela de valores"], ["Recuperar escopo contábil original", "Central de Gestão", "Próxima revisão", "Média", "Pendente", "Contábil"]], "updates": [["04/09/2026", "Fluxo financeiro parcialmente reconstruído", "Foi recuperado que o financeiro entra após definição de escopo/valores e antes da continuidade operacional. Vini é uma pessoa-chave nesse fluxo.", "Consolidar fluxo e recuperar frente contábil"]], "files": []}, {"id": "enjoy-albuns", "name": "Enjoy / Álbuns", "area": "Operação / Produto", "health": "Atenção", "status": "Em desenvolvimento", "movement": "Fluxo operacional / sistema", "owner": "Equipe de Álbuns", "priority": "Alta", "deadline": "A confirmar", "deadline_label": "Meta / prazo", "needs_user": "Nenhuma decisão crítica registrada no momento.", "objective": "Prever volume mensal da gráfica e controlar o fluxo completo de escolha de fotos, tratamento, diagramação, impressão, início de venda e venda.", "done": "Fluxo completo operando por contrato/turma, com responsáveis, templates, alertas e status atualizados até a venda.", "current": "Regras do montador, tratamento e templates já foram definidas. A próxima validação é operacional, especialmente tela do montador e responsabilidades por turma.", "next": "Validar tela do montador e fluxo real por turma.", "fronts": [{"name": "Fotos e tratamento", "status": "Definido", "owner": "Editores", "next": "Validar operação real e exceções."}, {"name": "Templates", "status": "Atenção", "owner": "A definir por turma", "next": "Definir responsáveis e múltiplos templates."}, {"name": "Montagem / diagramação", "status": "Atenção", "owner": "Diagramadores", "next": "Validar tela do montador."}, {"name": "Impressão", "status": "Planejado", "owner": "Equipe", "next": "Integrar previsão mensal e alertas."}, {"name": "Venda", "status": "Planejado", "owner": "Equipe", "next": "Validar mudança de status para venda iniciada/vendido."}], "people": [["Equipe de Álbuns", "Operação"], ["Diagramadores", "Montagem"], ["Editores", "Tratamento"], ["Responsável de templates", "Por turma - a definir"]], "tasks": [["Validar tela do montador", "Equipe de Álbuns", "Próxima revisão", "Alta", "Pendente", "Montagem / diagramação"], ["Definir responsável de templates por turma", "Equipe de Álbuns", "Próxima revisão", "Alta", "Pendente", "Templates"], ["Testar fluxo completo com uma turma real", "Equipe de Álbuns", "Após validação", "Alta", "Pendente", "Geral"]], "updates": [["28/08/2026", "Regras operacionais consolidadas", "Montador não altera tratamento; se houver problema, aciona editor. Múltiplos templates podem existir por evento e templates precisam ter responsável por turma.", "Validar tela do montador e piloto real"]], "files": [{"name": "Regras do fluxo de álbuns", "type": "Documento", "date": "28/08/2026", "source": "Operação", "link": ""}]}, {"id": "sistema-vendas", "name": "Sistema de Vendas", "area": "Comercial / Sistema", "health": "Atenção", "status": "Implantação", "movement": "Implantação real", "owner": "Ana / Coordenadores", "priority": "Alta", "deadline": "Imediato", "deadline_label": "Meta / prazo", "needs_user": "Acompanhar adesão real e destravar decisões de implantação.", "objective": "Colocar o Comercial da KAZ dentro de um fluxo único e registrado no sistema, com rotina clara de captação, reunião, orçamento, acompanhamento e responsabilidade por carteira.", "done": "Carteira real operando integralmente no sistema, coordenadores acompanhando rotina e informações comerciais registradas de forma consistente.", "current": "O sistema é o núcleo do novo modelo comercial. O foco está em colocar a operação real no fluxo.", "next": "Colocar 100% da operação comercial real dentro do sistema.", "fronts": [{"name": "Carteiras comerciais", "status": "Em implantação", "owner": "Coordenadores", "next": "Validar carteiras no novo modelo."}, {"name": "Rotina comercial", "status": "Em implantação", "owner": "Ana / Coordenadores", "next": "Consolidar rotina de captação, reunião e orçamento."}, {"name": "Registro no sistema", "status": "Atenção", "owner": "Vendedores", "next": "Garantir registro de informações relevantes."}, {"name": "Supervisão", "status": "Atenção", "owner": "Coordenadores", "next": "Formalizar acompanhamento recorrente."}], "people": [["Ana", "Rotina / sistema"], ["Coordenadores", "Estratégia e acompanhamento"], ["Vendedores", "Captação e relacionamento"], ["Rachid", "Direção / implantação"]], "tasks": [["Concluir adoção do sistema pelo Comercial", "Ana / Coordenadores", "Imediato", "Alta", "Em andamento", "Registro no sistema"], ["Cobrar registro de reuniões e informações relevantes", "Coordenadores", "Diário", "Alta", "Pendente", "Supervisão"], ["Formalizar rotina dos coordenadores", "Ana / Coordenadores", "Imediato", "Alta", "Pendente", "Rotina comercial"]], "updates": [["04/09/2026", "Implantação segue como prioridade", "O sistema permanece como núcleo da transformação comercial. A principal meta é tirar o fluxo do campo conceitual e colocar a operação real dentro dele.", "Colocar operação real no sistema"], ["02/09/2026", "Fluxo comercial consolidado", "Rotina de captação, visitas, reuniões, orçamento, acompanhamento e registro no sistema foi detalhada.", "Implantar com carteira real"]], "files": [{"name": "Ata da reunião do Sistema de Vendas", "type": "Ata", "date": "02/09/2026", "source": "Reunião", "link": ""}, {"name": "Fluxo comercial e operacional", "type": "Documento", "date": "02/09/2026", "source": "Processo", "link": ""}]}, {"id": "sistema-entrega", "name": "Sistema de Entrega", "area": "Operação / Sistema", "health": "Atenção", "status": "Estruturação", "movement": "Fluxo da venda à entrega", "owner": "Operação / a confirmar", "priority": "Alta", "deadline": "A confirmar", "deadline_label": "Meta / prazo", "needs_user": "Confirmar responsável geral do fluxo e aprovar desenho operacional.", "objective": "Organizar o fluxo operacional completo após a venda, distribuindo responsabilidades entre assessor, financeiro, local, detalhamento, compras e execução.", "done": "Fluxo pós-venda operando no sistema, com responsáveis por etapa, informações completas e passagem organizada até a execução do evento.", "current": "O fluxo foi recuperado com boa clareza: comissão confirma → assessor define escopo e valores → financeiro → escolha de local → detalhamento → compras → execução.", "next": "Transformar esse fluxo em frentes operacionais do sistema e testar com um caso real.", "fronts": [{"name": "Escopo / assessor", "status": "Definido", "owner": "Assessor", "next": "Transformar regra em etapa do sistema."}, {"name": "Financeiro", "status": "Definido", "owner": "Vini", "next": "Integrar aprovação e tabela."}, {"name": "Local", "status": "Definido", "owner": "Ju Hirota", "next": "Modelar seleção de local."}, {"name": "Detalhamento", "status": "Definido", "owner": "Juliana", "next": "Modelar cardápio e cronograma."}, {"name": "Compras", "status": "Definido", "owner": "Vancler", "next": "Integrar lista e tabela."}, {"name": "Execução", "status": "A estruturar", "owner": "Operação", "next": "Definir passagem final e acompanhamento."}], "people": [["Assessor", "Definição de escopo e valores"], ["Vini", "Financeiro"], ["Ju Hirota", "Escolha de local"], ["Juliana", "Detalhamento"], ["Vancler", "Compras / tabela"], ["Oscar", "Especificações"], ["Raquel", "Pós-venda"]], "tasks": [["Desenhar etapas do fluxo no sistema", "Operação", "Próxima revisão", "Alta", "Pendente", "Geral"], ["Definir responsável geral do Sistema de Entrega", "Rachid", "Próxima revisão", "Alta", "Pendente", "Geral"], ["Testar fluxo com um evento real", "Operação", "Após desenho", "Alta", "Pendente", "Execução"]], "updates": [["02/09/2026", "Fluxo da venda à entrega consolidado", "Foi definido o encadeamento entre comissão, assessor, financeiro, local, detalhamento, compras e execução.", "Modelar etapas e testar com caso real"]], "files": [{"name": "Fluxo operacional da venda à entrega", "type": "Documento", "date": "02/09/2026", "source": "Processo", "link": ""}]}, {"id": "sistema-comissao", "name": "Sistema da Comissão", "area": "Comercial / Relacionamento", "health": "Atenção", "status": "Estruturação", "movement": "Entrada e passagem para operação", "owner": "Coordenadores / a confirmar", "priority": "Alta", "deadline": "A confirmar", "deadline_label": "Meta / prazo", "needs_user": "Validar campos obrigatórios e regra de passagem para o assessor.", "objective": "Organizar a relação com as comissões e transformar a confirmação do evento em uma entrada estruturada para o fluxo operacional.", "done": "Comissão com interação registrada, informações completas no sistema e passagem organizada para assessor/produção sem perda de contexto.", "current": "A comissão é o gatilho inicial do fluxo de entrega: confirma o evento e precisa alimentar o sistema com briefing e informações relevantes.", "next": "Formalizar quais informações a comissão deve registrar e como ocorre a passagem para o assessor.", "fronts": [{"name": "Confirmação", "status": "Definido", "owner": "Comissão / Comercial", "next": "Formalizar gatilho de entrada."}, {"name": "Briefing", "status": "A estruturar", "owner": "Comissão / Vendedores", "next": "Definir informações mínimas obrigatórias."}, {"name": "Passagem para assessor", "status": "A estruturar", "owner": "Operação", "next": "Definir regra e responsável."}, {"name": "Pendências da comissão", "status": "A estruturar", "owner": "Coordenadores", "next": "Definir acompanhamento e cobranças."}], "people": [["Comissão", "Cliente / origem das informações"], ["Coordenadores", "Acompanhamento"], ["Vendedores", "Relacionamento"], ["Assessor", "Recebe escopo após confirmação"]], "tasks": [["Definir informações mínimas obrigatórias da comissão", "Coordenadores / Vendedores", "Próxima revisão", "Alta", "Pendente", "Briefing"], ["Definir passagem para o assessor", "Operação", "Próxima revisão", "Alta", "Pendente", "Passagem para assessor"]], "updates": [["04/09/2026", "Projeto reconstruído a partir do fluxo operacional", "Foi recuperado o papel da comissão como ponto de confirmação e origem das informações que alimentam a operação.", "Formalizar campos obrigatórios e passagem ao assessor"]], "files": []}]; const KEY='central-gestao-v16-kaz'; let projects;
 function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||'null');projects=Array.isArray(x)&&x.length?x:structuredClone(SEED)}catch(e){projects=structuredClone(SEED)}localStorage.setItem(KEY,JSON.stringify(projects));}
-function cls(h){if(h==='Crítico')return'red';if(h==='Atenção')return'amber';if(h==='Em reconstrução')return'gray';return'green'}
+function cls(s){if(['Crítico','Urgente'].includes(s))return'red';if(['Atenção','Em implantação','Em estruturação','Pendente','A revisar','Estruturação'].includes(s))return'amber';if(['Definido','Normal'].includes(s))return'green';return'gray'}
 function renderList(){document.getElementById('projectList').innerHTML=projects.map(p=>`<button class="project-row" onclick="openProject('${p.id}')"><div><b>${p.name}</b><span>${p.area}</span></div><div><span>Saúde</span><b>${p.health}</b></div><div><span>Movimento</span><b>${p.movement}</b></div><div><span>Próxima ação</span><b>${p.next}</b></div><span class="pill ${cls(p.health)}">${p.status}</span></button>`).join('')}
-function showProjects(){document.getElementById('listView').classList.remove('hidden');document.getElementById('detailView').classList.add('hidden');document.getElementById('topTitle').textContent='Transformação KAZ';document.getElementById('topSub').textContent='Programa de gestão dos 7 projetos estruturantes';window.scrollTo(0,0)}
-function openProject(id){const p=projects.find(x=>x.id===id);if(!p)return;document.getElementById('listView').classList.add('hidden');document.getElementById('detailView').classList.remove('hidden');document.getElementById('topTitle').textContent=p.name;document.getElementById('topSub').textContent='Projeto da Transformação KAZ';
-const vals={area:p.area,name:p.name,headline:p.current,objective:p.objective,done:p.done,owner:p.owner,priority:p.priority,status:p.status,deadline:p.deadline,needs:p.needs_user?'Sim':'Não',movement:p.movement,current:p.current,next:p.next};Object.entries(vals).forEach(([k,v])=>document.getElementById(k).textContent=v);
+function showProjectsLegacy(){document.getElementById('listView').classList.remove('hidden');document.getElementById('detailView').classList.add('hidden');document.getElementById('topTitle').textContent='Transformação KAZ';document.getElementById('topSub').textContent='Programa de gestão dos 7 projetos estruturantes';window.scrollTo(0,0)}
+function openProject(id){document.getElementById('notesView').classList.add('hidden');document.getElementById('agendaView').classList.add('hidden');const p=projects.find(x=>x.id===id);if(!p)return;document.getElementById('listView').classList.add('hidden');document.getElementById('detailView').classList.remove('hidden');document.getElementById('topTitle').textContent=p.name;document.getElementById('topSub').textContent='Projeto da Transformação KAZ';
+const vals={area:p.area,name:p.name,headline:p.current,objective:p.objective,done:p.done,owner:p.owner,priority:p.priority,status:p.status,deadline:p.deadline,needs:p.needs_user,movement:p.movement,current:p.current,next:p.next};Object.entries(vals).forEach(([k,v])=>document.getElementById(k).textContent=v);document.getElementById('deadlineLabel').textContent=p.deadline_label||'Meta / prazo';
 const h=document.getElementById('health');h.textContent=p.health;h.className='pill '+cls(p.health);
-document.getElementById('milestones').innerHTML=p.milestones.map((x,i)=>`<div class="mile"><b>${i+1}. ${x}</b></div>`).join('');
-document.getElementById('blockers').innerHTML=p.blockers.length?p.blockers.map(x=>`<div class="blocker"><b>${x}</b></div>`).join(''):'<span style="color:#6b7280;font-size:13px">Nenhum bloqueio relevante registrado.</span>';
+document.getElementById('fronts').innerHTML=p.fronts.map(f=>`<div class="card front-card"><div class="front-top"><h3>${f.name}</h3><span class="pill ${cls(f.status)}">${f.status}</span></div><div class="meta"><b>Responsável:</b> ${f.owner}</div><div class="next"><b>Próxima:</b> ${f.next}</div></div>`).join('');
+document.getElementById('tasks').innerHTML=p.tasks.map(x=>`<div class="task"><div class="left"><b>${x[0]}</b><span>${x[4]} · ${x[3]} · Frente: ${x[5]}</span></div><span>${x[1]} · ${x[2]}</span></div>`).join('');
 document.getElementById('people').innerHTML=p.people.length?p.people.map(x=>`<div class="person"><b>${x[0]}</b><span>${x[1]}</span></div>`).join(''):'<span style="color:#6b7280;font-size:13px">Responsáveis ainda a confirmar.</span>';
-document.getElementById('tasks').innerHTML=p.tasks.map(x=>`<div class="task"><div><b>${x[0]}</b><span>${x[4]} · ${x[3]}</span></div><span>${x[1]} · ${x[2]}</span></div>`).join('');
 document.getElementById('history').innerHTML=p.updates.map(x=>`<div class="entry"><div class="date">${x[0]}</div><h3>${x[1]}</h3><p>${x[2]}</p><small><b>Próximo:</b> ${x[3]}</small></div>`).join('');
-document.getElementById('files').innerHTML=p.files.length?p.files.map(x=>`<div class="task"><b>${x[0]}</b><span>${x[1]} · ${x[2]} · ${x[3]}</span></div>`).join(''):'<span style="color:#6b7280;font-size:13px">Nenhum arquivo vinculado ainda.</span>';window.scrollTo(0,0)}
-function go(id){document.getElementById(id).scrollIntoView({behavior:'smooth'})} function resetBase(){localStorage.removeItem(KEY);load();renderList();showProjects();} load();renderList();
+document.getElementById('files').innerHTML=p.files.length?p.files.map(f=>`<div class="file"><div><b>${f.name}</b><span>${f.type} · ${f.date}</span></div><span>${f.source}</span></div>`).join(''):'<span style="color:#6b7280;font-size:13px">Nenhum arquivo vinculado ainda.</span>';window.scrollTo(0,0)}
+function go(id){document.getElementById(id).scrollIntoView({behavior:'smooth'})} function resetBase(){localStorage.removeItem(KEY);
+
+const NOTES_KEY='central-gestao-v18-notes';
+const NOTES_SEED=[
+  {
+    id:'nota-central-gestao',
+    title:'Central de Gestão',
+    body:'Desenvolver e colocar em operação esta solução de gestão pessoal de projetos, agenda, notas, pendências, pessoas, diário e arquivos.',
+    project:'Central de Gestão',
+    status:'Em andamento',
+    pinned:true,
+    created:'04/09/2026'
+  },
+  {
+    id:'nota-sistema-anexxo',
+    title:'Sistema Anexxo',
+    body:'Continuar o desenvolvimento e testes do Sistema Anexxo, incluindo o piloto com evento real e os ajustes de fluxo.',
+    project:'Sistema Anexxo',
+    status:'Em andamento',
+    pinned:true,
+    created:'04/09/2026'
+  },
+  {
+    id:'nota-novas-telas',
+    title:'Novas telas do sistema',
+    body:'Desenvolver e revisar as novas telas do sistema que estão sendo trabalhadas em paralelo.',
+    project:'Sistema / UX',
+    status:'Em andamento',
+    pinned:true,
+    created:'04/09/2026'
+  }
+];
+let notes=[];
+function loadNotes(){
+  try{
+    const x=JSON.parse(localStorage.getItem(NOTES_KEY)||'null');
+    notes=Array.isArray(x)?x:structuredClone(NOTES_SEED);
+  }catch(e){notes=structuredClone(NOTES_SEED)}
+  localStorage.setItem(NOTES_KEY,JSON.stringify(notes));
+}
+function saveNotes(){
+  localStorage.setItem(NOTES_KEY,JSON.stringify(notes));
+  renderNotes();
+}
+function showNotes(){
+  document.getElementById('listView').classList.add('hidden');
+  document.getElementById('detailView').classList.add('hidden');
+  document.getElementById('agendaView').classList.add('hidden');
+  document.getElementById('notesView').classList.remove('hidden');
+  document.getElementById('topTitle').textContent='Notas';
+  document.getElementById('topSub').textContent='Caixa de entrada pessoal';
+  document.querySelectorAll('.side button').forEach(b=>b.classList.remove('active'));
+  const buttons=[...document.querySelectorAll('.side button')];
+  const n=buttons.find(b=>b.textContent.trim()==='Notas'); if(n) n.classList.add('active');
+  renderNotes();
+  window.scrollTo(0,0);
+}
+function addQuickNote(){
+  const input=document.getElementById('quickNoteInput');
+  const value=(input?.value||'').trim();
+  if(!value){
+    const manual=prompt('Digite a nota:');
+    if(!manual) return;
+    notes.unshift({
+      id:'note-'+Date.now(),
+      title:manual.length>42?manual.slice(0,42)+'…':manual,
+      body:manual,
+      project:'',
+      status:'Caixa de entrada',
+      pinned:false,
+      created:new Date().toLocaleDateString('pt-BR')
+    });
+  }else{
+    notes.unshift({
+      id:'note-'+Date.now(),
+      title:value.length>42?value.slice(0,42)+'…':value,
+      body:value,
+      project:'',
+      status:'Caixa de entrada',
+      pinned:false,
+      created:new Date().toLocaleDateString('pt-BR')
+    });
+    input.value='';
+  }
+  saveNotes();
+}
+function togglePin(id){
+  const n=notes.find(x=>x.id===id);
+  if(n){n.pinned=!n.pinned;saveNotes();}
+}
+function archiveNote(id){
+  const n=notes.find(x=>x.id===id);
+  if(n){n.status='Arquivada';saveNotes();}
+}
+function renderNotes(){
+  const host=document.getElementById('notesList');
+  const list=[...notes].sort((a,b)=>(Number(b.pinned)-Number(a.pinned)) || b.id.localeCompare(a.id));
+  host.innerHTML=list.map(n=>`
+    <div class="note-card" style="${n.status==='Arquivada'?'opacity:.55':''}">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+        <h3>${n.title}</h3>
+        ${n.pinned?'<span class="note-pin">Fixada</span>':''}
+      </div>
+      <p>${n.body}</p>
+      <div class="note-meta">
+        ${n.project?`<span class="note-chip">${n.project}</span>`:''}
+        <span class="note-chip">${n.status}</span>
+        <span class="note-chip">${n.created}</span>
+      </div>
+      <div class="note-actions">
+        <button onclick="togglePin('${n.id}')">${n.pinned?'Desafixar':'Fixar'}</button>
+        <button onclick="archiveNote('${n.id}')">Arquivar</button>
+        <button onclick="alert('Na versão com banco, esta nota poderá virar pendência, compromisso ou ser vinculada a um projeto.')">Transformar em...</button>
+      </div>
+    </div>`).join('');
+}
+
+const AGENDA_KEY='central-gestao-v17-agenda';
+const AGENDA_SEED=[
+  {
+    id:'annexo-abertura',
+    date:'2026-09-25',
+    time:'A definir',
+    title:'Meta de abertura / 1º evento ANNEXO',
+    project:'ANNEXO',
+    location:'ANNEXO',
+    people:'Equipe do projeto',
+    status:'Planejado',
+    notes:'Marco principal do projeto ANNEXO.'
+  }
+];
+let agenda=[];
+function loadAgenda(){
+  try{
+    const x=JSON.parse(localStorage.getItem(AGENDA_KEY)||'null');
+    agenda=Array.isArray(x)?x:structuredClone(AGENDA_SEED);
+  }catch(e){agenda=structuredClone(AGENDA_SEED)}
+  localStorage.setItem(AGENDA_KEY,JSON.stringify(agenda));
+}
+function showAgenda(){
+  document.getElementById('notesView').classList.add('hidden');
+  document.getElementById('listView').classList.add('hidden');
+  document.getElementById('detailView').classList.add('hidden');
+  document.getElementById('agendaView').classList.remove('hidden');
+  document.getElementById('topTitle').textContent='Agenda';
+  document.getElementById('topSub').textContent='Compromissos pessoais e de projetos';
+  document.querySelectorAll('.side button').forEach(b=>b.classList.remove('active'));
+  const buttons=[...document.querySelectorAll('.side button')];
+  const ag=buttons.find(b=>b.textContent.trim()==='Agenda'); if(ag) ag.classList.add('active');
+  renderAgenda('today');
+  window.scrollTo(0,0);
+}
+function showProjects(){
+  document.getElementById('notesView').classList.add('hidden');
+  document.getElementById('agendaView').classList.add('hidden');
+  document.getElementById('listView').classList.remove('hidden');
+  document.getElementById('detailView').classList.add('hidden');
+  document.getElementById('topTitle').textContent='Transformação KAZ';
+  document.getElementById('topSub').textContent='Programa de gestão dos 7 projetos estruturantes';
+  document.querySelectorAll('.side button').forEach(b=>b.classList.remove('active'));
+  const buttons=[...document.querySelectorAll('.side button')];
+  const p=buttons.find(b=>b.textContent.trim()==='Projetos'); if(p) p.classList.add('active');
+  window.scrollTo(0,0)
+}
+function fmtDate(s){
+  if(!s) return '';
+  const [y,m,d]=s.split('-');
+  return `${d}/${m}/${y}`;
+}
+function renderAgenda(mode='today',btn){
+  if(btn){
+    document.querySelectorAll('.agenda-tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  const today='2026-09-04';
+  let list=[...agenda];
+  if(mode==='today') list=list.filter(e=>e.date===today);
+  if(mode==='week') list=list.filter(e=>e.date>='2026-09-04' && e.date<='2026-09-10');
+  list.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  const host=document.getElementById('agendaList');
+  if(!list.length){
+    host.innerHTML='<div class="empty-agenda">Nenhum compromisso nesta visão. A agenda ficará completa quando conectarmos seus compromissos reais / Google Calendar.</div>';
+    return;
+  }
+  const groups={};
+  list.forEach(e=>{(groups[e.date]??=[]).push(e)});
+  host.innerHTML=Object.entries(groups).map(([date,items])=>`
+    <div class="agenda-day">
+      <h3>${fmtDate(date)}</h3>
+      ${items.map(e=>`
+        <div class="event-card">
+          <div class="event-time">${e.time}</div>
+          <div>
+            <div class="event-title">${e.title}</div>
+            <div class="event-meta">${e.location||'Sem local'}${e.people?' · '+e.people:''}</div>
+            ${e.project?`<span class="event-project">${e.project}</span>`:''}
+          </div>
+          <div class="event-actions"><button onclick="alert('Edição será habilitada com o banco online.')">Abrir</button></div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+load();loadAgenda();loadNotes();renderList();showProjects();} 
+
+const NOTES_KEY='central-gestao-v18-notes';
+const NOTES_SEED=[
+  {
+    id:'nota-central-gestao',
+    title:'Central de Gestão',
+    body:'Desenvolver e colocar em operação esta solução de gestão pessoal de projetos, agenda, notas, pendências, pessoas, diário e arquivos.',
+    project:'Central de Gestão',
+    status:'Em andamento',
+    pinned:true,
+    created:'04/09/2026'
+  },
+  {
+    id:'nota-sistema-anexxo',
+    title:'Sistema Anexxo',
+    body:'Continuar o desenvolvimento e testes do Sistema Anexxo, incluindo o piloto com evento real e os ajustes de fluxo.',
+    project:'Sistema Anexxo',
+    status:'Em andamento',
+    pinned:true,
+    created:'04/09/2026'
+  },
+  {
+    id:'nota-novas-telas',
+    title:'Novas telas do sistema',
+    body:'Desenvolver e revisar as novas telas do sistema que estão sendo trabalhadas em paralelo.',
+    project:'Sistema / UX',
+    status:'Em andamento',
+    pinned:true,
+    created:'04/09/2026'
+  }
+];
+let notes=[];
+function loadNotes(){
+  try{
+    const x=JSON.parse(localStorage.getItem(NOTES_KEY)||'null');
+    notes=Array.isArray(x)?x:structuredClone(NOTES_SEED);
+  }catch(e){notes=structuredClone(NOTES_SEED)}
+  localStorage.setItem(NOTES_KEY,JSON.stringify(notes));
+}
+function saveNotes(){
+  localStorage.setItem(NOTES_KEY,JSON.stringify(notes));
+  renderNotes();
+}
+function showNotes(){
+  document.getElementById('listView').classList.add('hidden');
+  document.getElementById('detailView').classList.add('hidden');
+  document.getElementById('agendaView').classList.add('hidden');
+  document.getElementById('notesView').classList.remove('hidden');
+  document.getElementById('topTitle').textContent='Notas';
+  document.getElementById('topSub').textContent='Caixa de entrada pessoal';
+  document.querySelectorAll('.side button').forEach(b=>b.classList.remove('active'));
+  const buttons=[...document.querySelectorAll('.side button')];
+  const n=buttons.find(b=>b.textContent.trim()==='Notas'); if(n) n.classList.add('active');
+  renderNotes();
+  window.scrollTo(0,0);
+}
+function addQuickNote(){
+  const input=document.getElementById('quickNoteInput');
+  const value=(input?.value||'').trim();
+  if(!value){
+    const manual=prompt('Digite a nota:');
+    if(!manual) return;
+    notes.unshift({
+      id:'note-'+Date.now(),
+      title:manual.length>42?manual.slice(0,42)+'…':manual,
+      body:manual,
+      project:'',
+      status:'Caixa de entrada',
+      pinned:false,
+      created:new Date().toLocaleDateString('pt-BR')
+    });
+  }else{
+    notes.unshift({
+      id:'note-'+Date.now(),
+      title:value.length>42?value.slice(0,42)+'…':value,
+      body:value,
+      project:'',
+      status:'Caixa de entrada',
+      pinned:false,
+      created:new Date().toLocaleDateString('pt-BR')
+    });
+    input.value='';
+  }
+  saveNotes();
+}
+function togglePin(id){
+  const n=notes.find(x=>x.id===id);
+  if(n){n.pinned=!n.pinned;saveNotes();}
+}
+function archiveNote(id){
+  const n=notes.find(x=>x.id===id);
+  if(n){n.status='Arquivada';saveNotes();}
+}
+function renderNotes(){
+  const host=document.getElementById('notesList');
+  const list=[...notes].sort((a,b)=>(Number(b.pinned)-Number(a.pinned)) || b.id.localeCompare(a.id));
+  host.innerHTML=list.map(n=>`
+    <div class="note-card" style="${n.status==='Arquivada'?'opacity:.55':''}">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+        <h3>${n.title}</h3>
+        ${n.pinned?'<span class="note-pin">Fixada</span>':''}
+      </div>
+      <p>${n.body}</p>
+      <div class="note-meta">
+        ${n.project?`<span class="note-chip">${n.project}</span>`:''}
+        <span class="note-chip">${n.status}</span>
+        <span class="note-chip">${n.created}</span>
+      </div>
+      <div class="note-actions">
+        <button onclick="togglePin('${n.id}')">${n.pinned?'Desafixar':'Fixar'}</button>
+        <button onclick="archiveNote('${n.id}')">Arquivar</button>
+        <button onclick="alert('Na versão com banco, esta nota poderá virar pendência, compromisso ou ser vinculada a um projeto.')">Transformar em...</button>
+      </div>
+    </div>`).join('');
+}
+
+const AGENDA_KEY='central-gestao-v17-agenda';
+const AGENDA_SEED=[
+  {
+    id:'annexo-abertura',
+    date:'2026-09-25',
+    time:'A definir',
+    title:'Meta de abertura / 1º evento ANNEXO',
+    project:'ANNEXO',
+    location:'ANNEXO',
+    people:'Equipe do projeto',
+    status:'Planejado',
+    notes:'Marco principal do projeto ANNEXO.'
+  }
+];
+let agenda=[];
+function loadAgenda(){
+  try{
+    const x=JSON.parse(localStorage.getItem(AGENDA_KEY)||'null');
+    agenda=Array.isArray(x)?x:structuredClone(AGENDA_SEED);
+  }catch(e){agenda=structuredClone(AGENDA_SEED)}
+  localStorage.setItem(AGENDA_KEY,JSON.stringify(agenda));
+}
+function showAgenda(){
+  document.getElementById('notesView').classList.add('hidden');
+  document.getElementById('listView').classList.add('hidden');
+  document.getElementById('detailView').classList.add('hidden');
+  document.getElementById('agendaView').classList.remove('hidden');
+  document.getElementById('topTitle').textContent='Agenda';
+  document.getElementById('topSub').textContent='Compromissos pessoais e de projetos';
+  document.querySelectorAll('.side button').forEach(b=>b.classList.remove('active'));
+  const buttons=[...document.querySelectorAll('.side button')];
+  const ag=buttons.find(b=>b.textContent.trim()==='Agenda'); if(ag) ag.classList.add('active');
+  renderAgenda('today');
+  window.scrollTo(0,0);
+}
+function showProjects(){
+  document.getElementById('notesView').classList.add('hidden');
+  document.getElementById('agendaView').classList.add('hidden');
+  document.getElementById('listView').classList.remove('hidden');
+  document.getElementById('detailView').classList.add('hidden');
+  document.getElementById('topTitle').textContent='Transformação KAZ';
+  document.getElementById('topSub').textContent='Programa de gestão dos 7 projetos estruturantes';
+  document.querySelectorAll('.side button').forEach(b=>b.classList.remove('active'));
+  const buttons=[...document.querySelectorAll('.side button')];
+  const p=buttons.find(b=>b.textContent.trim()==='Projetos'); if(p) p.classList.add('active');
+  window.scrollTo(0,0)
+}
+function fmtDate(s){
+  if(!s) return '';
+  const [y,m,d]=s.split('-');
+  return `${d}/${m}/${y}`;
+}
+function renderAgenda(mode='today',btn){
+  if(btn){
+    document.querySelectorAll('.agenda-tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  const today='2026-09-04';
+  let list=[...agenda];
+  if(mode==='today') list=list.filter(e=>e.date===today);
+  if(mode==='week') list=list.filter(e=>e.date>='2026-09-04' && e.date<='2026-09-10');
+  list.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  const host=document.getElementById('agendaList');
+  if(!list.length){
+    host.innerHTML='<div class="empty-agenda">Nenhum compromisso nesta visão. A agenda ficará completa quando conectarmos seus compromissos reais / Google Calendar.</div>';
+    return;
+  }
+  const groups={};
+  list.forEach(e=>{(groups[e.date]??=[]).push(e)});
+  host.innerHTML=Object.entries(groups).map(([date,items])=>`
+    <div class="agenda-day">
+      <h3>${fmtDate(date)}</h3>
+      ${items.map(e=>`
+        <div class="event-card">
+          <div class="event-time">${e.time}</div>
+          <div>
+            <div class="event-title">${e.title}</div>
+            <div class="event-meta">${e.location||'Sem local'}${e.people?' · '+e.people:''}</div>
+            ${e.project?`<span class="event-project">${e.project}</span>`:''}
+          </div>
+          <div class="event-actions"><button onclick="alert('Edição será habilitada com o banco online.')">Abrir</button></div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+load();loadAgenda();loadNotes();renderList();
 </script></body></html>
