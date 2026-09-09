@@ -1,0 +1,911 @@
+{
+  "version": "2.0",
+  "projects": [
+    {
+      "id": "annexo",
+      "name": "ANNEXO",
+      "area": "Operação / Obra",
+      "health": "Crítico",
+      "status": "Urgente",
+      "movement": "Execução crítica",
+      "owner": "Cris",
+      "priority": "Alta",
+      "deadline": "25/09/2026",
+      "deadline_label": "Meta de abertura / 1º evento",
+      "needs_user": "Aprovar decisões críticas de acabamento, prioridades e eventuais exceções de custo/prazo.",
+      "objective": "Concluir a implantação física e operacional do ANNEXO para entrada em funcionamento e realização dos primeiros eventos.",
+      "done": "Espaço pronto para operar, instalações testadas, acabamentos concluídos e primeiro evento realizado com segurança.",
+      "current": "Obra em fase crítica, com coordenação centralizada em Cris e foco nas frentes físicas que impactam a abertura.",
+      "next": "Fechar as frentes críticas e consolidar a lista única de pendências até a abertura.",
+      "fronts": [
+        {
+          "name": "Elétrica",
+          "status": "Crítico",
+          "owner": "Cris / Ricardo",
+          "next": "Fechar pendências elétricas e testar circuitos prioritários.",
+          "id": "annexo-front-1"
+        },
+        {
+          "name": "Iluminação",
+          "status": "Crítico",
+          "owner": "Cris / Ricardo",
+          "next": "Concluir instalação, testes e ajustes de iluminação.",
+          "id": "annexo-front-2"
+        },
+        {
+          "name": "Ar-condicionado",
+          "status": "Atenção",
+          "owner": "Cris",
+          "next": "Validar instalação, funcionamento e pendências finais.",
+          "id": "annexo-front-3"
+        },
+        {
+          "name": "Fachada / Comunicação visual",
+          "status": "Atenção",
+          "owner": "Cris / Maísa",
+          "next": "Fechar acabamentos e elementos visuais da fachada.",
+          "id": "annexo-front-4"
+        },
+        {
+          "name": "Cozinha / Infraestrutura",
+          "status": "Atenção",
+          "owner": "Cris",
+          "next": "Validar infraestrutura, pontos e funcionamento da cozinha.",
+          "id": "annexo-front-5"
+        },
+        {
+          "name": "Acabamentos / Mobiliário",
+          "status": "Atenção",
+          "owner": "Cris / Maísa",
+          "next": "Concluir acabamentos e preparar mobiliário final.",
+          "id": "annexo-front-6"
+        },
+        {
+          "name": "Segurança / Acessibilidade",
+          "status": "Atenção",
+          "owner": "A confirmar",
+          "next": "Validar itens obrigatórios antes da abertura.",
+          "id": "annexo-front-7"
+        },
+        {
+          "name": "Preparação operacional",
+          "status": "Pendente",
+          "owner": "Equipe",
+          "next": "Preparar espaço, testes e rotina para o primeiro evento.",
+          "id": "annexo-front-8"
+        }
+      ],
+      "people": [
+        [
+          "Cris",
+          "Coordenação / liderança da obra"
+        ],
+        [
+          "Maísa",
+          "Apoio de arquitetura"
+        ],
+        [
+          "Ricardo",
+          "Execução / obra"
+        ],
+        [
+          "Rachid",
+          "Direção e decisões"
+        ]
+      ],
+      "tasks": [
+        {
+          "id": "annexo-task-1",
+          "title": "Consolidar lista única de pendências críticas",
+          "owner": "Cris",
+          "due": "Imediato",
+          "priority": "Alta",
+          "status": "Em andamento",
+          "front": "Geral"
+        },
+        {
+          "id": "annexo-task-2",
+          "title": "Fechar elétrica",
+          "owner": "Cris / Ricardo",
+          "due": "Imediato",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Elétrica"
+        },
+        {
+          "id": "annexo-task-3",
+          "title": "Fechar iluminação",
+          "owner": "Cris / Ricardo",
+          "due": "Imediato",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Iluminação"
+        },
+        {
+          "id": "annexo-task-4",
+          "title": "Validar ar-condicionado",
+          "owner": "Cris",
+          "due": "Antes da abertura",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Ar-condicionado"
+        },
+        {
+          "id": "annexo-task-5",
+          "title": "Fechar fachada e comunicação visual",
+          "owner": "Cris / Maísa",
+          "due": "Antes da abertura",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Fachada / Comunicação visual"
+        },
+        {
+          "id": "annexo-task-6",
+          "title": "Validar cozinha e infraestrutura",
+          "owner": "Cris",
+          "due": "Antes da abertura",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Cozinha / Infraestrutura"
+        },
+        {
+          "id": "annexo-task-7",
+          "title": "Concluir acabamentos e mobiliário",
+          "owner": "Cris / Maísa",
+          "due": "Antes da abertura",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Acabamentos / Mobiliário"
+        },
+        {
+          "id": "annexo-task-8",
+          "title": "Validar segurança e acessibilidade",
+          "owner": "A confirmar",
+          "due": "Antes da abertura",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Segurança / Acessibilidade"
+        },
+        {
+          "id": "annexo-task-9",
+          "title": "Preparar espaço para primeiro evento",
+          "owner": "Equipe",
+          "due": "Após frentes críticas",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Preparação operacional"
+        }
+      ],
+      "updates": [
+        [
+          "04/09/2026",
+          "Projeto em atenção máxima",
+          "A obra segue como frente crítica da Central. Cris está centralizando a coordenação e as pendências físicas que impactam diretamente a abertura.",
+          "Fechar frentes críticas e consolidar pendências"
+        ],
+        [
+          "03/09/2026",
+          "Coordenação centralizada",
+          "Cris assumiu a liderança operacional da obra, com acesso e presença recorrente. Maísa segue apoiando e Ricardo permanece na execução.",
+          "Reorganizar cronograma e responsáveis"
+        ]
+      ],
+      "files": [
+        {
+          "name": "Referências de acabamento",
+          "type": "Referência",
+          "date": "03/09/2026",
+          "source": "Arquitetura",
+          "link": ""
+        },
+        {
+          "name": "Conversas e registros da obra",
+          "type": "Histórico",
+          "date": "28/08–03/09",
+          "source": "Coordenação",
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "bar",
+      "name": "Bar",
+      "area": "Operação / Gastronomia",
+      "health": "Atenção",
+      "status": "Estruturação",
+      "movement": "Conceito e operação",
+      "owner": "A confirmar",
+      "priority": "Média",
+      "deadline": "A confirmar",
+      "deadline_label": "Meta / prazo",
+      "needs_user": "Confirmar responsável principal e escopo do projeto.",
+      "objective": "Estruturar o projeto de bar da operação, incluindo conceito, serviço, coquetelaria, fornecedores, equipamentos e integração com os eventos.",
+      "done": "Bar com conceito, ficha de operação, fornecedores, equipamentos, custos e padrão de serviço definidos.",
+      "current": "O projeto está reconhecido como uma das frentes estruturantes da Transformação KAZ, mas o responsável e o cronograma ainda precisam ser reconstituídos do histórico original.",
+      "next": "Confirmar responsável, escopo operacional e cronograma do Bar.",
+      "fronts": [
+        {
+          "name": "Conceito e serviço",
+          "status": "A revisar",
+          "owner": "Rachid",
+          "next": "Recuperar definição original do conceito.",
+          "id": "bar-front-1"
+        },
+        {
+          "name": "Estrutura e equipamentos",
+          "status": "A revisar",
+          "owner": "A confirmar",
+          "next": "Consolidar necessidades físicas e equipamentos.",
+          "id": "bar-front-2"
+        },
+        {
+          "name": "Fornecedores e insumos",
+          "status": "A revisar",
+          "owner": "A confirmar",
+          "next": "Recuperar fornecedores e critérios de compra.",
+          "id": "bar-front-3"
+        },
+        {
+          "name": "Operação e custos",
+          "status": "A revisar",
+          "owner": "A confirmar",
+          "next": "Formalizar rotina e estrutura de custos.",
+          "id": "bar-front-4"
+        }
+      ],
+      "people": [
+        [
+          "Rachid",
+          "Direção / definição de conceito"
+        ],
+        [
+          "Responsável do Bar",
+          "A confirmar"
+        ]
+      ],
+      "tasks": [
+        {
+          "id": "bar-task-1",
+          "title": "Confirmar responsável principal do Bar",
+          "owner": "Rachid",
+          "due": "Próxima revisão",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Geral"
+        },
+        {
+          "id": "bar-task-2",
+          "title": "Recuperar pendências originais do Bar",
+          "owner": "Central de Gestão",
+          "due": "Próxima revisão",
+          "priority": "Média",
+          "status": "Pendente",
+          "front": "Geral"
+        }
+      ],
+      "updates": [
+        [
+          "04/09/2026",
+          "Projeto restabelecido na Central",
+          "Bar voltou ao conjunto oficial dos sete projetos. A estrutura básica foi recomposta sem inventar responsáveis ou prazos não recuperados.",
+          "Confirmar responsável e cronograma original"
+        ]
+      ],
+      "files": []
+    },
+    {
+      "id": "financeiro-contabil",
+      "name": "Financeiro / Contábil",
+      "area": "Financeiro",
+      "health": "Atenção",
+      "status": "Estruturação",
+      "movement": "Fluxos e controles",
+      "owner": "Vini / a confirmar",
+      "priority": "Alta",
+      "deadline": "A confirmar",
+      "deadline_label": "Meta / prazo",
+      "needs_user": "Validar escopo contábil e responsáveis além do financeiro operacional.",
+      "objective": "Organizar os fluxos financeiro e contábil ligados à nova operação, com responsabilidades, aprovações, tabelas, controles e integração com os demais sistemas.",
+      "done": "Fluxos financeiro/contábil formalizados, responsáveis definidos, controles recorrentes operando e dados integrados à gestão.",
+      "current": "Há uma base operacional recuperada: Vini participa do financeiro no fluxo da venda à entrega e os valores precisam seguir tabela pré-cadastrada e regras de exceção.",
+      "next": "Consolidar o fluxo financeiro atual e recuperar as pendências contábeis originais.",
+      "fronts": [
+        {
+          "name": "Fluxo financeiro",
+          "status": "Em estruturação",
+          "owner": "Vini",
+          "next": "Documentar entradas, aprovações e passagem para operação.",
+          "id": "financeiro-contabil-front-1"
+        },
+        {
+          "name": "Tabela de valores",
+          "status": "Em estruturação",
+          "owner": "Vini / Vancler",
+          "next": "Consolidar tabela e regras de exceção.",
+          "id": "financeiro-contabil-front-2"
+        },
+        {
+          "name": "Contábil",
+          "status": "A revisar",
+          "owner": "A confirmar",
+          "next": "Recuperar escopo e responsáveis.",
+          "id": "financeiro-contabil-front-3"
+        },
+        {
+          "name": "Fechamentos / controles",
+          "status": "A revisar",
+          "owner": "A confirmar",
+          "next": "Definir rotina e indicadores recorrentes.",
+          "id": "financeiro-contabil-front-4"
+        }
+      ],
+      "people": [
+        [
+          "Vini",
+          "Financeiro"
+        ],
+        [
+          "Rachid",
+          "Direção / decisões"
+        ],
+        [
+          "Vancler",
+          "Compras / tabela - quando aplicável"
+        ]
+      ],
+      "tasks": [
+        {
+          "id": "financeiro-contabil-task-1",
+          "title": "Documentar fluxo financeiro atual",
+          "owner": "Vini",
+          "due": "Próxima revisão",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Fluxo financeiro"
+        },
+        {
+          "id": "financeiro-contabil-task-2",
+          "title": "Consolidar tabela de valores e exceções",
+          "owner": "Vini / Vancler",
+          "due": "Próxima revisão",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Tabela de valores"
+        },
+        {
+          "id": "financeiro-contabil-task-3",
+          "title": "Recuperar escopo contábil original",
+          "owner": "Central de Gestão",
+          "due": "Próxima revisão",
+          "priority": "Média",
+          "status": "Pendente",
+          "front": "Contábil"
+        }
+      ],
+      "updates": [
+        [
+          "04/09/2026",
+          "Fluxo financeiro parcialmente reconstruído",
+          "Foi recuperado que o financeiro entra após definição de escopo/valores e antes da continuidade operacional. Vini é uma pessoa-chave nesse fluxo.",
+          "Consolidar fluxo e recuperar frente contábil"
+        ]
+      ],
+      "files": []
+    },
+    {
+      "id": "enjoy-albuns",
+      "name": "Enjoy / Álbuns",
+      "area": "Operação / Produto",
+      "health": "Atenção",
+      "status": "Em desenvolvimento",
+      "movement": "Fluxo operacional / sistema",
+      "owner": "Equipe de Álbuns",
+      "priority": "Alta",
+      "deadline": "A confirmar",
+      "deadline_label": "Meta / prazo",
+      "needs_user": "Nenhuma decisão crítica registrada no momento.",
+      "objective": "Prever volume mensal da gráfica e controlar o fluxo completo de escolha de fotos, tratamento, diagramação, impressão, início de venda e venda.",
+      "done": "Fluxo completo operando por contrato/turma, com responsáveis, templates, alertas e status atualizados até a venda.",
+      "current": "Regras do montador, tratamento e templates já foram definidas. A próxima validação é operacional, especialmente tela do montador e responsabilidades por turma.",
+      "next": "Validar tela do montador e fluxo real por turma.",
+      "fronts": [
+        {
+          "name": "Fotos e tratamento",
+          "status": "Definido",
+          "owner": "Editores",
+          "next": "Validar operação real e exceções.",
+          "id": "enjoy-albuns-front-1"
+        },
+        {
+          "name": "Templates",
+          "status": "Atenção",
+          "owner": "A definir por turma",
+          "next": "Definir responsáveis e múltiplos templates.",
+          "id": "enjoy-albuns-front-2"
+        },
+        {
+          "name": "Montagem / diagramação",
+          "status": "Atenção",
+          "owner": "Diagramadores",
+          "next": "Validar tela do montador.",
+          "id": "enjoy-albuns-front-3"
+        },
+        {
+          "name": "Impressão",
+          "status": "Planejado",
+          "owner": "Equipe",
+          "next": "Integrar previsão mensal e alertas.",
+          "id": "enjoy-albuns-front-4"
+        },
+        {
+          "name": "Venda",
+          "status": "Planejado",
+          "owner": "Equipe",
+          "next": "Validar mudança de status para venda iniciada/vendido.",
+          "id": "enjoy-albuns-front-5"
+        }
+      ],
+      "people": [
+        [
+          "Equipe de Álbuns",
+          "Operação"
+        ],
+        [
+          "Diagramadores",
+          "Montagem"
+        ],
+        [
+          "Editores",
+          "Tratamento"
+        ],
+        [
+          "Responsável de templates",
+          "Por turma - a definir"
+        ]
+      ],
+      "tasks": [
+        {
+          "id": "enjoy-albuns-task-1",
+          "title": "Validar tela do montador",
+          "owner": "Equipe de Álbuns",
+          "due": "Próxima revisão",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Montagem / diagramação"
+        },
+        {
+          "id": "enjoy-albuns-task-2",
+          "title": "Definir responsável de templates por turma",
+          "owner": "Equipe de Álbuns",
+          "due": "Próxima revisão",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Templates"
+        },
+        {
+          "id": "enjoy-albuns-task-3",
+          "title": "Testar fluxo completo com uma turma real",
+          "owner": "Equipe de Álbuns",
+          "due": "Após validação",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Geral"
+        }
+      ],
+      "updates": [
+        [
+          "28/08/2026",
+          "Regras operacionais consolidadas",
+          "Montador não altera tratamento; se houver problema, aciona editor. Múltiplos templates podem existir por evento e templates precisam ter responsável por turma.",
+          "Validar tela do montador e piloto real"
+        ]
+      ],
+      "files": [
+        {
+          "name": "Regras do fluxo de álbuns",
+          "type": "Documento",
+          "date": "28/08/2026",
+          "source": "Operação",
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "sistema-vendas",
+      "name": "Sistema de Vendas",
+      "area": "Comercial / Sistema",
+      "health": "Atenção",
+      "status": "Implantação",
+      "movement": "Implantação real",
+      "owner": "Ana / Coordenadores",
+      "priority": "Alta",
+      "deadline": "Imediato",
+      "deadline_label": "Meta / prazo",
+      "needs_user": "Acompanhar adesão real e destravar decisões de implantação.",
+      "objective": "Colocar o Comercial da KAZ dentro de um fluxo único e registrado no sistema, com rotina clara de captação, reunião, orçamento, acompanhamento e responsabilidade por carteira.",
+      "done": "Carteira real operando integralmente no sistema, coordenadores acompanhando rotina e informações comerciais registradas de forma consistente.",
+      "current": "O sistema é o núcleo do novo modelo comercial. O foco está em colocar a operação real no fluxo.",
+      "next": "Colocar 100% da operação comercial real dentro do sistema.",
+      "fronts": [
+        {
+          "name": "Carteiras comerciais",
+          "status": "Em implantação",
+          "owner": "Coordenadores",
+          "next": "Validar carteiras no novo modelo.",
+          "id": "sistema-vendas-front-1"
+        },
+        {
+          "name": "Rotina comercial",
+          "status": "Em implantação",
+          "owner": "Ana / Coordenadores",
+          "next": "Consolidar rotina de captação, reunião e orçamento.",
+          "id": "sistema-vendas-front-2"
+        },
+        {
+          "name": "Registro no sistema",
+          "status": "Atenção",
+          "owner": "Vendedores",
+          "next": "Garantir registro de informações relevantes.",
+          "id": "sistema-vendas-front-3"
+        },
+        {
+          "name": "Supervisão",
+          "status": "Atenção",
+          "owner": "Coordenadores",
+          "next": "Formalizar acompanhamento recorrente.",
+          "id": "sistema-vendas-front-4"
+        }
+      ],
+      "people": [
+        [
+          "Ana",
+          "Rotina / sistema"
+        ],
+        [
+          "Coordenadores",
+          "Estratégia e acompanhamento"
+        ],
+        [
+          "Vendedores",
+          "Captação e relacionamento"
+        ],
+        [
+          "Rachid",
+          "Direção / implantação"
+        ]
+      ],
+      "tasks": [
+        {
+          "id": "sistema-vendas-task-1",
+          "title": "Concluir adoção do sistema pelo Comercial",
+          "owner": "Ana / Coordenadores",
+          "due": "Imediato",
+          "priority": "Alta",
+          "status": "Em andamento",
+          "front": "Registro no sistema"
+        },
+        {
+          "id": "sistema-vendas-task-2",
+          "title": "Cobrar registro de reuniões e informações relevantes",
+          "owner": "Coordenadores",
+          "due": "Diário",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Supervisão"
+        },
+        {
+          "id": "sistema-vendas-task-3",
+          "title": "Formalizar rotina dos coordenadores",
+          "owner": "Ana / Coordenadores",
+          "due": "Imediato",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Rotina comercial"
+        }
+      ],
+      "updates": [
+        [
+          "04/09/2026",
+          "Implantação segue como prioridade",
+          "O sistema permanece como núcleo da transformação comercial. A principal meta é tirar o fluxo do campo conceitual e colocar a operação real dentro dele.",
+          "Colocar operação real no sistema"
+        ],
+        [
+          "02/09/2026",
+          "Fluxo comercial consolidado",
+          "Rotina de captação, visitas, reuniões, orçamento, acompanhamento e registro no sistema foi detalhada.",
+          "Implantar com carteira real"
+        ]
+      ],
+      "files": [
+        {
+          "name": "Ata da reunião do Sistema de Vendas",
+          "type": "Ata",
+          "date": "02/09/2026",
+          "source": "Reunião",
+          "link": ""
+        },
+        {
+          "name": "Fluxo comercial e operacional",
+          "type": "Documento",
+          "date": "02/09/2026",
+          "source": "Processo",
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "sistema-entrega",
+      "name": "Sistema de Entrega",
+      "area": "Operação / Sistema",
+      "health": "Atenção",
+      "status": "Estruturação",
+      "movement": "Fluxo da venda à entrega",
+      "owner": "Operação / a confirmar",
+      "priority": "Alta",
+      "deadline": "A confirmar",
+      "deadline_label": "Meta / prazo",
+      "needs_user": "Confirmar responsável geral do fluxo e aprovar desenho operacional.",
+      "objective": "Organizar o fluxo operacional completo após a venda, distribuindo responsabilidades entre assessor, financeiro, local, detalhamento, compras e execução.",
+      "done": "Fluxo pós-venda operando no sistema, com responsáveis por etapa, informações completas e passagem organizada até a execução do evento.",
+      "current": "O fluxo foi recuperado com boa clareza: comissão confirma → assessor define escopo e valores → financeiro → escolha de local → detalhamento → compras → execução.",
+      "next": "Transformar esse fluxo em frentes operacionais do sistema e testar com um caso real.",
+      "fronts": [
+        {
+          "name": "Escopo / assessor",
+          "status": "Definido",
+          "owner": "Assessor",
+          "next": "Transformar regra em etapa do sistema.",
+          "id": "sistema-entrega-front-1"
+        },
+        {
+          "name": "Financeiro",
+          "status": "Definido",
+          "owner": "Vini",
+          "next": "Integrar aprovação e tabela.",
+          "id": "sistema-entrega-front-2"
+        },
+        {
+          "name": "Local",
+          "status": "Definido",
+          "owner": "Ju Hirota",
+          "next": "Modelar seleção de local.",
+          "id": "sistema-entrega-front-3"
+        },
+        {
+          "name": "Detalhamento",
+          "status": "Definido",
+          "owner": "Juliana",
+          "next": "Modelar cardápio e cronograma.",
+          "id": "sistema-entrega-front-4"
+        },
+        {
+          "name": "Compras",
+          "status": "Definido",
+          "owner": "Vancler",
+          "next": "Integrar lista e tabela.",
+          "id": "sistema-entrega-front-5"
+        },
+        {
+          "name": "Execução",
+          "status": "A estruturar",
+          "owner": "Operação",
+          "next": "Definir passagem final e acompanhamento.",
+          "id": "sistema-entrega-front-6"
+        }
+      ],
+      "people": [
+        [
+          "Assessor",
+          "Definição de escopo e valores"
+        ],
+        [
+          "Vini",
+          "Financeiro"
+        ],
+        [
+          "Ju Hirota",
+          "Escolha de local"
+        ],
+        [
+          "Juliana",
+          "Detalhamento"
+        ],
+        [
+          "Vancler",
+          "Compras / tabela"
+        ],
+        [
+          "Oscar",
+          "Especificações"
+        ],
+        [
+          "Raquel",
+          "Pós-venda"
+        ]
+      ],
+      "tasks": [
+        {
+          "id": "sistema-entrega-task-1",
+          "title": "Desenhar etapas do fluxo no sistema",
+          "owner": "Operação",
+          "due": "Próxima revisão",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Geral"
+        },
+        {
+          "id": "sistema-entrega-task-2",
+          "title": "Definir responsável geral do Sistema de Entrega",
+          "owner": "Rachid",
+          "due": "Próxima revisão",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Geral"
+        },
+        {
+          "id": "sistema-entrega-task-3",
+          "title": "Testar fluxo com um evento real",
+          "owner": "Operação",
+          "due": "Após desenho",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Execução"
+        }
+      ],
+      "updates": [
+        [
+          "02/09/2026",
+          "Fluxo da venda à entrega consolidado",
+          "Foi definido o encadeamento entre comissão, assessor, financeiro, local, detalhamento, compras e execução.",
+          "Modelar etapas e testar com caso real"
+        ]
+      ],
+      "files": [
+        {
+          "name": "Fluxo operacional da venda à entrega",
+          "type": "Documento",
+          "date": "02/09/2026",
+          "source": "Processo",
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "sistema-comissao",
+      "name": "Sistema da Comissão",
+      "area": "Comercial / Relacionamento",
+      "health": "Atenção",
+      "status": "Estruturação",
+      "movement": "Entrada e passagem para operação",
+      "owner": "Coordenadores / a confirmar",
+      "priority": "Alta",
+      "deadline": "A confirmar",
+      "deadline_label": "Meta / prazo",
+      "needs_user": "Validar campos obrigatórios e regra de passagem para o assessor.",
+      "objective": "Organizar a relação com as comissões e transformar a confirmação do evento em uma entrada estruturada para o fluxo operacional.",
+      "done": "Comissão com interação registrada, informações completas no sistema e passagem organizada para assessor/produção sem perda de contexto.",
+      "current": "A comissão é o gatilho inicial do fluxo de entrega: confirma o evento e precisa alimentar o sistema com briefing e informações relevantes.",
+      "next": "Formalizar quais informações a comissão deve registrar e como ocorre a passagem para o assessor.",
+      "fronts": [
+        {
+          "name": "Confirmação",
+          "status": "Definido",
+          "owner": "Comissão / Comercial",
+          "next": "Formalizar gatilho de entrada.",
+          "id": "sistema-comissao-front-1"
+        },
+        {
+          "name": "Briefing",
+          "status": "A estruturar",
+          "owner": "Comissão / Vendedores",
+          "next": "Definir informações mínimas obrigatórias.",
+          "id": "sistema-comissao-front-2"
+        },
+        {
+          "name": "Passagem para assessor",
+          "status": "A estruturar",
+          "owner": "Operação",
+          "next": "Definir regra e responsável.",
+          "id": "sistema-comissao-front-3"
+        },
+        {
+          "name": "Pendências da comissão",
+          "status": "A estruturar",
+          "owner": "Coordenadores",
+          "next": "Definir acompanhamento e cobranças.",
+          "id": "sistema-comissao-front-4"
+        }
+      ],
+      "people": [
+        [
+          "Comissão",
+          "Cliente / origem das informações"
+        ],
+        [
+          "Coordenadores",
+          "Acompanhamento"
+        ],
+        [
+          "Vendedores",
+          "Relacionamento"
+        ],
+        [
+          "Assessor",
+          "Recebe escopo após confirmação"
+        ]
+      ],
+      "tasks": [
+        {
+          "id": "sistema-comissao-task-1",
+          "title": "Definir informações mínimas obrigatórias da comissão",
+          "owner": "Coordenadores / Vendedores",
+          "due": "Próxima revisão",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Briefing"
+        },
+        {
+          "id": "sistema-comissao-task-2",
+          "title": "Definir passagem para o assessor",
+          "owner": "Operação",
+          "due": "Próxima revisão",
+          "priority": "Alta",
+          "status": "Pendente",
+          "front": "Passagem para assessor"
+        }
+      ],
+      "updates": [
+        [
+          "04/09/2026",
+          "Projeto reconstruído a partir do fluxo operacional",
+          "Foi recuperado o papel da comissão como ponto de confirmação e origem das informações que alimentam a operação.",
+          "Formalizar campos obrigatórios e passagem ao assessor"
+        ]
+      ],
+      "files": []
+    }
+  ],
+  "notes": [
+    {
+      "id": "nota-central-gestao",
+      "title": "Central de Gestão",
+      "body": "Desenvolver e colocar em operação esta solução de gestão pessoal de projetos, agenda, notas, pendências, pessoas, diário e arquivos.",
+      "project": "Central de Gestão",
+      "status": "Em andamento",
+      "pinned": true,
+      "created": "04/09/2026"
+    },
+    {
+      "id": "nota-sistema-anexxo",
+      "title": "Sistema Anexxo",
+      "body": "Continuar o desenvolvimento e testes do Sistema Anexxo, incluindo o piloto com evento real e os ajustes de fluxo.",
+      "project": "Sistema Anexxo",
+      "status": "Em andamento",
+      "pinned": true,
+      "created": "04/09/2026"
+    },
+    {
+      "id": "nota-novas-telas",
+      "title": "Novas telas do sistema",
+      "body": "Desenvolver e revisar as novas telas do sistema que estão sendo trabalhadas em paralelo.",
+      "project": "Sistema / UX",
+      "status": "Em andamento",
+      "pinned": true,
+      "created": "04/09/2026"
+    }
+  ],
+  "agenda": [
+    {
+      "id": "annexo-abertura",
+      "date": "2026-09-25",
+      "time": "A definir",
+      "title": "Meta de abertura / 1º evento ANNEXO",
+      "project": "ANNEXO",
+      "location": "ANNEXO",
+      "people": "Equipe do projeto",
+      "status": "Planejado",
+      "notes": "Marco principal do projeto ANNEXO."
+    }
+  ]
+}
