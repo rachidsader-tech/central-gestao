@@ -1,17 +1,14 @@
-# Central de Gestão — Projetos
+# Central de Gestão — V2.0 Operacional
 
-Versão de teste para GitHub Pages.
+A V2.0 deixa de ser apenas consulta e passa a ser alimentável durante o dia.
 
-## Publicar
+Funcional agora, com persistência no navegador:
+- Notas: criar, editar, fixar e transformar em pendência ou compromisso.
+- Agenda: criar e editar compromissos, com vínculo opcional a projeto.
+- Pendências: criar, editar, concluir/reabrir e consultar em visão global.
+- Frentes: editar status, responsável e próxima ação diretamente no projeto.
+- Backup JSON da base local.
 
-1. Crie um repositório novo no GitHub, por exemplo `central-gestao`.
-2. Faça upload de todo o conteúdo deste pacote para a branch `main`.
-3. No GitHub, vá em **Settings → Pages**.
-4. Em **Build and deployment / Source**, selecione **GitHub Actions**.
-5. Abra a aba **Actions** e aguarde o workflow `Deploy GitHub Pages`.
-6. O GitHub mostrará a URL pública do sistema.
-
-## Dados
-
-Esta versão já nasce com os projetos reais carregados. Os dados ficam em `localStorage` do navegador durante o teste.  
-O próximo passo, após validar o uso em URL real, é conectar Supabase para login, multiusuário, arquivos reais e persistência centralizada.
+Persistência:
+- Nesta etapa os dados ficam no localStorage do navegador.
+- O próximo passo técnico é Supabase para persistência central, login, múltiplos dispositivos e arquivos reais.
