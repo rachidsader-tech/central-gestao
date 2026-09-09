@@ -1,11 +1,21 @@
-# Central de Gestão — V3.2 Render/PostgreSQL
+# Central de Gestão — V3.3
 
-Correção do deploy no Render:
-- driver PostgreSQL atualizado para `psycopg[binary]==3.3.5`;
-- URI do PostgreSQL usa explicitamente o driver SQLAlchemy `postgresql+psycopg://`;
-- removido `__pycache__` do pacote.
+Correção do seed inicial no PostgreSQL.
 
-## Publicação
-Suba todo o conteúdo deste pacote na raiz do repositório `central-gestao`, sobrescrevendo os arquivos existentes.
+## O que foi corrigido
+O deploy anterior conectava corretamente ao PostgreSQL, mas falhava ao inserir
+`fronts` porque o PostgreSQL recebia registros filhos antes de os respectivos
+`projects` estarem persistidos.
 
-O serviço existente `central-gestao-app-v31` está conectado à branch `main`, então o commit deve disparar novo deploy automático. Não crie outro Blueprint nem outro banco.
+A V3.3:
+- persiste/flush os projetos antes de frentes, tarefas e diário;
+- torna o seed idempotente para permitir reinícios sem duplicar dados;
+- preserva os mesmos serviços Render já criados;
+- mantém psycopg 3.3.5 e a configuração atual do banco.
+
+## Como atualizar
+Suba todo o conteúdo deste pacote na raiz do repositório `central-gestao`,
+sobrescrevendo os arquivos existentes, e faça commit na branch `main`.
+
+Não crie novo Blueprint, novo Web Service ou novo banco. O serviço
+`central-gestao-app-v31` deve fazer Auto-Deploy após o commit.

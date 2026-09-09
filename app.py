@@ -159,23 +159,109 @@ def index():
 
 
 def seed_if_empty():
-    if Project.query.count()>0: return
+    """
+    Carrega a base inicial de forma idempotente.
+
+    No PostgreSQL, os registros filhos (frentes, tarefas e diário) possuem
+    foreign key para projects.id. Portanto primeiro garantimos e persistimos
+    todos os projetos; só depois inserimos os registros dependentes.
+    """
     seed_path=os.path.join(app.root_path,'data','seed.json')
-    with open(seed_path,encoding='utf-8') as f: seed=json.load(f)
+    with open(seed_path,encoding='utf-8') as f:
+        seed=json.load(f)
+
+    # 1) Pais primeiro: projetos.
     for p in seed.get('projects',[]):
-        pr=Project(id=p['id'],name=p['name'],area=p.get('area'),health=p.get('health'),status=p.get('status'),movement=p.get('movement'),owner=p.get('owner'),priority=p.get('priority'),deadline=p.get('deadline'),deadline_label=p.get('deadline_label'),needs_user=p.get('needs_user'),objective=p.get('objective'),done_criteria=p.get('done'),current_state=p.get('current'),next_action=p.get('next'),people=p.get('people',[]))
+        pr=db.session.get(Project,p['id'])
+        if not pr:
+            pr=Project(id=p['id'],name=p['name'])
+        pr.name=p['name']
+        pr.area=p.get('area')
+        pr.health=p.get('health')
+        pr.status=p.get('status')
+        pr.movement=p.get('movement')
+        pr.owner=p.get('owner')
+        pr.priority=p.get('priority')
+        pr.deadline=p.get('deadline')
+        pr.deadline_label=p.get('deadline_label')
+        pr.needs_user=p.get('needs_user')
+        pr.objective=p.get('objective')
+        pr.done_criteria=p.get('done')
+        pr.current_state=p.get('current')
+        pr.next_action=p.get('next')
+        pr.people=p.get('people',[])
         db.session.add(pr)
+
+    # Flush força os INSERTs de projects antes dos filhos, sem encerrar a transação.
+    db.session.flush()
+
+    # 2) Filhos: frentes, tarefas e histórico.
+    for p in seed.get('projects',[]):
         for i,f in enumerate(p.get('fronts',[])):
-            db.session.add(Front(id=f.get('id') or f"{p['id']}-front-{i+1}",project_id=p['id'],name=f.get('name',''),status=f.get('status'),owner=f.get('owner'),next_action=f.get('next'),position=i))
+            fid=f.get('id') or f"{p['id']}-front-{i+1}"
+            front=db.session.get(Front,fid)
+            if not front:
+                front=Front(id=fid,project_id=p['id'],name=f.get('name',''))
+            front.project_id=p['id']
+            front.name=f.get('name','')
+            front.status=f.get('status')
+            front.owner=f.get('owner')
+            front.next_action=f.get('next')
+            front.position=i
+            db.session.add(front)
+
         for i,t in enumerate(p.get('tasks',[])):
-            db.session.add(Task(id=t.get('id') or f"{p['id']}-task-{i+1}",project_id=p['id'],title=t.get('title',''),owner=t.get('owner'),due=t.get('due'),priority=t.get('priority'),status=t.get('status'),front=t.get('front')))
+            tid=t.get('id') or f"{p['id']}-task-{i+1}"
+            task=db.session.get(Task,tid)
+            if not task:
+                task=Task(id=tid,project_id=p['id'],title=t.get('title',''))
+            task.project_id=p['id']
+            task.title=t.get('title','')
+            task.owner=t.get('owner')
+            task.due=t.get('due')
+            task.priority=t.get('priority')
+            task.status=t.get('status')
+            task.front=t.get('front')
+            db.session.add(task)
+
         for u in p.get('updates',[]):
             if isinstance(u,list) and len(u)>=4:
-                db.session.add(JournalEntry(project_id=p['id'],entry_date=u[0],title=u[1],summary=u[2],next_action=u[3],source='seed'))
+                exists=JournalEntry.query.filter_by(
+                    project_id=p['id'], entry_date=u[0], title=u[1], source='seed'
+                ).first()
+                if not exists:
+                    db.session.add(JournalEntry(
+                        project_id=p['id'],entry_date=u[0],title=u[1],
+                        summary=u[2],next_action=u[3],source='seed'
+                    ))
+
+    # 3) Dados independentes.
     for n in seed.get('notes',[]):
-        db.session.add(Note(id=n['id'],title=n.get('title','Sem título'),body=n.get('body'),project=n.get('project'),status=n.get('status'),pinned=bool(n.get('pinned')),created_label=n.get('created')))
+        note=db.session.get(Note,n['id'])
+        if not note:
+            note=Note(id=n['id'],title=n.get('title','Sem título'))
+        note.title=n.get('title','Sem título')
+        note.body=n.get('body')
+        note.project=n.get('project')
+        note.status=n.get('status')
+        note.pinned=bool(n.get('pinned'))
+        note.created_label=n.get('created')
+        db.session.add(note)
+
     for e in seed.get('agenda',[]):
-        db.session.add(AgendaEvent(id=e['id'],date=e.get('date',''),time_label=e.get('time'),title=e.get('title','Sem título'),project=e.get('project'),location=e.get('location'),people=e.get('people'),status=e.get('status'),notes=e.get('notes')))
+        event=db.session.get(AgendaEvent,e['id'])
+        if not event:
+            event=AgendaEvent(id=e['id'],date=e.get('date',''),title=e.get('title','Sem título'))
+        event.date=e.get('date','')
+        event.time_label=e.get('time')
+        event.title=e.get('title','Sem título')
+        event.project=e.get('project')
+        event.location=e.get('location')
+        event.people=e.get('people')
+        event.status=e.get('status')
+        event.notes=e.get('notes')
+        db.session.add(event)
+
     db.session.commit()
 
 
@@ -198,7 +284,7 @@ def project_to_dict(p):
 @login_required
 def api_state():
     return jsonify({
-        'version':'3.1',
+        'version':'3.3',
         'projects':[project_to_dict(p) for p in Project.query.order_by(Project.created_at).all()],
         'notes':[{'id':n.id,'title':n.title,'body':n.body,'project':n.project,'status':n.status,'pinned':n.pinned,'created':n.created_label} for n in Note.query.order_by(Note.pinned.desc(),Note.updated_at.desc()).all()],
         'agenda':[{'id':e.id,'date':e.date,'time':e.time_label,'title':e.title,'project':e.project,'location':e.location,'people':e.people,'status':e.status,'notes':e.notes} for e in AgendaEvent.query.order_by(AgendaEvent.date,AgendaEvent.time_label).all()]
