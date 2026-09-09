@@ -196,7 +196,7 @@ def project_to_dict(p):
 @login_required
 def api_state():
     return jsonify({
-        'version':'3.0',
+        'version':'3.1',
         'projects':[project_to_dict(p) for p in Project.query.order_by(Project.created_at).all()],
         'notes':[{'id':n.id,'title':n.title,'body':n.body,'project':n.project,'status':n.status,'pinned':n.pinned,'created':n.created_label} for n in Note.query.order_by(Note.pinned.desc(),Note.updated_at.desc()).all()],
         'agenda':[{'id':e.id,'date':e.date,'time':e.time_label,'title':e.title,'project':e.project,'location':e.location,'people':e.people,'status':e.status,'notes':e.notes} for e in AgendaEvent.query.order_by(AgendaEvent.date,AgendaEvent.time_label).all()]
@@ -297,6 +297,62 @@ def daily_import():
         for t in upd.get('tasks_create',[]):
             db.session.add(Task(id=t.get('id') or f"task-{int(datetime.utcnow().timestamp()*1000)}-{secrets.token_hex(2)}",project_id=p.id,title=t.get('title','Sem título'),owner=t.get('owner'),due=t.get('due'),priority=t.get('priority'),status=t.get('status','Pendente'),front=t.get('front','Geral')))
     db.session.add(DailyImport(import_key=key,payload=payload)); db.session.commit(); return jsonify({'ok':True})
+
+
+@app.route('/api/import-backup',methods=['POST'])
+@login_required
+def import_backup():
+    payload=request.get_json(force=True)
+    if not isinstance(payload,dict):
+        return jsonify({'error':'backup inválido'}),400
+
+    project_ids={p.id for p in Project.query.all()}
+    for p in payload.get('projects',[]):
+        pid=p.get('id')
+        if not pid:
+            continue
+        pr=db.session.get(Project,pid)
+        if not pr:
+            pr=Project(id=pid,name=p.get('name') or pid)
+            db.session.add(pr)
+            project_ids.add(pid)
+        mapping={
+            'name':'name','area':'area','health':'health','status':'status','movement':'movement',
+            'owner':'owner','priority':'priority','deadline':'deadline','deadline_label':'deadline_label',
+            'needs_user':'needs_user','objective':'objective','done':'done_criteria','current':'current_state','next':'next_action'
+        }
+        for k,attr in mapping.items():
+            if k in p:
+                setattr(pr,attr,p.get(k))
+        if 'people' in p:
+            pr.people=p.get('people') or []
+        for i,f in enumerate(p.get('fronts',[])):
+            fid=f.get('id') or f"{pid}-front-{i+1}"
+            fr=db.session.get(Front,fid) or Front(id=fid,project_id=pid,name=f.get('name') or '')
+            fr.project_id=pid; fr.name=f.get('name') or fr.name; fr.status=f.get('status'); fr.owner=f.get('owner'); fr.next_action=f.get('next'); fr.position=i
+            db.session.add(fr)
+        for i,t in enumerate(p.get('tasks',[])):
+            tid=t.get('id') or f"{pid}-task-{i+1}"
+            task=db.session.get(Task,tid) or Task(id=tid,project_id=pid,title=t.get('title') or 'Sem título')
+            task.project_id=pid; task.title=t.get('title') or task.title; task.owner=t.get('owner'); task.due=t.get('due'); task.priority=t.get('priority'); task.status=t.get('status'); task.front=t.get('front')
+            db.session.add(task)
+
+    for n in payload.get('notes',[]):
+        nid=n.get('id')
+        if not nid: continue
+        note=db.session.get(Note,nid) or Note(id=nid,title=n.get('title') or 'Sem título')
+        note.title=n.get('title') or note.title; note.body=n.get('body'); note.project=n.get('project'); note.status=n.get('status'); note.pinned=bool(n.get('pinned')); note.created_label=n.get('created')
+        db.session.add(note)
+
+    for e in payload.get('agenda',[]):
+        eid=e.get('id')
+        if not eid: continue
+        ev=db.session.get(AgendaEvent,eid) or AgendaEvent(id=eid,date=e.get('date') or '',title=e.get('title') or 'Sem título')
+        ev.date=e.get('date') or ev.date; ev.time_label=e.get('time'); ev.title=e.get('title') or ev.title; ev.project=e.get('project'); ev.location=e.get('location'); ev.people=e.get('people'); ev.status=e.get('status'); ev.notes=e.get('notes')
+        db.session.add(ev)
+
+    db.session.commit()
+    return jsonify({'ok':True})
 
 @app.route('/health')
 def health(): return jsonify({'ok':True})

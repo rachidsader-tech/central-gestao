@@ -1,0 +1,8 @@
+Arquivos antigos que podem ser removidos do repositório depois que a V3.1 estiver funcionando no Render:
+
+- index.html
+- config.js
+- pasta supabase/
+
+Eles pertencem às versões GitHub Pages/Supabase e não são usados pela aplicação Flask/Render.
+Não é obrigatório apagá-los antes do deploy da V3.1.
