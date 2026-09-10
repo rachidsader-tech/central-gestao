@@ -2,367 +2,1013 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Central de Gestão V2.0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transformação KAZ</title>
 <style>
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:#f5f6f8;color:#15171a}
-.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}.side{background:#111827;color:#fff;padding:22px 15px;position:sticky;top:0;height:100vh}
-.brand{font-size:18px;font-weight:800;margin:4px 9px 28px}.brand small{display:block;color:#9ca3af;font-size:11px;font-weight:500;margin-top:3px}
-.side button{display:block;width:100%;border:0;background:transparent;color:#cbd5e1;text-align:left;padding:11px 13px;border-radius:9px;font-size:14px;cursor:pointer;margin:3px 0}
-.side button:hover,.side button.active{background:#1f2937;color:#fff}.top{background:#fff;border-bottom:1px solid #e5e7eb;padding:18px 28px;display:flex;justify-content:space-between;align-items:center;gap:14px}
-.top h1{margin:0;font-size:23px}.top p{margin:4px 0 0;color:#6b7280;font-size:12px}.top-actions{display:flex;gap:8px;align-items:center}.save-state{font-size:11px;color:#6b7280}
-.content{padding:26px}.panel,.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px}.panel{padding:18px}
-.program{background:#111827;color:#fff;border-radius:14px;padding:20px;margin-bottom:18px;display:flex;justify-content:space-between;gap:18px;align-items:center}.program h2{margin:0 0 5px;font-size:20px}.program p{margin:0;color:#cbd5e1;font-size:13px}.program .count{font-size:28px;font-weight:800}
-.btn{border:0;border-radius:9px;padding:9px 12px;cursor:pointer;background:#111827;color:#fff}.btn.light{background:#f3f4f6;color:#111827}.btn.danger{background:#fee2e2;color:#991b1b}.btn.small{padding:6px 8px;font-size:11px}
-.project-row{width:100%;display:grid;grid-template-columns:1.35fr .85fr 1.3fr 1.45fr auto;gap:16px;align-items:center;text-align:left;border:0;border-top:1px solid #eef0f2;background:#fff;padding:15px 4px;cursor:pointer}.project-row:first-child{border-top:0}.project-row span{display:block;color:#6b7280;font-size:11px}.project-row b{font-size:13px}
-.pill{padding:5px 8px;border-radius:999px;font-size:10px;white-space:nowrap}.green{background:#dcfce7;color:#166534}.amber{background:#fef3c7;color:#92400e}.red{background:#fee2e2;color:#991b1b}.gray{background:#e5e7eb;color:#374151}.blue{background:#dbeafe;color:#1e40af}
-.hidden{display:none!important}.view-head{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:15px}.view-head h2{margin:0}.view-head p{margin:4px 0 0;color:#6b7280;font-size:12px}
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.filters input,.filters select{border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;background:#fff}
-.anchor{position:sticky;top:0;z-index:5;background:rgba(245,246,248,.96);backdrop-filter:blur(8px);padding:10px 0;border-bottom:1px solid #e5e7eb;display:flex;gap:8px;flex-wrap:wrap}.anchor button{border:1px solid #d1d5db;background:#fff;border-radius:999px;padding:8px 11px;cursor:pointer}
-.section{scroll-margin-top:65px;margin-top:18px}.section-title{display:flex;justify-content:space-between;align-items:end;margin-bottom:10px}.section-title h2{margin:0;font-size:18px}.section-title p{margin:3px 0 0;color:#6b7280;font-size:12px}
-.info-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px}.info-card{padding:15px}.info-card span{display:block;color:#6b7280;font-size:11px;margin-bottom:5px}.objective{grid-column:span 2}.wide{grid-column:span 2}
-.current-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.current-grid .card{padding:15px}.current-grid span{display:block;color:#6b7280;font-size:11px}.current-grid b{font-size:15px}
-.front-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.front-card{padding:14px}.front-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.front-card h3{font-size:14px;margin:0}.front-card .meta{font-size:11px;color:#6b7280;margin-top:7px}.front-card .next{font-size:12px;color:#374151;margin-top:8px;line-height:1.4}.front-actions{margin-top:10px}
-.person,.task,.file{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-top:1px solid #eef0f2;align-items:center}.person:first-child,.task:first-child,.file:first-child{border-top:0}.person span,.task span,.file span{color:#6b7280;font-size:12px}.task .left span{display:block;margin-top:3px}
-.task-actions{display:flex;gap:5px;align-items:center}.done{text-decoration:line-through;opacity:.5}.timeline{position:relative;padding-left:28px}.timeline:before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:1px;background:#e5e7eb}.entry{position:relative;padding-bottom:22px}.entry:before{content:"";position:absolute;left:-24px;top:4px;width:9px;height:9px;border-radius:50%;background:#111827}.date{font-size:11px;color:#9ca3af}.entry h3{font-size:14px;margin:4px 0}.entry p{font-size:13px;color:#4b5563;line-height:1.45;margin:0}
-.notes-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.note-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:15px}.note-card h3{margin:0;font-size:14px}.note-card p{font-size:13px;color:#4b5563;line-height:1.45;margin:8px 0}.note-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.note-chip{background:#f3f4f6;border-radius:999px;padding:4px 7px;font-size:10px;color:#374151}.note-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
-.quick-note{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:14px}.quick-note input{border:1px solid #d1d5db;border-radius:9px;padding:10px 12px}
-.agenda-tabs{display:flex;gap:8px;margin-bottom:12px}.agenda-tabs button{border:1px solid #d1d5db;background:#fff;border-radius:999px;padding:8px 11px;cursor:pointer}.agenda-tabs button.active{background:#111827;color:#fff}.agenda-day{margin-top:15px}.agenda-day h3{font-size:14px;color:#374151;margin:0 0 8px}
-.event-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;display:grid;grid-template-columns:90px 1fr auto;gap:14px;align-items:start;margin-bottom:9px}.event-time{font-weight:800;font-size:14px}.event-title{font-weight:700;font-size:14px}.event-meta{font-size:12px;color:#6b7280;margin-top:4px}.event-project{display:inline-block;margin-top:7px;background:#f3f4f6;padding:4px 7px;border-radius:999px;font-size:10px}
-.empty{background:#fff;border:1px dashed #d1d5db;border-radius:12px;padding:22px;color:#6b7280;font-size:13px;text-align:center}
-.back{border:0;background:transparent;color:#4b5563;cursor:pointer;margin-bottom:12px}
-.modal-wrap{position:fixed;inset:0;background:rgba(17,24,39,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}.modal{background:#fff;border-radius:14px;width:min(640px,100%);max-height:90vh;overflow:auto;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.2)}.modal h3{margin:0 0 14px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.field{display:flex;flex-direction:column;gap:5px}.field.full{grid-column:1/-1}.field label{font-size:11px;color:#6b7280}.field input,.field select,.field textarea{border:1px solid #d1d5db;border-radius:8px;padding:9px 10px;font:inherit}.field textarea{min-height:90px;resize:vertical}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
-@media(max-width:900px){.app{grid-template-columns:1fr}.side{display:none}.project-row,.info-grid,.current-grid,.front-grid,.notes-grid,.form-grid{grid-template-columns:1fr}.objective,.wide,.field.full{grid-column:auto}.event-card{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+:root {
+ --bg:#0d0d0f; --panel:#17171b; --panel2:#202026; --line:#303039; --text:#f6f6f7;
+ --muted:#a8a8b2; --accent:#f5348a; --good:#34c77b; --warn:#f6b93b; --risk:#ff675f; --blue:#5da9ff;
+}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}
+button,input,textarea,select{font:inherit} button{cursor:pointer}
+.shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+.sidebar{border-right:1px solid var(--line);padding:24px 16px;position:sticky;top:0;height:100vh;background:#111114}
+.brand{font-weight:900;font-size:26px;letter-spacing:-1px;margin-bottom:4px} .brand span{color:var(--accent)}
+.sub{color:var(--muted);font-size:12px;margin-bottom:28px}
+.nav button{width:100%;text-align:left;background:transparent;color:var(--muted);border:0;border-radius:10px;padding:11px 12px;margin:2px 0}
+.nav button.active,.nav button:hover{background:var(--panel2);color:#fff}
+.main{padding:26px 30px 60px;max-width:1500px;width:100%;margin:0 auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px}
+h1{font-size:28px;margin:0} h2{margin:0 0 12px} h3{margin:0 0 10px} .muted{color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);padding:5px 9px;border-radius:999px;font-size:12px;color:var(--muted)}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 14px;font-weight:700}
+.btn.secondary{background:var(--panel2);border:1px solid var(--line);color:#fff} .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px}
+.kpi .num{font-size:28px;font-weight:850;margin-top:6px}
+.project-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}
+.project-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;transition:.15s}
+.project-card:hover{transform:translateY(-1px);border-color:#51515d}
+.project-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.owner{color:var(--muted);font-size:13px} .progress{height:8px;background:#29292f;border-radius:999px;overflow:hidden;margin:15px 0 8px}
+.progress>span{display:block;height:100%;background:var(--accent)}
+.meta-row{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.status-dot{width:8px;height:8px;border-radius:99px;display:inline-block;margin-right:5px} .s-not{background:#777} .s-progress{background:var(--warn)} .s-risk{background:var(--risk)} .s-done{background:var(--good)}
+.table{width:100%;border-collapse:collapse} .table th,.table td{border-bottom:1px solid var(--line);padding:12px 8px;text-align:left;vertical-align:top} .table th{color:var(--muted);font-size:12px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0} .tabs button{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:8px 12px} .tabs button.active{color:#fff;border-color:var(--accent)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin:14px 0}
+.milestone{border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0;background:#141418}
+.milestone-top{display:grid;grid-template-columns:1fr 170px 150px auto;gap:10px;align-items:center}
+.milestone-title{font-weight:750} .small{font-size:12px;color:var(--muted)}
+.input,.select,.textarea{width:100%;background:#101014;color:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 11px}
+.textarea{min-height:90px;resize:vertical}
+.timeline{border-left:2px solid var(--line);margin-left:8px;padding-left:18px} .timeline-item{margin:0 0 16px} .timeline-item .date{font-size:11px;color:var(--muted)}
+.file-row{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px;margin:7px 0}
+.split{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
+.meeting-step{display:none} .meeting-step.active{display:block}
+.stepper{display:flex;gap:6px;overflow:auto;padding-bottom:8px} .step{white-space:nowrap;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 10px;color:var(--muted);font-size:12px} .step.active{border-color:var(--accent);color:#fff}
+.commitment{display:grid;grid-template-columns:1fr 180px;gap:10px;margin:8px 0}
+.notice{border-left:3px solid var(--accent);background:#1c1419;padding:12px 14px;border-radius:8px;color:#e9c9d7}
+.project-hero{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start;margin-bottom:14px}
+.meeting-cta{padding:13px 20px;font-size:15px;box-shadow:0 0 0 1px rgba(245,52,138,.15),0 8px 28px rgba(245,52,138,.16)}
+.meeting-shell{max-width:1180px;margin:0 auto}
+.meeting-header{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;padding:6px 0 18px;border-bottom:1px solid var(--line)}
+.meeting-title{font-size:34px;letter-spacing:-1px;margin:3px 0}
+.meeting-owner{color:var(--muted);font-size:14px}
+.meeting-stage{margin-top:18px;background:linear-gradient(180deg,#17171b,#131317);border:1px solid var(--line);border-radius:20px;padding:24px}
+.meeting-stage h2{font-size:25px;letter-spacing:-.5px}
+.meeting-stepper{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:18px 0 0}
+.meeting-step-pill{border:1px solid var(--line);background:#141418;border-radius:12px;padding:9px 10px;color:var(--muted);font-size:11px;min-height:45px}
+.meeting-step-pill.active{border-color:var(--accent);background:#22151c;color:#fff}
+.meeting-step-pill.done{border-color:#3b5b49;color:#bfe8cf}
+.meeting-controls{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px;position:sticky;bottom:12px;background:rgba(13,13,15,.92);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:14px;padding:10px 12px;z-index:4}
+.meeting-big-btn{padding:12px 22px;font-weight:850}
+.meeting-status-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:15px 0}
+.meeting-status-card{border:1px solid var(--line);background:#111115;border-radius:14px;padding:14px}
+.meeting-status-card .n{font-size:25px;font-weight:850;margin-top:5px}
+.meeting-commitment-card{border:1px solid var(--line);border-radius:15px;padding:16px;margin:10px 0;background:#111115}
+.meeting-commitment-title{font-size:17px;font-weight:800;margin-bottom:12px}
+.meeting-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.meeting-mark-row{display:grid;grid-template-columns:38px 1fr 155px 150px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+.meeting-mark-row:last-child{border-bottom:0}
+.meeting-summary{background:#111115;border:1px solid var(--line);border-radius:14px;padding:16px}
+.meeting-note{font-size:13px;color:var(--muted);line-height:1.45}
+.meeting-closed{max-width:900px;margin:70px auto;text-align:center}
+.meeting-closed .check{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;background:#173425;color:#82e2aa;font-size:30px}
+.last-meeting-strip{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:10px;margin-top:12px}
+.last-meeting-box{border:1px solid var(--line);border-radius:12px;background:#121216;padding:12px}
+.last-meeting-box .label{font-size:11px;color:var(--muted);text-transform:uppercase}
+.last-meeting-box .value{margin-top:5px;font-weight:750;line-height:1.35}
+.history-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin:12px 0;overflow:hidden}
+.history-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:16px 18px;border-bottom:1px solid var(--line)}
+.history-body{padding:18px}
+.history-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.history-section{border:1px solid var(--line);border-radius:12px;padding:13px;background:#121216}
+.history-section h4{margin:0 0 8px;font-size:13px;color:var(--muted);text-transform:uppercase}
+.result-ok{color:#7fe0a5}.result-partial{color:#f5bf55}.result-no{color:#ff7a72}
+@media(max-width:900px){.last-meeting-strip,.history-grid{grid-template-columns:1fr}}
+
+@media(max-width:980px){.meeting-stepper{grid-template-columns:1fr 1fr}.meeting-two{grid-template-columns:1fr}.meeting-mark-row{grid-template-columns:34px 1fr}.meeting-header{grid-template-columns:1fr}.meeting-status-grid{grid-template-columns:repeat(2,1fr)}}
+
+.executive-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0}
+.executive-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.executive-box .value{font-size:22px;font-weight:850;margin-top:5px}
+.roadmap-row{display:grid;grid-template-columns:42px 1fr 145px 130px;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.roadmap-row:last-child{border-bottom:0}
+.roadmap-click{cursor:pointer;border-radius:10px;padding-left:6px;padding-right:6px;transition:.15s}
+.roadmap-click:hover{background:#1b1b20}
+.roadmap-detail{display:none;background:#111115;border:1px solid var(--line);border-radius:12px;padding:14px;margin:8px 0 12px}
+.roadmap-detail.open{display:block}
+.roadmap-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.roadmap-detail-section{border:1px solid var(--line);border-radius:10px;padding:12px;background:#141418}
+.roadmap-detail-section h4{margin:0 0 8px;font-size:12px;color:var(--muted);text-transform:uppercase}
+@media(max-width:800px){.roadmap-detail-grid{grid-template-columns:1fr}}
+
+.roadmap-index{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--panel2);font-weight:800;color:var(--muted)}
+.recent-list .item{padding:11px 0;border-bottom:1px solid var(--line)}
+.recent-list .item:last-child{border-bottom:0}
+@media(max-width:980px){.project-hero{grid-template-columns:1fr}.executive-grid{grid-template-columns:repeat(2,1fr)}.roadmap-row{grid-template-columns:36px 1fr}}
+@media(max-width:600px){.executive-grid{grid-template-columns:1fr}}
+.hr{height:1px;background:var(--line);margin:18px 0}
+.right{text-align:right} .hidden{display:none!important}
+@media(max-width:980px){.shell{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}.nav{display:flex;overflow:auto}.nav button{width:auto;white-space:nowrap}.cards{grid-template-columns:repeat(2,1fr)}.project-grid,.split{grid-template-columns:1fr}.milestone-top{grid-template-columns:1fr}}
+@media(max-width:600px){.main{padding:18px 14px 40px}.cards{grid-template-columns:1fr}}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./config.js"></script>
-<style>
-.auth-screen{min-height:100vh;display:grid;place-items:center;background:#f5f6f8;padding:20px}.auth-card{width:min(430px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px}.auth-card h1{margin:0 0 6px}.auth-card p{color:#6b7280;font-size:13px;line-height:1.5}.auth-card input{width:100%;border:1px solid #d1d5db;border-radius:9px;padding:10px 12px;margin-top:8px}.auth-card .btn{width:100%;margin-top:10px}.auth-msg{font-size:12px;color:#6b7280;margin-top:10px}.setup-warning{background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;font-size:12px;margin-top:12px}</style>
 </head>
 <body>
-<div id="authScreen" class="auth-screen">
-  <div class="auth-card">
-    <h1>Central de Gestão</h1>
-    <p>Entre para acessar e salvar sua Central online.</p>
-    <input id="authEmail" type="email" placeholder="Seu e-mail">
-    <input id="authPassword" type="password" placeholder="Sua senha">
-    <button class="btn" onclick="signIn()">Entrar</button>
-    <button class="btn light" onclick="signUp()">Criar primeiro acesso</button>
-    <div id="authMsg" class="auth-msg"></div>
-    <div id="setupWarning" class="setup-warning hidden">Antes de entrar, configure o arquivo <b>config.js</b> com os dados do Supabase.</div>
+<div class="shell">
+<aside class="sidebar">
+  <div class="brand">KAZ<span>.</span></div>
+  <div class="sub">TRANSFORMAÇÃO • SISTEMA</div>
+  <div class="nav">
+    <button data-view="dashboard" class="active">Visão Geral</button>
+    <button data-view="dependencies">Pendências</button>
+    <button data-view="history">Histórico</button>
+    <button id="exportBackup">Exportar backup</button>
+
   </div>
-</div>
-<div id="appRoot" class="app hidden">
-<aside class="side">
-  <div class="brand">Central de Gestão<small>V2.0 operacional</small></div>
-  <button data-nav="projects" class="active" onclick="showProjects()">Projetos</button>
-  <button data-nav="agenda" onclick="showAgenda()">Agenda</button>
-  <button data-nav="notes" onclick="showNotes()">Notas</button>
-  <button data-nav="tasks" onclick="showTasks()">Pendências</button>
-  <button onclick="alert('Pessoas será o próximo módulo operacional.')">Pessoas</button>
-  <button onclick="alert('Arquivos ganhará upload real quando conectarmos o banco.')">Arquivos</button>
+  <div style="position:absolute;bottom:18px;left:16px;right:16px;border-top:1px solid var(--line);padding-top:12px">
+    <div class="small">Conectado como</div>
+    <div style="font-weight:700;margin:3px 0">{{ user.display_name }}</div>
+    <div id="saveIndicator" class="small">Salvo</div>
+    {% if user.role == 'admin' %}<a href="/admin/users" style="display:block;color:var(--muted);font-size:12px;margin-top:8px">Gerenciar usuários</a>{% endif %}
+    <a href="/logout" style="display:block;color:var(--muted);font-size:12px;margin-top:5px">Sair</a>
+  </div>
 </aside>
-<main>
-<header class="top">
-  <div><h1 id="topTitle">Transformação KAZ</h1><p id="topSub">Central de uso diário</p></div>
-  <div class="top-actions"><span class="save-state" id="saveState">Sincronizado online</span><button class="btn light" onclick="backup()">Backup JSON</button><button class="btn light" onclick="signOut()">Sair</button></div>
-</header>
-<div class="content">
-
-<div id="projectsView">
-  <section class="program"><div><h2>Transformação KAZ</h2><p>Programa guarda-chuva dos sete projetos estruturantes.</p></div><div><div class="count">7</div><div style="font-size:11px;color:#9ca3af">projetos</div></div></section>
-  <section class="panel"><div id="projectList"></div></section>
+<main class="main" id="app"></main>
 </div>
-
-<div id="notesView" class="hidden">
-  <div class="view-head"><div><h2>Notas</h2><p>Caixa de entrada para registrar rápido e organizar depois.</p></div><button class="btn" onclick="openNoteModal()">＋ Nova nota</button></div>
-  <div class="quick-note"><input id="quickNoteInput" placeholder="Anote rápido para não esquecer..." onkeydown="if(event.key==='Enter')quickNote()"><button class="btn" onclick="quickNote()">Salvar</button></div>
-  <div class="filters"><select id="noteFilter" onchange="renderNotes()"><option value="">Todas</option><option>Caixa de entrada</option><option>Em andamento</option><option>Arquivada</option></select></div>
-  <div id="notesList" class="notes-grid"></div>
-</div>
-
-<div id="agendaView" class="hidden">
-  <div class="view-head"><div><h2>Agenda</h2><p>Compromissos vinculados ou não a projetos.</p></div><button class="btn" onclick="openEventModal()">＋ Novo compromisso</button></div>
-  <div class="agenda-tabs"><button class="active" onclick="setAgendaMode('today',this)">Hoje</button><button onclick="setAgendaMode('week',this)">Semana</button><button onclick="setAgendaMode('all',this)">Todos</button></div>
-  <div id="agendaList"></div>
-</div>
-
-<div id="tasksView" class="hidden">
-  <div class="view-head"><div><h2>Pendências</h2><p>Todas as ações abertas dos projetos em uma única tela.</p></div><button class="btn" onclick="openTaskModal()">＋ Nova pendência</button></div>
-  <div class="filters">
-    <input id="taskSearch" placeholder="Buscar..." oninput="renderGlobalTasks()">
-    <select id="taskProjectFilter" onchange="renderGlobalTasks()"></select>
-    <select id="taskStatusFilter" onchange="renderGlobalTasks()"><option value="">Todos os status</option><option>Pendente</option><option>Em andamento</option><option>Bloqueado</option><option>Concluído</option></select>
-    <select id="taskPriorityFilter" onchange="renderGlobalTasks()"><option value="">Todas prioridades</option><option>Alta</option><option>Média</option><option>Baixa</option></select>
-  </div>
-  <div class="panel" id="globalTasks"></div>
-</div>
-
-<div id="detailView" class="hidden">
-  <button class="back" onclick="showProjects()">← Voltar para Transformação KAZ</button>
-  <div style="display:flex;justify-content:space-between;gap:20px;align-items:flex-start">
-    <div><div id="area" style="font-size:11px;color:#6b7280;text-transform:uppercase"></div><h1 id="name" style="margin:4px 0 7px"></h1><p id="headline" style="margin:0;color:#4b5563"></p></div><span id="health" class="pill"></span>
-  </div>
-  <div class="anchor"><button onclick="go('info')">Informações</button><button onclick="go('andamento')">Andamento</button><button onclick="go('frentes')">Frentes</button><button onclick="go('pendencias')">Pendências</button><button onclick="go('pessoas')">Pessoas</button><button onclick="go('diario')">Diário</button><button onclick="go('arquivos')">Arquivos</button></div>
-  <section id="info" class="section"><div class="section-title"><div><h2>Informações do projeto</h2><p>Contexto e definição</p></div></div><div class="info-grid">
-    <div class="card info-card objective"><span>Objetivo</span><div id="objective"></div></div><div class="card info-card"><span>Critério de conclusão</span><div id="done"></div></div>
-    <div class="card info-card"><span>Responsável / bola com</span><b id="owner"></b></div><div class="card info-card"><span>Prioridade</span><b id="priority"></b></div><div class="card info-card"><span>Status</span><b id="status"></b></div><div class="card info-card"><span id="deadlineLabel">Meta / prazo</span><b id="deadline"></b></div><div class="card info-card wide"><span>Precisa de você</span><b id="needs"></b></div>
-  </div></section>
-  <section id="andamento" class="section"><div class="section-title"><div><h2>Andamento</h2><p>Onde está agora e qual é a próxima ação</p></div></div><div class="current-grid"><div class="card"><span>Movimento atual</span><b id="movement"></b><div id="current" style="margin-top:6px;font-size:13px;color:#4b5563"></div></div><div class="card"><span>Próxima ação</span><b id="next"></b></div></div></section>
-  <section id="frentes" class="section"><div class="section-title"><div><h2>Frentes</h2><p>Pacotes de trabalho que compõem o projeto</p></div></div><div id="fronts" class="front-grid"></div></section>
-  <section id="pendencias" class="section"><div class="section-title"><div><h2>Pendências</h2><p>Ações abertas, vinculadas às frentes</p></div><button class="btn small" onclick="openTaskModal(currentProjectId)">＋ Nova pendência</button></div><div class="panel" id="tasks"></div></section>
-  <section id="pessoas" class="section"><div class="section-title"><div><h2>Pessoas</h2><p>Responsáveis e envolvidos</p></div></div><div class="panel" id="people"></div></section>
-  <section id="diario" class="section"><div class="section-title"><div><h2>Diário</h2><p>Histórico do projeto</p></div></div><div class="panel"><div class="timeline" id="history"></div></div></section>
-  <section id="arquivos" class="section"><div class="section-title"><div><h2>Arquivos</h2><p>Documentos e referências vinculados ao projeto</p></div></div><div class="panel" id="files"></div></section>
-</div>
-
-</div>
-</main>
-</div>
-
-<div id="modalRoot"></div>
 
 <script>
-const SEED={"version": "2.0", "projects": [{"id": "annexo", "name": "ANNEXO", "area": "Operação / Obra", "health": "Crítico", "status": "Urgente", "movement": "Execução crítica", "owner": "Cris", "priority": "Alta", "deadline": "25/09/2026", "deadline_label": "Meta de abertura / 1º evento", "needs_user": "Aprovar decisões críticas de acabamento, prioridades e eventuais exceções de custo/prazo.", "objective": "Concluir a implantação física e operacional do ANNEXO para entrada em funcionamento e realização dos primeiros eventos.", "done": "Espaço pronto para operar, instalações testadas, acabamentos concluídos e primeiro evento realizado com segurança.", "current": "Obra em fase crítica, com coordenação centralizada em Cris e foco nas frentes físicas que impactam a abertura.", "next": "Fechar as frentes críticas e consolidar a lista única de pendências até a abertura.", "fronts": [{"name": "Elétrica", "status": "Crítico", "owner": "Cris / Ricardo", "next": "Fechar pendências elétricas e testar circuitos prioritários.", "id": "annexo-front-1"}, {"name": "Iluminação", "status": "Crítico", "owner": "Cris / Ricardo", "next": "Concluir instalação, testes e ajustes de iluminação.", "id": "annexo-front-2"}, {"name": "Ar-condicionado", "status": "Atenção", "owner": "Cris", "next": "Validar instalação, funcionamento e pendências finais.", "id": "annexo-front-3"}, {"name": "Fachada / Comunicação visual", "status": "Atenção", "owner": "Cris / Maísa", "next": "Fechar acabamentos e elementos visuais da fachada.", "id": "annexo-front-4"}, {"name": "Cozinha / Infraestrutura", "status": "Atenção", "owner": "Cris", "next": "Validar infraestrutura, pontos e funcionamento da cozinha.", "id": "annexo-front-5"}, {"name": "Acabamentos / Mobiliário", "status": "Atenção", "owner": "Cris / Maísa", "next": "Concluir acabamentos e preparar mobiliário final.", "id": "annexo-front-6"}, {"name": "Segurança / Acessibilidade", "status": "Atenção", "owner": "A confirmar", "next": "Validar itens obrigatórios antes da abertura.", "id": "annexo-front-7"}, {"name": "Preparação operacional", "status": "Pendente", "owner": "Equipe", "next": "Preparar espaço, testes e rotina para o primeiro evento.", "id": "annexo-front-8"}], "people": [["Cris", "Coordenação / liderança da obra"], ["Maísa", "Apoio de arquitetura"], ["Ricardo", "Execução / obra"], ["Rachid", "Direção e decisões"]], "tasks": [{"id": "annexo-task-1", "title": "Consolidar lista única de pendências críticas", "owner": "Cris", "due": "Imediato", "priority": "Alta", "status": "Em andamento", "front": "Geral"}, {"id": "annexo-task-2", "title": "Fechar elétrica", "owner": "Cris / Ricardo", "due": "Imediato", "priority": "Alta", "status": "Pendente", "front": "Elétrica"}, {"id": "annexo-task-3", "title": "Fechar iluminação", "owner": "Cris / Ricardo", "due": "Imediato", "priority": "Alta", "status": "Pendente", "front": "Iluminação"}, {"id": "annexo-task-4", "title": "Validar ar-condicionado", "owner": "Cris", "due": "Antes da abertura", "priority": "Alta", "status": "Pendente", "front": "Ar-condicionado"}, {"id": "annexo-task-5", "title": "Fechar fachada e comunicação visual", "owner": "Cris / Maísa", "due": "Antes da abertura", "priority": "Alta", "status": "Pendente", "front": "Fachada / Comunicação visual"}, {"id": "annexo-task-6", "title": "Validar cozinha e infraestrutura", "owner": "Cris", "due": "Antes da abertura", "priority": "Alta", "status": "Pendente", "front": "Cozinha / Infraestrutura"}, {"id": "annexo-task-7", "title": "Concluir acabamentos e mobiliário", "owner": "Cris / Maísa", "due": "Antes da abertura", "priority": "Alta", "status": "Pendente", "front": "Acabamentos / Mobiliário"}, {"id": "annexo-task-8", "title": "Validar segurança e acessibilidade", "owner": "A confirmar", "due": "Antes da abertura", "priority": "Alta", "status": "Pendente", "front": "Segurança / Acessibilidade"}, {"id": "annexo-task-9", "title": "Preparar espaço para primeiro evento", "owner": "Equipe", "due": "Após frentes críticas", "priority": "Alta", "status": "Pendente", "front": "Preparação operacional"}], "updates": [["04/09/2026", "Projeto em atenção máxima", "A obra segue como frente crítica da Central. Cris está centralizando a coordenação e as pendências físicas que impactam diretamente a abertura.", "Fechar frentes críticas e consolidar pendências"], ["03/09/2026", "Coordenação centralizada", "Cris assumiu a liderança operacional da obra, com acesso e presença recorrente. Maísa segue apoiando e Ricardo permanece na execução.", "Reorganizar cronograma e responsáveis"]], "files": [{"name": "Referências de acabamento", "type": "Referência", "date": "03/09/2026", "source": "Arquitetura", "link": ""}, {"name": "Conversas e registros da obra", "type": "Histórico", "date": "28/08–03/09", "source": "Coordenação", "link": ""}]}, {"id": "bar", "name": "Bar", "area": "Operação / Gastronomia", "health": "Atenção", "status": "Estruturação", "movement": "Conceito e operação", "owner": "A confirmar", "priority": "Média", "deadline": "A confirmar", "deadline_label": "Meta / prazo", "needs_user": "Confirmar responsável principal e escopo do projeto.", "objective": "Estruturar o projeto de bar da operação, incluindo conceito, serviço, coquetelaria, fornecedores, equipamentos e integração com os eventos.", "done": "Bar com conceito, ficha de operação, fornecedores, equipamentos, custos e padrão de serviço definidos.", "current": "O projeto está reconhecido como uma das frentes estruturantes da Transformação KAZ, mas o responsável e o cronograma ainda precisam ser reconstituídos do histórico original.", "next": "Confirmar responsável, escopo operacional e cronograma do Bar.", "fronts": [{"name": "Conceito e serviço", "status": "A revisar", "owner": "Rachid", "next": "Recuperar definição original do conceito.", "id": "bar-front-1"}, {"name": "Estrutura e equipamentos", "status": "A revisar", "owner": "A confirmar", "next": "Consolidar necessidades físicas e equipamentos.", "id": "bar-front-2"}, {"name": "Fornecedores e insumos", "status": "A revisar", "owner": "A confirmar", "next": "Recuperar fornecedores e critérios de compra.", "id": "bar-front-3"}, {"name": "Operação e custos", "status": "A revisar", "owner": "A confirmar", "next": "Formalizar rotina e estrutura de custos.", "id": "bar-front-4"}], "people": [["Rachid", "Direção / definição de conceito"], ["Responsável do Bar", "A confirmar"]], "tasks": [{"id": "bar-task-1", "title": "Confirmar responsável principal do Bar", "owner": "Rachid", "due": "Próxima revisão", "priority": "Alta", "status": "Pendente", "front": "Geral"}, {"id": "bar-task-2", "title": "Recuperar pendências originais do Bar", "owner": "Central de Gestão", "due": "Próxima revisão", "priority": "Média", "status": "Pendente", "front": "Geral"}], "updates": [["04/09/2026", "Projeto restabelecido na Central", "Bar voltou ao conjunto oficial dos sete projetos. A estrutura básica foi recomposta sem inventar responsáveis ou prazos não recuperados.", "Confirmar responsável e cronograma original"]], "files": []}, {"id": "financeiro-contabil", "name": "Financeiro / Contábil", "area": "Financeiro", "health": "Atenção", "status": "Estruturação", "movement": "Fluxos e controles", "owner": "Vini / a confirmar", "priority": "Alta", "deadline": "A confirmar", "deadline_label": "Meta / prazo", "needs_user": "Validar escopo contábil e responsáveis além do financeiro operacional.", "objective": "Organizar os fluxos financeiro e contábil ligados à nova operação, com responsabilidades, aprovações, tabelas, controles e integração com os demais sistemas.", "done": "Fluxos financeiro/contábil formalizados, responsáveis definidos, controles recorrentes operando e dados integrados à gestão.", "current": "Há uma base operacional recuperada: Vini participa do financeiro no fluxo da venda à entrega e os valores precisam seguir tabela pré-cadastrada e regras de exceção.", "next": "Consolidar o fluxo financeiro atual e recuperar as pendências contábeis originais.", "fronts": [{"name": "Fluxo financeiro", "status": "Em estruturação", "owner": "Vini", "next": "Documentar entradas, aprovações e passagem para operação.", "id": "financeiro-contabil-front-1"}, {"name": "Tabela de valores", "status": "Em estruturação", "owner": "Vini / Vancler", "next": "Consolidar tabela e regras de exceção.", "id": "financeiro-contabil-front-2"}, {"name": "Contábil", "status": "A revisar", "owner": "A confirmar", "next": "Recuperar escopo e responsáveis.", "id": "financeiro-contabil-front-3"}, {"name": "Fechamentos / controles", "status": "A revisar", "owner": "A confirmar", "next": "Definir rotina e indicadores recorrentes.", "id": "financeiro-contabil-front-4"}], "people": [["Vini", "Financeiro"], ["Rachid", "Direção / decisões"], ["Vancler", "Compras / tabela - quando aplicável"]], "tasks": [{"id": "financeiro-contabil-task-1", "title": "Documentar fluxo financeiro atual", "owner": "Vini", "due": "Próxima revisão", "priority": "Alta", "status": "Pendente", "front": "Fluxo financeiro"}, {"id": "financeiro-contabil-task-2", "title": "Consolidar tabela de valores e exceções", "owner": "Vini / Vancler", "due": "Próxima revisão", "priority": "Alta", "status": "Pendente", "front": "Tabela de valores"}, {"id": "financeiro-contabil-task-3", "title": "Recuperar escopo contábil original", "owner": "Central de Gestão", "due": "Próxima revisão", "priority": "Média", "status": "Pendente", "front": "Contábil"}], "updates": [["04/09/2026", "Fluxo financeiro parcialmente reconstruído", "Foi recuperado que o financeiro entra após definição de escopo/valores e antes da continuidade operacional. Vini é uma pessoa-chave nesse fluxo.", "Consolidar fluxo e recuperar frente contábil"]], "files": []}, {"id": "enjoy-albuns", "name": "Enjoy / Álbuns", "area": "Operação / Produto", "health": "Atenção", "status": "Em desenvolvimento", "movement": "Fluxo operacional / sistema", "owner": "Equipe de Álbuns", "priority": "Alta", "deadline": "A confirmar", "deadline_label": "Meta / prazo", "needs_user": "Nenhuma decisão crítica registrada no momento.", "objective": "Prever volume mensal da gráfica e controlar o fluxo completo de escolha de fotos, tratamento, diagramação, impressão, início de venda e venda.", "done": "Fluxo completo operando por contrato/turma, com responsáveis, templates, alertas e status atualizados até a venda.", "current": "Regras do montador, tratamento e templates já foram definidas. A próxima validação é operacional, especialmente tela do montador e responsabilidades por turma.", "next": "Validar tela do montador e fluxo real por turma.", "fronts": [{"name": "Fotos e tratamento", "status": "Definido", "owner": "Editores", "next": "Validar operação real e exceções.", "id": "enjoy-albuns-front-1"}, {"name": "Templates", "status": "Atenção", "owner": "A definir por turma", "next": "Definir responsáveis e múltiplos templates.", "id": "enjoy-albuns-front-2"}, {"name": "Montagem / diagramação", "status": "Atenção", "owner": "Diagramadores", "next": "Validar tela do montador.", "id": "enjoy-albuns-front-3"}, {"name": "Impressão", "status": "Planejado", "owner": "Equipe", "next": "Integrar previsão mensal e alertas.", "id": "enjoy-albuns-front-4"}, {"name": "Venda", "status": "Planejado", "owner": "Equipe", "next": "Validar mudança de status para venda iniciada/vendido.", "id": "enjoy-albuns-front-5"}], "people": [["Equipe de Álbuns", "Operação"], ["Diagramadores", "Montagem"], ["Editores", "Tratamento"], ["Responsável de templates", "Por turma - a definir"]], "tasks": [{"id": "enjoy-albuns-task-1", "title": "Validar tela do montador", "owner": "Equipe de Álbuns", "due": "Próxima revisão", "priority": "Alta", "status": "Pendente", "front": "Montagem / diagramação"}, {"id": "enjoy-albuns-task-2", "title": "Definir responsável de templates por turma", "owner": "Equipe de Álbuns", "due": "Próxima revisão", "priority": "Alta", "status": "Pendente", "front": "Templates"}, {"id": "enjoy-albuns-task-3", "title": "Testar fluxo completo com uma turma real", "owner": "Equipe de Álbuns", "due": "Após validação", "priority": "Alta", "status": "Pendente", "front": "Geral"}], "updates": [["28/08/2026", "Regras operacionais consolidadas", "Montador não altera tratamento; se houver problema, aciona editor. Múltiplos templates podem existir por evento e templates precisam ter responsável por turma.", "Validar tela do montador e piloto real"]], "files": [{"name": "Regras do fluxo de álbuns", "type": "Documento", "date": "28/08/2026", "source": "Operação", "link": ""}]}, {"id": "sistema-vendas", "name": "Sistema de Vendas", "area": "Comercial / Sistema", "health": "Atenção", "status": "Implantação", "movement": "Implantação real", "owner": "Ana / Coordenadores", "priority": "Alta", "deadline": "Imediato", "deadline_label": "Meta / prazo", "needs_user": "Acompanhar adesão real e destravar decisões de implantação.", "objective": "Colocar o Comercial da KAZ dentro de um fluxo único e registrado no sistema, com rotina clara de captação, reunião, orçamento, acompanhamento e responsabilidade por carteira.", "done": "Carteira real operando integralmente no sistema, coordenadores acompanhando rotina e informações comerciais registradas de forma consistente.", "current": "O sistema é o núcleo do novo modelo comercial. O foco está em colocar a operação real no fluxo.", "next": "Colocar 100% da operação comercial real dentro do sistema.", "fronts": [{"name": "Carteiras comerciais", "status": "Em implantação", "owner": "Coordenadores", "next": "Validar carteiras no novo modelo.", "id": "sistema-vendas-front-1"}, {"name": "Rotina comercial", "status": "Em implantação", "owner": "Ana / Coordenadores", "next": "Consolidar rotina de captação, reunião e orçamento.", "id": "sistema-vendas-front-2"}, {"name": "Registro no sistema", "status": "Atenção", "owner": "Vendedores", "next": "Garantir registro de informações relevantes.", "id": "sistema-vendas-front-3"}, {"name": "Supervisão", "status": "Atenção", "owner": "Coordenadores", "next": "Formalizar acompanhamento recorrente.", "id": "sistema-vendas-front-4"}], "people": [["Ana", "Rotina / sistema"], ["Coordenadores", "Estratégia e acompanhamento"], ["Vendedores", "Captação e relacionamento"], ["Rachid", "Direção / implantação"]], "tasks": [{"id": "sistema-vendas-task-1", "title": "Concluir adoção do sistema pelo Comercial", "owner": "Ana / Coordenadores", "due": "Imediato", "priority": "Alta", "status": "Em andamento", "front": "Registro no sistema"}, {"id": "sistema-vendas-task-2", "title": "Cobrar registro de reuniões e informações relevantes", "owner": "Coordenadores", "due": "Diário", "priority": "Alta", "status": "Pendente", "front": "Supervisão"}, {"id": "sistema-vendas-task-3", "title": "Formalizar rotina dos coordenadores", "owner": "Ana / Coordenadores", "due": "Imediato", "priority": "Alta", "status": "Pendente", "front": "Rotina comercial"}], "updates": [["04/09/2026", "Implantação segue como prioridade", "O sistema permanece como núcleo da transformação comercial. A principal meta é tirar o fluxo do campo conceitual e colocar a operação real dentro dele.", "Colocar operação real no sistema"], ["02/09/2026", "Fluxo comercial consolidado", "Rotina de captação, visitas, reuniões, orçamento, acompanhamento e registro no sistema foi detalhada.", "Implantar com carteira real"]], "files": [{"name": "Ata da reunião do Sistema de Vendas", "type": "Ata", "date": "02/09/2026", "source": "Reunião", "link": ""}, {"name": "Fluxo comercial e operacional", "type": "Documento", "date": "02/09/2026", "source": "Processo", "link": ""}]}, {"id": "sistema-entrega", "name": "Sistema de Entrega", "area": "Operação / Sistema", "health": "Atenção", "status": "Estruturação", "movement": "Fluxo da venda à entrega", "owner": "Operação / a confirmar", "priority": "Alta", "deadline": "A confirmar", "deadline_label": "Meta / prazo", "needs_user": "Confirmar responsável geral do fluxo e aprovar desenho operacional.", "objective": "Organizar o fluxo operacional completo após a venda, distribuindo responsabilidades entre assessor, financeiro, local, detalhamento, compras e execução.", "done": "Fluxo pós-venda operando no sistema, com responsáveis por etapa, informações completas e passagem organizada até a execução do evento.", "current": "O fluxo foi recuperado com boa clareza: comissão confirma → assessor define escopo e valores → financeiro → escolha de local → detalhamento → compras → execução.", "next": "Transformar esse fluxo em frentes operacionais do sistema e testar com um caso real.", "fronts": [{"name": "Escopo / assessor", "status": "Definido", "owner": "Assessor", "next": "Transformar regra em etapa do sistema.", "id": "sistema-entrega-front-1"}, {"name": "Financeiro", "status": "Definido", "owner": "Vini", "next": "Integrar aprovação e tabela.", "id": "sistema-entrega-front-2"}, {"name": "Local", "status": "Definido", "owner": "Ju Hirota", "next": "Modelar seleção de local.", "id": "sistema-entrega-front-3"}, {"name": "Detalhamento", "status": "Definido", "owner": "Juliana", "next": "Modelar cardápio e cronograma.", "id": "sistema-entrega-front-4"}, {"name": "Compras", "status": "Definido", "owner": "Vancler", "next": "Integrar lista e tabela.", "id": "sistema-entrega-front-5"}, {"name": "Execução", "status": "A estruturar", "owner": "Operação", "next": "Definir passagem final e acompanhamento.", "id": "sistema-entrega-front-6"}], "people": [["Assessor", "Definição de escopo e valores"], ["Vini", "Financeiro"], ["Ju Hirota", "Escolha de local"], ["Juliana", "Detalhamento"], ["Vancler", "Compras / tabela"], ["Oscar", "Especificações"], ["Raquel", "Pós-venda"]], "tasks": [{"id": "sistema-entrega-task-1", "title": "Desenhar etapas do fluxo no sistema", "owner": "Operação", "due": "Próxima revisão", "priority": "Alta", "status": "Pendente", "front": "Geral"}, {"id": "sistema-entrega-task-2", "title": "Definir responsável geral do Sistema de Entrega", "owner": "Rachid", "due": "Próxima revisão", "priority": "Alta", "status": "Pendente", "front": "Geral"}, {"id": "sistema-entrega-task-3", "title": "Testar fluxo com um evento real", "owner": "Operação", "due": "Após desenho", "priority": "Alta", "status": "Pendente", "front": "Execução"}], "updates": [["02/09/2026", "Fluxo da venda à entrega consolidado", "Foi definido o encadeamento entre comissão, assessor, financeiro, local, detalhamento, compras e execução.", "Modelar etapas e testar com caso real"]], "files": [{"name": "Fluxo operacional da venda à entrega", "type": "Documento", "date": "02/09/2026", "source": "Processo", "link": ""}]}, {"id": "sistema-comissao", "name": "Sistema da Comissão", "area": "Comercial / Relacionamento", "health": "Atenção", "status": "Estruturação", "movement": "Entrada e passagem para operação", "owner": "Coordenadores / a confirmar", "priority": "Alta", "deadline": "A confirmar", "deadline_label": "Meta / prazo", "needs_user": "Validar campos obrigatórios e regra de passagem para o assessor.", "objective": "Organizar a relação com as comissões e transformar a confirmação do evento em uma entrada estruturada para o fluxo operacional.", "done": "Comissão com interação registrada, informações completas no sistema e passagem organizada para assessor/produção sem perda de contexto.", "current": "A comissão é o gatilho inicial do fluxo de entrega: confirma o evento e precisa alimentar o sistema com briefing e informações relevantes.", "next": "Formalizar quais informações a comissão deve registrar e como ocorre a passagem para o assessor.", "fronts": [{"name": "Confirmação", "status": "Definido", "owner": "Comissão / Comercial", "next": "Formalizar gatilho de entrada.", "id": "sistema-comissao-front-1"}, {"name": "Briefing", "status": "A estruturar", "owner": "Comissão / Vendedores", "next": "Definir informações mínimas obrigatórias.", "id": "sistema-comissao-front-2"}, {"name": "Passagem para assessor", "status": "A estruturar", "owner": "Operação", "next": "Definir regra e responsável.", "id": "sistema-comissao-front-3"}, {"name": "Pendências da comissão", "status": "A estruturar", "owner": "Coordenadores", "next": "Definir acompanhamento e cobranças.", "id": "sistema-comissao-front-4"}], "people": [["Comissão", "Cliente / origem das informações"], ["Coordenadores", "Acompanhamento"], ["Vendedores", "Relacionamento"], ["Assessor", "Recebe escopo após confirmação"]], "tasks": [{"id": "sistema-comissao-task-1", "title": "Definir informações mínimas obrigatórias da comissão", "owner": "Coordenadores / Vendedores", "due": "Próxima revisão", "priority": "Alta", "status": "Pendente", "front": "Briefing"}, {"id": "sistema-comissao-task-2", "title": "Definir passagem para o assessor", "owner": "Operação", "due": "Próxima revisão", "priority": "Alta", "status": "Pendente", "front": "Passagem para assessor"}], "updates": [["04/09/2026", "Projeto reconstruído a partir do fluxo operacional", "Foi recuperado o papel da comissão como ponto de confirmação e origem das informações que alimentam a operação.", "Formalizar campos obrigatórios e passagem ao assessor"]], "files": []}], "notes": [{"id": "nota-central-gestao", "title": "Central de Gestão", "body": "Desenvolver e colocar em operação esta solução de gestão pessoal de projetos, agenda, notas, pendências, pessoas, diário e arquivos.", "project": "Central de Gestão", "status": "Em andamento", "pinned": true, "created": "04/09/2026"}, {"id": "nota-sistema-anexxo", "title": "Sistema Anexxo", "body": "Continuar o desenvolvimento e testes do Sistema Anexxo, incluindo o piloto com evento real e os ajustes de fluxo.", "project": "Sistema Anexxo", "status": "Em andamento", "pinned": true, "created": "04/09/2026"}, {"id": "nota-novas-telas", "title": "Novas telas do sistema", "body": "Desenvolver e revisar as novas telas do sistema que estão sendo trabalhadas em paralelo.", "project": "Sistema / UX", "status": "Em andamento", "pinned": true, "created": "04/09/2026"}], "agenda": [{"id": "annexo-abertura", "date": "2026-09-25", "time": "A definir", "title": "Meta de abertura / 1º evento ANNEXO", "project": "ANNEXO", "location": "ANNEXO", "people": "Equipe do projeto", "status": "Planejado", "notes": "Marco principal do projeto ANNEXO."}]};
-const LOCAL_MIGRATION_KEY='central-gestao-v20-db';
-const DB_KEY='central-gestao-v21-cache';
-const TODAY='2026-09-04';
-let db;
+const INITIAL = {{ initial_state|tojson }};
+let db = clone(INITIAL);
+let serverRevision = {{ revision }};
+const CURRENT_USER = {{ user|tojson }};
+const CSRF = {{ csrf|tojson }};
 let currentProjectId=null;
-let agendaMode='today';
+let currentTab='overview';
+let meeting={projectId:null, step:0, draft:null};
+let saveRunning=false, saveDirty=false;
 
 function clone(x){return JSON.parse(JSON.stringify(x))}
-let supabaseClient=null;
-let currentUser=null;
-let remoteSyncTimer=null;
+function load(){ return clone(INITIAL); }
+function bootstrap(){ return clone(INITIAL); }
 
-function configReady(){
-  const c=window.CENTRAL_CONFIG||{};
-  return c.SUPABASE_URL && c.SUPABASE_ANON_KEY &&
-    !c.SUPABASE_URL.includes('COLE_AQUI') &&
-    !c.SUPABASE_ANON_KEY.includes('COLE_AQUI');
+function setSaveIndicator(text, kind=''){
+ const el=document.getElementById('saveIndicator');
+ if(el){ el.textContent=text; el.style.color=kind==='error'?'#ff7a72':kind==='ok'?'#7fe0a5':''; }
 }
-function initSupabase(){
-  if(!configReady()){
-    document.getElementById('setupWarning').classList.remove('hidden');
-    return false;
-  }
-  supabaseClient=window.supabase.createClient(
-    window.CENTRAL_CONFIG.SUPABASE_URL,
-    window.CENTRAL_CONFIG.SUPABASE_ANON_KEY
-  );
-  return true;
+function save(){
+ saveDirty=true;
+ if(saveRunning) return;
+ flushSave();
 }
-async function boot(){
-  if(!initSupabase()) return;
-  const {data:{session}}=await supabaseClient.auth.getSession();
-  if(session){currentUser=session.user;await enterApp();}
-  else showAuth();
-  supabaseClient.auth.onAuthStateChange(async (event,session)=>{
-    if(session && (!currentUser || currentUser.id!==session.user.id)){
-      currentUser=session.user; await enterApp();
-    }
-    if(!session){currentUser=null;showAuth();}
-  });
+async function flushSave(){
+ if(!saveDirty || saveRunning) return;
+ saveDirty=false; saveRunning=true; setSaveIndicator('Salvando...');
+ try{
+   const res=await fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':CSRF},body:JSON.stringify({state:db,revision:serverRevision})});
+   if(res.status===409){
+      const data=await res.json();
+      setSaveIndicator('Conflito — recarregue', 'error');
+      alert('Outra pessoa atualizou o sistema antes de você. Para evitar sobrescrever dados, recarregue a página e refaça esta última alteração.');
+      return;
+   }
+   if(!res.ok) throw new Error('Falha ao salvar');
+   const data=await res.json(); serverRevision=data.revision; setSaveIndicator('Salvo', 'ok');
+ }catch(e){ setSaveIndicator('Erro ao salvar', 'error'); alert('Não foi possível salvar no servidor. Verifique sua conexão.'); }
+ finally{ saveRunning=false; if(saveDirty) flushSave(); }
 }
-function showAuth(){
-  document.getElementById('authScreen').classList.remove('hidden');
-  document.getElementById('appRoot').classList.add('hidden');
-}
-async function signIn(){
-  if(!supabaseClient && !initSupabase()) return;
-  document.getElementById('authMsg').textContent='Entrando...';
-  const {error}=await supabaseClient.auth.signInWithPassword({
-    email:document.getElementById('authEmail').value,
-    password:document.getElementById('authPassword').value
-  });
-  document.getElementById('authMsg').textContent=error?error.message:'';
-}
-async function signUp(){
-  if(!supabaseClient && !initSupabase()) return;
-  document.getElementById('authMsg').textContent='Criando acesso...';
-  const {data,error}=await supabaseClient.auth.signUp({
-    email:document.getElementById('authEmail').value,
-    password:document.getElementById('authPassword').value
-  });
-  if(error) document.getElementById('authMsg').textContent=error.message;
-  else if(data.session) document.getElementById('authMsg').textContent='Acesso criado.';
-  else document.getElementById('authMsg').textContent='Conta criada. Confirme o e-mail se o Supabase solicitar.';
-}
-async function signOut(){ if(supabaseClient) await supabaseClient.auth.signOut(); }
+function project(id){return db.projects.find(p=>p.id===id)}
+function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function pct(p){const done=p.milestones.filter(m=>m.status==='Concluído').length; return Math.round(done/p.milestones.length*100)}
+function currentMilestone(p){return p.milestones.find(m=>m.status!=='Concluído') || p.milestones[p.milestones.length-1]}
 
-async function enterApp(){
-  document.getElementById('authScreen').classList.add('hidden');
-  document.getElementById('appRoot').classList.remove('hidden');
-  await loadDB();
-  renderProjects();
-  showProjects();
+function meetingsForProject(projectId){
+ return db.meetings.filter(m=>m.projectId===projectId);
 }
+function lastMeeting(projectId){
+ const list=meetingsForProject(projectId);
+ return list.length?list[list.length-1]:null;
+}
+function resultSummary(rec){
+ if(!rec||!rec.previous||!rec.previous.length)return {done:0,partial:0,no:0,total:0};
+ let done=0,partial=0,no=0;
+ rec.previous.forEach((_,i)=>{
+   const st=rec.results&&rec.results[i]?rec.results[i].status:'';
+   if(st==='Realizado')done++;
+   if(st==='Parcial')partial++;
+   if(st==='Não realizado')no++;
+ });
+ return {done,partial,no,total:rec.previous.length};
+}
+function meetingPulse(p){
+ const rec=lastMeeting(p.id);
+ if(!rec)return {label:'Sem reunião fechada',tone:'neutral'};
+ const r=resultSummary(rec);
+ if(r.no>0 || p.status==='Em risco')return {label:'Atenção',tone:'risk'};
+ if(r.partial>0 || db.dependencies.some(d=>d.projectId===p.id&&d.status!=='Resolvida'))return {label:'Em acompanhamento',tone:'warn'};
+ return {label:'Evolução saudável',tone:'good'};
+}
+function statusClass(s){return s==='Concluído'?'s-done':s==='Em risco'?'s-risk':s==='Em andamento'?'s-progress':'s-not'}
+function fmtDate(v){if(!v)return '—'; const [y,m,d]=v.split('-'); return `${d}/${m}/${y}`}
+function nowBR(){return new Date().toLocaleString('pt-BR')}
+function navActive(view){document.querySelectorAll('.nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view))}
+function exportBackup(){
+ const payload={
+   app:'Transformacao KAZ MVP',
+   exportedAt:nowBR(),
+   data:db
+ };
+ const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+ const a=document.createElement('a');
+ const dt=new Date();
+ const stamp=dt.toISOString().slice(0,19).replace(/[:T]/g,'-');
+ a.href=URL.createObjectURL(blob);
+ a.download='backup_transformacao_kaz_'+stamp+'.json';
+ document.body.appendChild(a);
+ a.click();
+ setTimeout(()=>URL.revokeObjectURL(a.href),500);
+ a.remove();
+}
+window.exportBackup=exportBackup;
 
-async function loadDB(){
-  const saveState=document.getElementById('saveState');
-  if(saveState) saveState.textContent='Carregando banco...';
-  try{
-    const {data,error}=await supabaseClient
-      .from('app_state')
-      .select('data')
-      .eq('user_id',currentUser.id)
-      .maybeSingle();
-    if(error) throw error;
 
-    if(data && data.data){
-      db=data.data;
-    }else{
-      let initial=null;
-      try{
-        initial=JSON.parse(localStorage.getItem(LOCAL_MIGRATION_KEY)||'null');
-      }catch(e){}
-      db=(initial && Array.isArray(initial.projects) && initial.projects.length)
-        ? initial
-        : clone(SEED);
-      await syncRemote(true);
-    }
+function renderDashboard(){
+ navActive('dashboard');
+ const total=db.projects.reduce((a,p)=>a+p.milestones.length,0);
+ const done=db.projects.reduce((a,p)=>a+p.milestones.filter(m=>m.status==='Concluído').length,0);
+ const risk=db.projects.reduce((a,p)=>a+p.milestones.filter(m=>m.status==='Em risco').length,0);
+ const deps=db.dependencies.filter(d=>d.status!=='Resolvida').length;
+ document.getElementById('app').innerHTML=`
+ <div class="topbar"><div><h1>Transformação KAZ</h1><div class="muted">Painel estratégico de implantação</div></div><span class="badge">Direção: ${db.direction.join(' • ')}</span></div>
+ <div class="cards">
+  <div class="card kpi"><div class="muted">Projetos</div><div class="num">7</div></div>
+  <div class="card kpi"><div class="muted">Marcos concluídos</div><div class="num">${done} / ${total}</div></div>
+  <div class="card kpi"><div class="muted">Marcos em risco</div><div class="num">${risk}</div></div>
+  <div class="card kpi"><div class="muted">Pendências externas</div><div class="num">${deps}</div></div>
+ </div>
+ <div class="project-grid">
+ ${db.projects.map(p=>{
+  const m=currentMilestone(p);
+  const openDeps=db.dependencies.filter(d=>d.projectId===p.id && d.status!=='Resolvida').length;
+  const rec=lastMeeting(p.id);
+  const rs=resultSummary(rec);
+  const pulse=meetingPulse(p);
+  return `<div class="project-card" onclick="openProject('${p.id}')">
+    <div class="project-head">
+      <div>
+        <h3>${esc(p.name)}</h3>
+        <div class="owner">Dono: ${esc(p.owner)}</div>
+      </div>
+      <span class="badge"><span class="status-dot ${statusClass(p.status)}"></span>${esc(p.status)}</span>
+    </div>
 
-    db.projects=(db.projects||[]).map(normalizeProject);
-    db.notes=db.notes||[];
-    db.agenda=db.agenda||[];
-    localStorage.setItem(DB_KEY,JSON.stringify(db));
-    if(saveState) saveState.textContent='Sincronizado online';
-  }catch(e){
-    console.error(e);
-    alert('Não foi possível carregar a Central online: '+e.message);
-    try{
-      const cached=JSON.parse(localStorage.getItem(DB_KEY)||'null');
-      db=(cached && Array.isArray(cached.projects))?cached:clone(SEED);
-    }catch(_){db=clone(SEED)}
-  }
-}
-async function syncRemote(force=false){
-  if(!supabaseClient || !currentUser) return;
-  const saveState=document.getElementById('saveState');
-  if(saveState) saveState.textContent='Salvando online...';
-  const {error}=await supabaseClient.from('app_state').upsert({
-    user_id:currentUser.id,
-    data:db,
-    updated_at:new Date().toISOString()
-  });
-  if(error){
-    console.error(error);
-    if(saveState) saveState.textContent='Falha ao sincronizar';
-    if(force) throw error;
-    return;
-  }
-  if(saveState) saveState.textContent='Sincronizado online';
-}
-function normalizeProject(p){
-  p.fronts=(p.fronts||[]).map((f,i)=>({...f,id:f.id||`${p.id}-front-${i+1}`}));
-  p.tasks=(p.tasks||[]).map((t,i)=>Array.isArray(t)?{id:`${p.id}-task-${i+1}`,title:t[0],owner:t[1],due:t[2],priority:t[3],status:t[4],front:t[5]||'Geral'}:{...t,id:t.id||`${p.id}-task-${i+1}`});
-  return p;
-}
-function saveDB(render=true){
-  localStorage.setItem(DB_KEY,JSON.stringify(db));
-  clearTimeout(remoteSyncTimer);
-  remoteSyncTimer=setTimeout(()=>syncRemote(false),250);
-  if(render) refreshCurrent();
-}
-function setNav(name){
-  document.querySelectorAll('.side button[data-nav]').forEach(b=>b.classList.toggle('active',b.dataset.nav===name));
-}
-function hideViews(){['projectsView','notesView','agendaView','tasksView','detailView'].forEach(id=>document.getElementById(id).classList.add('hidden'))}
-function showProjects(){hideViews();document.getElementById('projectsView').classList.remove('hidden');setNav('projects');setTop('Transformação KAZ','Programa de gestão dos 7 projetos estruturantes');renderProjects();window.scrollTo(0,0)}
-function showNotes(){hideViews();document.getElementById('notesView').classList.remove('hidden');setNav('notes');setTop('Notas','Caixa de entrada pessoal');renderNotes();window.scrollTo(0,0)}
-function showAgenda(){hideViews();document.getElementById('agendaView').classList.remove('hidden');setNav('agenda');setTop('Agenda','Compromissos pessoais e de projetos');renderAgenda();window.scrollTo(0,0)}
-function showTasks(){hideViews();document.getElementById('tasksView').classList.remove('hidden');setNav('tasks');setTop('Pendências','Central de ações abertas');populateTaskProjectFilter();renderGlobalTasks();window.scrollTo(0,0)}
-function setTop(t,s){document.getElementById('topTitle').textContent=t;document.getElementById('topSub').textContent=s}
-function cls(s){if(['Crítico','Urgente','Bloqueado'].includes(s))return'red';if(['Atenção','Em andamento','Em implantação','Em estruturação','Pendente','A revisar','Estruturação'].includes(s))return'amber';if(['Definido','Normal','Concluído'].includes(s))return'green';return'gray'}
-function renderProjects(){
-  document.getElementById('projectList').innerHTML=db.projects.map(p=>`<button class="project-row" onclick="openProject('${p.id}')"><div><b>${esc(p.name)}</b><span>${esc(p.area)}</span></div><div><span>Saúde</span><b>${esc(p.health)}</b></div><div><span>Movimento</span><b>${esc(p.movement)}</b></div><div><span>Próxima ação</span><b>${esc(p.next)}</b></div><span class="pill ${cls(p.health)}">${esc(p.status)}</span></button>`).join('')
-}
-function openProject(id){
-  currentProjectId=id;const p=db.projects.find(x=>x.id===id);if(!p)return;hideViews();document.getElementById('detailView').classList.remove('hidden');setNav('projects');setTop(p.name,'Projeto da Transformação KAZ');
-  const vals={area:p.area,name:p.name,headline:p.current,objective:p.objective,done:p.done,owner:p.owner,priority:p.priority,status:p.status,deadline:p.deadline,needs:p.needs_user,movement:p.movement,current:p.current,next:p.next};
-  Object.entries(vals).forEach(([k,v])=>document.getElementById(k).textContent=v||'—');document.getElementById('deadlineLabel').textContent=p.deadline_label||'Meta / prazo';const h=document.getElementById('health');h.textContent=p.health;h.className='pill '+cls(p.health);
-  renderFronts(p);renderProjectTasks(p);renderPeople(p);renderHistory(p);renderFiles(p);window.scrollTo(0,0)
-}
-function renderFronts(p){
-  document.getElementById('fronts').innerHTML=(p.fronts||[]).map(f=>`<div class="card front-card"><div class="front-top"><h3>${esc(f.name)}</h3><span class="pill ${cls(f.status)}">${esc(f.status)}</span></div><div class="meta"><b>Responsável:</b> ${esc(f.owner||'—')}</div><div class="next"><b>Próxima:</b> ${esc(f.next||'—')}</div><div class="front-actions"><button class="btn light small" onclick="openFrontModal('${p.id}','${f.id}')">Editar frente</button></div></div>`).join('')
-}
-function renderProjectTasks(p){
-  const list=p.tasks||[];document.getElementById('tasks').innerHTML=list.length?list.map(t=>taskRow(p,t)).join(''):'<div class="empty">Nenhuma pendência cadastrada.</div>'
-}
-function taskRow(p,t){
-  return `<div class="task ${t.status==='Concluído'?'done':''}"><div class="left"><b>${esc(t.title)}</b><span>${esc(t.status)} · ${esc(t.priority||'—')} · Frente: ${esc(t.front||'Geral')}</span></div><div class="task-actions"><span>${esc(t.owner||'—')} · ${esc(t.due||'—')}</span><button class="btn light small" onclick="toggleTask('${p.id}','${t.id}')">${t.status==='Concluído'?'Reabrir':'Concluir'}</button><button class="btn light small" onclick="openTaskModal('${p.id}','${t.id}')">Editar</button></div></div>`
-}
-function renderPeople(p){document.getElementById('people').innerHTML=(p.people||[]).length?p.people.map(x=>`<div class="person"><b>${esc(x[0])}</b><span>${esc(x[1])}</span></div>`).join(''):'<div class="empty">Nenhuma pessoa vinculada.</div>'}
-function renderHistory(p){document.getElementById('history').innerHTML=(p.updates||[]).map(x=>`<div class="entry"><div class="date">${esc(x[0])}</div><h3>${esc(x[1])}</h3><p>${esc(x[2])}</p><small><b>Próximo:</b> ${esc(x[3])}</small></div>`).join('')}
-function renderFiles(p){document.getElementById('files').innerHTML=(p.files||[]).length?p.files.map(f=>`<div class="file"><div><b>${esc(f.name||f[0])}</b><span>${esc(f.type||f[1]||'')} · ${esc(f.date||f[2]||'')}</span></div><span>${esc(f.source||f[3]||'')}</span></div>`).join(''):'<div class="empty">Nenhum arquivo vinculado ainda.</div>'}
-function go(id){document.getElementById(id).scrollIntoView({behavior:'smooth'})}
+    <div class="progress"><span style="width:${pct(p)}%"></span></div>
+    <div class="small">${p.milestones.filter(m=>m.status==='Concluído').length} de ${p.milestones.length} marcos concluídos</div>
 
-function renderNotes(){
-  const filter=document.getElementById('noteFilter')?.value||'';let list=[...(db.notes||[])];if(filter)list=list.filter(n=>n.status===filter);list.sort((a,b)=>(Number(b.pinned)-Number(a.pinned))||String(b.id).localeCompare(String(a.id)));
-  document.getElementById('notesList').innerHTML=list.length?list.map(n=>`<div class="note-card" style="${n.status==='Arquivada'?'opacity:.55':''}"><div style="display:flex;justify-content:space-between;gap:8px"><h3>${esc(n.title)}</h3>${n.pinned?'<span class="pill amber">Fixada</span>':''}</div><p>${esc(n.body||'')}</p><div class="note-meta">${n.project?`<span class="note-chip">${esc(n.project)}</span>`:''}<span class="note-chip">${esc(n.status)}</span><span class="note-chip">${esc(n.created||'')}</span></div><div class="note-actions"><button class="btn light small" onclick="openNoteModal('${n.id}')">Editar</button><button class="btn light small" onclick="togglePin('${n.id}')">${n.pinned?'Desafixar':'Fixar'}</button><button class="btn light small" onclick="noteToTask('${n.id}')">Virar pendência</button><button class="btn light small" onclick="noteToEvent('${n.id}')">Virar compromisso</button></div></div>`).join(''):'<div class="empty">Nenhuma nota nesta visão.</div>'
-}
-function quickNote(){const i=document.getElementById('quickNoteInput'),v=i.value.trim();if(!v)return;db.notes.unshift({id:'note-'+Date.now(),title:v.length>45?v.slice(0,45)+'…':v,body:v,project:'',status:'Caixa de entrada',pinned:false,created:new Date().toLocaleDateString('pt-BR')});i.value='';saveDB()}
-function togglePin(id){const n=db.notes.find(x=>x.id===id);if(n){n.pinned=!n.pinned;saveDB()}}
-function openNoteModal(id){
-  const n=id?db.notes.find(x=>x.id===id):null;openModal(n?'Editar nota':'Nova nota',`
-  <div class="form-grid"><div class="field full"><label>Título</label><input id="mTitle" value="${attr(n?.title||'')}"></div><div class="field full"><label>Nota</label><textarea id="mBody">${esc(n?.body||'')}</textarea></div><div class="field"><label>Projeto / assunto</label><input id="mProject" value="${attr(n?.project||'')}"></div><div class="field"><label>Status</label><select id="mStatus">${opts(['Caixa de entrada','Em andamento','Arquivada'],n?.status||'Caixa de entrada')}</select></div></div>`,
-  ()=>{const item=n||{id:'note-'+Date.now(),created:new Date().toLocaleDateString('pt-BR'),pinned:false};item.title=val('mTitle')||'Sem título';item.body=val('mBody');item.project=val('mProject');item.status=val('mStatus');if(!n)db.notes.unshift(item);saveDB();closeModal()})
-}
-function noteToTask(id){const n=db.notes.find(x=>x.id===id);if(!n)return;openTaskModal('', '', n.body||n.title)}
-function noteToEvent(id){const n=db.notes.find(x=>x.id===id);if(!n)return;openEventModal('',n.body||n.title)}
+    <div class="last-meeting-strip">
+      <div class="last-meeting-box">
+        <div class="label">Pulso</div>
+        <div class="value">${esc(pulse.label)}</div>
+      </div>
+      <div class="last-meeting-box">
+        <div class="label">Pendências</div>
+        <div class="value">${openDeps}</div>
+      </div>
+      <div class="last-meeting-box">
+        <div class="label">Última reunião</div>
+        <div class="value">${rec?esc(rec.closedAt):'—'}</div>
+      </div>
+    </div>
 
-function setAgendaMode(mode,btn){agendaMode=mode;document.querySelectorAll('.agenda-tabs button').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');renderAgenda()}
-function renderAgenda(){
-  let list=[...(db.agenda||[])];if(agendaMode==='today')list=list.filter(e=>e.date===TODAY);if(agendaMode==='week')list=list.filter(e=>e.date>=TODAY&&e.date<='2026-09-10');list.sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
-  const host=document.getElementById('agendaList');if(!list.length){host.innerHTML='<div class="empty">Nenhum compromisso nesta visão.</div>';return}const g={};list.forEach(e=>(g[e.date]??=[]).push(e));
-  host.innerHTML=Object.entries(g).map(([date,items])=>`<div class="agenda-day"><h3>${fmtDate(date)}</h3>${items.map(e=>`<div class="event-card"><div class="event-time">${esc(e.time||'—')}</div><div><div class="event-title">${esc(e.title)}</div><div class="event-meta">${esc(e.location||'Sem local')}${e.people?' · '+esc(e.people):''}</div>${e.project?`<span class="event-project">${esc(e.project)}</span>`:''}</div><div><button class="btn light small" onclick="openEventModal('${e.id}')">Editar</button></div></div>`).join('')}</div>`).join('')
-}
-function openEventModal(id,prefill=''){
-  const e=id?db.agenda.find(x=>x.id===id):null;openModal(e?'Editar compromisso':'Novo compromisso',`<div class="form-grid"><div class="field full"><label>Título</label><input id="mTitle" value="${attr(e?.title||prefill)}"></div><div class="field"><label>Data</label><input id="mDate" type="date" value="${attr(e?.date||TODAY)}"></div><div class="field"><label>Horário</label><input id="mTime" value="${attr(e?.time||'')}"></div><div class="field"><label>Projeto</label><select id="mProject"><option value="">Sem projeto</option>${db.projects.map(p=>`<option ${e?.project===p.name?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div><div class="field"><label>Status</label><select id="mStatus">${opts(['Planejado','Confirmado','Concluído','Cancelado'],e?.status||'Planejado')}</select></div><div class="field"><label>Local</label><input id="mLocation" value="${attr(e?.location||'')}"></div><div class="field"><label>Pessoas</label><input id="mPeople" value="${attr(e?.people||'')}"></div><div class="field full"><label>Observações</label><textarea id="mNotes">${esc(e?.notes||'')}</textarea></div></div>`,
-  ()=>{const item=e||{id:'event-'+Date.now()};item.title=val('mTitle')||'Sem título';item.date=val('mDate');item.time=val('mTime');item.project=val('mProject');item.status=val('mStatus');item.location=val('mLocation');item.people=val('mPeople');item.notes=val('mNotes');if(!e)db.agenda.push(item);saveDB();closeModal()})
+    ${rec&&rs.total?`<div class="small" style="margin-top:10px">Semana anterior: <span class="result-ok">${rs.done} realizado(s)</span> • <span class="result-partial">${rs.partial} parcial(is)</span> • <span class="result-no">${rs.no} não realizado(s)</span></div>`:''}
+
+    <div style="margin-top:12px">
+      ${p.validated?'<span class="badge">✓ Validado pelo dono</span>':'<span class="badge">Proposto pela Direção</span>'}
+    </div>
+  </div>`;
+ }).join('')}
+ </div>`;
 }
 
-function populateTaskProjectFilter(){const el=document.getElementById('taskProjectFilter');const cur=el.value;el.innerHTML='<option value="">Todos os projetos</option>'+db.projects.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');el.value=cur}
-function allTasks(){return db.projects.flatMap(p=>(p.tasks||[]).map(t=>({p,t})))}
-function renderGlobalTasks(){
-  const q=(document.getElementById('taskSearch')?.value||'').toLowerCase(),pid=document.getElementById('taskProjectFilter')?.value||'',st=document.getElementById('taskStatusFilter')?.value||'',pr=document.getElementById('taskPriorityFilter')?.value||'';
-  let list=allTasks().filter(({p,t})=>(!q||`${t.title} ${t.owner} ${p.name}`.toLowerCase().includes(q))&&(!pid||p.id===pid)&&(!st||t.status===st)&&(!pr||t.priority===pr));
-  document.getElementById('globalTasks').innerHTML=list.length?list.map(({p,t})=>taskRow(p,t)).join(''):'<div class="empty">Nenhuma pendência encontrada.</div>'
-}
-function toggleTask(pid,tid){const p=db.projects.find(x=>x.id===pid),t=p?.tasks.find(x=>x.id===tid);if(t){t.status=t.status==='Concluído'?'Pendente':'Concluído';saveDB()}}
-function openTaskModal(pid='',tid='',prefill=''){
-  let p=pid?db.projects.find(x=>x.id===pid):null,t=p&&tid?p.tasks.find(x=>x.id===tid):null;
-  openModal(t?'Editar pendência':'Nova pendência',`<div class="form-grid"><div class="field full"><label>Pendência</label><input id="mTitle" value="${attr(t?.title||prefill)}"></div><div class="field"><label>Projeto</label><select id="mProject" onchange="refreshFrontSelect()"><option value="">Selecione</option>${db.projects.map(x=>`<option value="${x.id}" ${(p?.id===x.id)?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div><div class="field"><label>Frente</label><select id="mFront"></select></div><div class="field"><label>Responsável</label><input id="mOwner" value="${attr(t?.owner||'')}"></div><div class="field"><label>Prazo</label><input id="mDue" value="${attr(t?.due||'')}"></div><div class="field"><label>Prioridade</label><select id="mPriority">${opts(['Alta','Média','Baixa'],t?.priority||'Média')}</select></div><div class="field"><label>Status</label><select id="mStatus">${opts(['Pendente','Em andamento','Bloqueado','Concluído'],t?.status||'Pendente')}</select></div></div>`,
-  ()=>{const target=db.projects.find(x=>x.id===val('mProject'));if(!target){alert('Selecione um projeto.');return}let item=t;if(t&&p.id!==target.id){p.tasks=p.tasks.filter(x=>x.id!==t.id);item=null}if(!item){item={id:'task-'+Date.now()};target.tasks.push(item)}item.title=val('mTitle')||'Sem título';item.front=val('mFront')||'Geral';item.owner=val('mOwner');item.due=val('mDue');item.priority=val('mPriority');item.status=val('mStatus');saveDB();closeModal()},()=>refreshFrontSelect(t?.front))
-}
-function refreshFrontSelect(selected=''){const pid=val('mProject'),p=db.projects.find(x=>x.id===pid),el=document.getElementById('mFront');if(!el)return;el.innerHTML='<option>Geral</option>'+((p?.fronts||[]).map(f=>`<option ${selected===f.name?'selected':''}>${esc(f.name)}</option>`).join(''))}
+function openProject(id){currentProjectId=id; currentTab='overview'; renderProject()}
+window.openProject=openProject;
 
-function openFrontModal(pid,fid){
-  const p=db.projects.find(x=>x.id===pid),f=p?.fronts.find(x=>x.id===fid);if(!f)return;openModal('Atualizar frente',`<div class="form-grid"><div class="field full"><label>Frente</label><input id="mName" value="${attr(f.name)}"></div><div class="field"><label>Status</label><select id="mStatus">${opts(['Crítico','Atenção','Pendente','Em andamento','Definido','Planejado','A revisar','Concluído'],f.status)}</select></div><div class="field"><label>Responsável</label><input id="mOwner" value="${attr(f.owner||'')}"></div><div class="field full"><label>Próxima ação</label><textarea id="mNext">${esc(f.next||'')}</textarea></div></div>`,
-  ()=>{f.name=val('mName');f.status=val('mStatus');f.owner=val('mOwner');f.next=val('mNext');saveDB();closeModal()})
+function renderProject(){
+ const p=project(currentProjectId); if(!p) return renderDashboard();
+ navActive('');
+ document.getElementById('app').innerHTML=`
+ <div class="topbar"><div><button class="btn ghost" onclick="renderDashboard()">← Visão Geral</button></div></div>
+
+ <div class="project-hero">
+   <div>
+     <div class="small">PROJETO DE TRANSFORMAÇÃO</div>
+     <h1 style="margin-top:4px">${esc(p.name)}</h1>
+     <div class="muted">Dono: ${esc(p.owner)}</div>
+   </div>
+   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+     <select class="select" style="width:170px" onchange="setProjectStatus(this.value)">${['Não iniciado','Em andamento','Em risco','Concluído'].map(s=>`<option ${p.status===s?'selected':''}>${s}</option>`).join('')}</select>
+     <button class="btn meeting-cta" onclick="startMeeting('${p.id}')">▶ Iniciar Modo Reunião</button>
+   </div>
+ </div>
+
+ <div class="panel">
+   <div class="small">OBJETIVO DA TRANSFORMAÇÃO</div>
+   <div style="font-size:17px;line-height:1.55;margin-top:7px">${esc(p.objective)}</div>
+   <div style="margin-top:12px">${p.validated?'<span class="badge">✓ Objetivo e marcos validados pelo dono</span>':'<span class="badge">Proposto pela Direção</span> <button class="btn secondary" style="margin-left:8px" onclick="validateProject()">Validar objetivo e marcos</button>'}</div>
+ </div>
+
+ <div class="tabs">
+  <button onclick="switchTab('overview')" class="${currentTab==='overview'?'active':''}">Painel do projeto</button>
+  <button onclick="switchTab('milestones')" class="${currentTab==='milestones'?'active':''}">Editar marcos</button>
+  <button onclick="switchTab('memo')" class="${currentTab==='memo'?'active':''}">Memorando geral</button>
+  <button onclick="switchTab('deps')" class="${currentTab==='deps'?'active':''}">Pendências</button>
+  <button onclick="switchTab('files')" class="${currentTab==='files'?'active':''}">Arquivos</button>
+ </div>
+ <div id="projectTab"></div>`;
+ renderProjectTab();
+}
+window.renderDashboard=renderDashboard;
+
+function switchTab(t){currentTab=t; renderProject()} window.switchTab=switchTab;
+function setProjectStatus(v){project(currentProjectId).status=v; save(); renderProject()} window.setProjectStatus=setProjectStatus;
+function validateProject(){project(currentProjectId).validated=true; save(); renderProject()} window.validateProject=validateProject;
+
+function toggleRoadmapDetail(id){
+ const el=document.getElementById('roadmap-detail-'+id);
+ if(el) el.classList.toggle('open');
+}
+window.toggleRoadmapDetail=toggleRoadmapDetail;
+
+function renderProjectTab(){
+ const p=project(currentProjectId), el=document.getElementById('projectTab'); if(!el)return;
+ if(currentTab==='overview'){
+  const done=p.milestones.filter(m=>m.status==='Concluído').length;
+  const progress=p.milestones.filter(m=>m.status==='Em andamento').length;
+  const risk=p.milestones.filter(m=>m.status==='Em risco').length;
+  const openDeps=db.dependencies.filter(d=>d.projectId===p.id && d.status!=='Resolvida').length;
+
+  const recent=[];
+  p.generalMemos.forEach(x=>recent.push({date:x.date,text:x.text,source:'Projeto'}));
+  p.milestones.forEach(m=>m.memos.forEach(x=>recent.push({date:x.date,text:x.text,source:m.name})));
+  recent.reverse();
+  const latest=recent.slice(0,5);
+
+  el.innerHTML=`
+   <div class="executive-grid">
+     <div class="executive-box"><div class="small">MARCOS CONCLUÍDOS</div><div class="value">${done} de ${p.milestones.length}</div></div>
+     <div class="executive-box"><div class="small">EM ANDAMENTO</div><div class="value">${progress}</div></div>
+     <div class="executive-box"><div class="small">EM RISCO</div><div class="value">${risk}</div></div>
+     <div class="executive-box"><div class="small">PENDÊNCIAS EXTERNAS</div><div class="value">${openDeps}</div></div>
+   </div>
+
+   <div class="panel">
+     <div class="project-head">
+       <div><h3>Roadmap da transformação</h3><div class="small">Visão completa dos marcos — sem transformar o projeto em lista de tarefas.</div></div>
+       <button class="btn secondary" onclick="switchTab('milestones')">Editar marcos</button>
+     </div>
+     <div style="margin-top:10px">
+       ${p.milestones.map((m,i)=>`
+       <div class="roadmap-row roadmap-click" onclick="toggleRoadmapDetail('${m.id}')">
+         <div class="roadmap-index">${i+1}</div>
+         <div>
+           <b>${esc(m.name)}</b>
+           <div class="small">${m.memos.length} registro(s) • ${m.files.length} arquivo(s)${m.conclusion?' • conclusão registrada':''}</div>
+         </div>
+         <div class="small">Deadline: ${fmtDate(m.deadline)}</div>
+         <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
+           <span class="badge"><span class="status-dot ${statusClass(m.status)}"></span>${esc(m.status)}</span>
+           <span class="small">Abrir ▾</span>
+         </div>
+       </div>
+
+       <div id="roadmap-detail-${m.id}" class="roadmap-detail">
+         <div class="roadmap-detail-grid">
+           <div class="roadmap-detail-section">
+             <h4>Memorandos do marco</h4>
+             ${m.memos.length
+               ? [...m.memos].reverse().map(x=>`<div style="margin-bottom:10px"><div class="small">${esc(x.date)}</div><div style="margin-top:3px">${esc(x.text)}</div></div>`).join('')
+               : '<div class="muted">Nenhum registro neste marco.</div>'}
+           </div>
+
+           <div class="roadmap-detail-section">
+             <h4>Arquivos</h4>
+             ${m.files.length
+               ? m.files.map(f=>fileRow(f)).join('')
+               : '<div class="muted">Nenhum arquivo anexado.</div>'}
+           </div>
+
+           <div class="roadmap-detail-section">
+             <h4>Conclusão</h4>
+             ${m.conclusion
+               ? `<div>${esc(m.conclusion)}</div><div class="small" style="margin-top:8px">Concluído em ${esc(m.concludedAt||'—')}</div>`
+               : '<div class="muted">Marco ainda sem conclusão registrada.</div>'}
+           </div>
+
+           <div class="roadmap-detail-section">
+             <h4>Situação do marco</h4>
+             <div><b>Status:</b> ${esc(m.status)}</div>
+             <div style="margin-top:6px"><b>Deadline:</b> ${fmtDate(m.deadline)}</div>
+             <div style="margin-top:10px">
+               <button class="btn secondary" onclick="event.stopPropagation(); switchTab('milestones')">Editar marco</button>
+             </div>
+           </div>
+         </div>
+       </div>
+     `).join('')}
+     </div>
+   </div>
+
+   <div class="split">
+     <div class="panel">
+       <div class="project-head"><div><h3>Registros recentes</h3><div class="small">Memorandos gerais e dos marcos.</div></div><button class="btn ghost" onclick="switchTab('memo')">Registrar</button></div>
+       <div class="recent-list" style="margin-top:8px">
+         ${latest.map(r=>`<div class="item"><div class="small">${esc(r.date)} • ${esc(r.source)}</div><div style="margin-top:4px">${esc(r.text)}</div></div>`).join('')||'<div class="muted">Nenhum registro ainda.</div>'}
+       </div>
+     </div>
+
+     <div>
+       <div class="panel">
+         <div class="project-head"><div><h3>Pendências externas</h3><div class="small">Dependências de outras pessoas.</div></div><button class="btn ghost" onclick="switchTab('deps')">Abrir</button></div>
+         <div style="margin-top:8px">
+           ${db.dependencies.filter(d=>d.projectId===p.id&&d.status!=='Resolvida').slice(0,4).map(d=>`<div class="item" style="padding:9px 0;border-bottom:1px solid var(--line)"><b>${esc(d.person)}</b><div class="small">${esc(d.need)} • ${fmtDate(d.deadline)}</div></div>`).join('')||'<div class="muted">Nenhuma pendência externa.</div>'}
+         </div>
+       </div>
+
+       <div class="panel">
+         <div class="project-head"><div><h3>Arquivos</h3><div class="small">${p.files.length} arquivo(s) gerais no projeto.</div></div><button class="btn ghost" onclick="switchTab('files')">Abrir</button></div>
+         <div class="small" style="margin-top:10px">Arquivos vinculados aos marcos permanecem dentro de cada marco.</div>
+       </div>
+     </div>
+   </div>
+
+   ${(()=>{
+      const rec=lastMeeting(p.id);
+      if(!rec)return '';
+      const rs=resultSummary(rec);
+      return `<div class="panel">
+        <div class="project-head">
+          <div><div class="small">ÚLTIMA REUNIÃO</div><h3 style="margin-top:4px">${esc(rec.closedAt)}</h3></div>
+          <button class="btn ghost" onclick="renderHistory()">Ver histórico completo</button>
+        </div>
+        <div class="last-meeting-strip">
+          <div class="last-meeting-box">
+            <div class="label">Decisão principal</div>
+            <div class="value">${esc(rec.decisions||'Nenhuma decisão destacada.')}</div>
+          </div>
+          <div class="last-meeting-box">
+            <div class="label">Compromissos atuais</div>
+            <div class="value">${(rec.nextCommitments||[]).length}</div>
+          </div>
+          <div class="last-meeting-box">
+            <div class="label">Prestação de contas</div>
+            <div class="value">${rs.total?`${rs.done} ✓ · ${rs.partial} parcial · ${rs.no} não`:'1º ciclo'}</div>
+          </div>
+        </div>
+        ${(rec.nextCommitments||[]).length?`<div class="hr"></div><div class="small">COMPROMISSOS ATUAIS</div>${rec.nextCommitments.map((c,i)=>`<div class="file-row"><div><b>${i+1}.</b> ${esc(c)}</div></div>`).join('')}`:''}
+      </div>`;
+   })()}
+
+   <div class="panel" style="border-color:rgba(245,52,138,.5)">
+     <div class="project-head">
+       <div>
+         <div class="small">RITUAL SEMANAL</div>
+         <h3 style="margin-top:4px">Apresentar, registrar, decidir e comprometer</h3>
+         <div class="muted">O Modo Reunião recupera a semana anterior e fecha o próximo ciclo na própria reunião.</div>
+       </div>
+       <button class="btn meeting-cta" onclick="startMeeting('${p.id}')">▶ Iniciar Modo Reunião</button>
+     </div>
+   </div>`;
+ } else if(currentTab==='milestones'){
+  el.innerHTML=`<div class="panel"><h3>Marcos do projeto</h3>${p.milestones.map((m,i)=>milestoneHTML(p,m,i)).join('')}</div>`;
+ } else if(currentTab==='memo'){
+  el.innerHTML=`<div class="panel"><h3>Memorando geral do projeto</h3><textarea id="generalMemo" class="textarea" placeholder="Registre algo relevante sobre o projeto como um todo..."></textarea><div class="right" style="margin-top:8px"><button class="btn" onclick="addGeneralMemo()">Registrar</button></div></div>
+  <div class="panel"><h3>Histórico</h3><div class="timeline">${[...p.generalMemos].reverse().map(x=>`<div class="timeline-item"><div class="date">${esc(x.date)}</div><div>${esc(x.text)}</div></div>`).join('')||'<div class="muted">Nenhum memorando ainda.</div>'}</div></div>`;
+ } else if(currentTab==='deps'){
+  const ds=db.dependencies.filter(d=>d.projectId===p.id);
+  el.innerHTML=`<div class="panel"><h3>Nova pendência externa</h3><div class="split"><div><label class="small">Acionado</label><input id="depPerson" class="input" placeholder="Quem precisa agir"></div><div><label class="small">Prazo</label><input id="depDeadline" class="input" type="date"></div></div><div style="margin-top:10px"><label class="small">O que precisa</label><textarea id="depNeed" class="textarea"></textarea></div><div class="right"><button class="btn" onclick="addDependency()">Criar pendência</button></div></div>
+  <div class="panel"><h3>Pendências deste projeto</h3>${ds.map(d=>dependencyRow(d)).join('')||'<div class="muted">Nenhuma pendência externa.</div>'}</div>`;
+ } else if(currentTab==='files'){
+  el.innerHTML=`<div class="panel"><h3>Arquivos gerais do projeto</h3><input type="file" id="projectFile"><input id="projectFileNote" class="input" style="margin-top:8px" placeholder="Descrição opcional"><div class="right" style="margin-top:8px"><button class="btn" onclick="addProjectFile()">Adicionar referência</button></div></div>
+  <div class="panel">${p.files.map(f=>fileRow(f)).join('')||'<div class="muted">Nenhum arquivo.</div>'}</div>`;
+ }
 }
 
-function refreshCurrent(){
-  if(!document.getElementById('detailView').classList.contains('hidden')&&currentProjectId)openProject(currentProjectId);
-  else if(!document.getElementById('notesView').classList.contains('hidden'))renderNotes();
-  else if(!document.getElementById('agendaView').classList.contains('hidden'))renderAgenda();
-  else if(!document.getElementById('tasksView').classList.contains('hidden'))renderGlobalTasks();
-  else renderProjects()
+function milestoneHTML(p,m,i){
+ return `<div class="milestone">
+  <div class="milestone-top">
+   <div><div class="small">MARCO ${i+1}</div><div class="milestone-title">${esc(m.name)}</div></div>
+   <select class="select" onchange="updateMilestone('${m.id}','status',this.value)">${['Não iniciado','Em andamento','Em risco','Concluído'].map(s=>`<option ${m.status===s?'selected':''}>${s}</option>`).join('')}</select>
+   <input class="input" type="date" value="${m.deadline||''}" onchange="updateMilestone('${m.id}','deadline',this.value)">
+   <button class="btn secondary" onclick="toggleMilestone('${m.id}')">Abrir</button>
+  </div>
+  <div id="detail-${m.id}" class="hidden" style="margin-top:14px">
+   <div class="split">
+    <div class="panel"><h3>Memorando do marco</h3><textarea id="memo-${m.id}" class="textarea" placeholder="Registre o que ocorreu neste marco..."></textarea><div class="right" style="margin-top:8px"><button class="btn" onclick="addMilestoneMemo('${m.id}')">Registrar</button></div>
+    <div class="timeline" style="margin-top:16px">${[...m.memos].reverse().map(x=>`<div class="timeline-item"><div class="date">${esc(x.date)}</div><div>${esc(x.text)}</div></div>`).join('')||'<div class="muted">Sem registros.</div>'}</div></div>
+    <div class="panel"><h3>Arquivos do marco</h3><input type="file" id="file-${m.id}"><input class="input" id="filenote-${m.id}" style="margin-top:8px" placeholder="Descrição opcional"><div class="right" style="margin-top:8px"><button class="btn secondary" onclick="addMilestoneFile('${m.id}')">Adicionar referência</button></div>
+    <div style="margin-top:12px">${m.files.map(f=>fileRow(f)).join('')||'<div class="muted">Sem arquivos.</div>'}</div></div>
+   </div>
+   <div class="panel"><h3>Conclusão do marco</h3><textarea id="conclusion-${m.id}" class="textarea" placeholder="Registre o resultado final / conclusão...">${esc(m.conclusion)}</textarea><div class="right" style="margin-top:8px"><button class="btn" onclick="concludeMilestone('${m.id}')">Concluir marco</button></div>${m.concludedAt?`<div class="small" style="margin-top:8px">Concluído em ${esc(m.concludedAt)}</div>`:''}</div>
+  </div>
+ </div>`;
 }
-function openModal(title,body,onSave,onOpen){
-  document.getElementById('modalRoot').innerHTML=`<div class="modal-wrap" onclick="if(event.target===this)closeModal()"><div class="modal"><h3>${esc(title)}</h3>${body}<div class="modal-actions"><button class="btn light" onclick="closeModal()">Cancelar</button><button class="btn" id="modalSave">Salvar</button></div></div></div>`;
-  document.getElementById('modalSave').onclick=onSave;if(onOpen)setTimeout(onOpen,0)
+function findMilestone(id){for(const p of db.projects){const m=p.milestones.find(x=>x.id===id);if(m)return [p,m]} return [null,null]}
+function meetingUpdateMilestone(id,k,v){
+ const [p,m]=findMilestone(id); if(!m)return;
+ m[k]=v;
+ if(k==='status'&&v==='Concluído'&&!m.concludedAt)m.concludedAt=nowBR();
+ save();
 }
-function closeModal(){document.getElementById('modalRoot').innerHTML=''}
-function val(id){return document.getElementById(id)?.value||''}
-function opts(arr,sel){return arr.map(x=>`<option ${x===sel?'selected':''}>${x}</option>`).join('')}
-function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
-function attr(s){return esc(s)}
-function fmtDate(s){if(!s)return'';const [y,m,d]=s.split('-');return`${d}/${m}/${y}`}
-function backup(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='central-gestao-backup-'+TODAY+'.json';a.click();URL.revokeObjectURL(a.href)}
+window.meetingUpdateMilestone=meetingUpdateMilestone;
+function toggleMilestone(id){document.getElementById('detail-'+id)?.classList.toggle('hidden')} window.toggleMilestone=toggleMilestone;
+function updateMilestone(id,k,v){const [p,m]=findMilestone(id);if(!m)return;m[k]=v;if(k==='status'&&v==='Concluído'&&!m.concludedAt)m.concludedAt=nowBR();save();renderProject();} window.updateMilestone=updateMilestone;
+function addMilestoneMemo(id){const [p,m]=findMilestone(id);const t=document.getElementById('memo-'+id).value.trim();if(!t)return;m.memos.push({date:nowBR(),text:t});p.lastUpdate=nowBR();save();renderProject();currentTab='milestones';} window.addMilestoneMemo=addMilestoneMemo;
+async function uploadServerFile(file, projectId, milestoneId, note){
+ const fd=new FormData(); fd.append('file',file); fd.append('project_id',projectId); if(milestoneId)fd.append('milestone_id',milestoneId); fd.append('note',note||''); fd.append('csrf_token',CSRF);
+ const res=await fetch('/api/attachments',{method:'POST',headers:{'X-CSRF-Token':CSRF},body:fd});
+ if(!res.ok){ const data=await res.json().catch(()=>({})); throw new Error(data.error==='too_large'?'Arquivo acima de 12 MB.':'Falha no upload.'); }
+ return await res.json();
+}
+async function addMilestoneFile(id){
+ const [p,m]=findMilestone(id), inp=document.getElementById('file-'+id), note=document.getElementById('filenote-'+id).value.trim();
+ if(!inp.files[0])return alert('Selecione um arquivo.');
+ try{ const meta=await uploadServerFile(inp.files[0],p.id,m.id,note); m.files.push(meta); p.lastUpdate=nowBR(); save(); renderProject(); }
+ catch(e){alert(e.message||'Não foi possível armazenar o arquivo.');}
+}
+window.addMilestoneFile=addMilestoneFile;
+function concludeMilestone(id){const [p,m]=findMilestone(id),t=document.getElementById('conclusion-'+id).value.trim();if(!t)return alert('Registre uma conclusão.');m.conclusion=t;m.status='Concluído';m.concludedAt=nowBR();p.lastUpdate=nowBR();if(p.milestones.every(x=>x.status==='Concluído'))p.status='Concluído';else if(p.status==='Não iniciado')p.status='Em andamento';save();renderProject();currentTab='milestones';} window.concludeMilestone=concludeMilestone;
+function fileRow(f){
+ const dl=f.url?`<a class="btn ghost" href="${esc(f.url)}">Baixar</a>`:`<span class="badge">arquivo</span>`;
+ return `<div class="file-row"><div><b>${esc(f.name)}</b><div class="small">${esc(f.note||'')}${f.date?' • '+esc(f.date):''}</div></div><div style="display:flex;gap:8px;align-items:center"><span class="badge">${f.size?Math.round(f.size/1024)+' KB':'arquivo'}</span>${dl}</div></div>`
+}
+function findStoredFile(id){return null}
+function downloadStoredFile(id){}
+window.downloadStoredFile=downloadStoredFile;
+function addGeneralMemo(){const p=project(currentProjectId),t=document.getElementById('generalMemo').value.trim();if(!t)return;p.generalMemos.push({date:nowBR(),text:t});p.lastUpdate=nowBR();save();renderProject();} window.addGeneralMemo=addGeneralMemo;
+async function addProjectFile(){
+ const p=project(currentProjectId),inp=document.getElementById('projectFile'),note=document.getElementById('projectFileNote').value.trim();
+ if(!inp.files[0])return alert('Selecione um arquivo.');
+ try{ const meta=await uploadServerFile(inp.files[0],p.id,null,note); p.files.push(meta); save(); renderProject(); }
+ catch(e){alert(e.message||'Não foi possível armazenar o arquivo.');}
+}
+window.addProjectFile=addProjectFile;
 
-boot();
+function addDependency(){
+ const p=project(currentProjectId),person=document.getElementById('depPerson').value.trim(),need=document.getElementById('depNeed').value.trim(),deadline=document.getElementById('depDeadline').value;
+ if(!person||!need)return alert('Preencha quem foi acionado e o que precisa.');
+ db.dependencies.push({id:'d'+Date.now(),projectId:p.id,requester:p.owner,person,need,deadline,status:'Aberta',createdAt:nowBR()});
+ save();renderProject();
+} window.addDependency=addDependency;
+function dependencyRow(d){return `<div class="file-row"><div><b>${esc(d.person)}</b> — ${esc(d.need)}<div class="small">Solicitante: ${esc(d.requester)} • Prazo: ${fmtDate(d.deadline)}</div></div><select class="select" style="width:140px" onchange="setDepStatus('${d.id}',this.value)">${['Aberta','Aguardando','Resolvida'].map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}</select></div>`}
+function setDepStatus(id,v){const d=db.dependencies.find(x=>x.id===id);d.status=v;save(); if(currentProjectId) renderProject(); else renderDependencies()} window.setDepStatus=setDepStatus;
+
+function renderDependencies(){
+ navActive('dependencies'); currentProjectId=null;
+ document.getElementById('app').innerHTML=`<div class="topbar"><div><h1>Pendências entre pessoas</h1><div class="muted">Só entram dependências externas aos projetos</div></div></div>
+ <div class="panel"><table class="table"><thead><tr><th>Projeto</th><th>Solicitante</th><th>Acionado</th><th>Necessidade</th><th>Prazo</th><th>Status</th></tr></thead><tbody>
+ ${db.dependencies.map(d=>{const p=project(d.projectId);return `<tr><td>${esc(p?.name||'')}</td><td>${esc(d.requester)}</td><td>${esc(d.person)}</td><td>${esc(d.need)}</td><td>${fmtDate(d.deadline)}</td><td><select class="select" onchange="setDepStatus('${d.id}',this.value)">${['Aberta','Aguardando','Resolvida'].map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}</select></td></tr>`}).join('')||'<tr><td colspan="6" class="muted">Nenhuma pendência registrada.</td></tr>'}
+ </tbody></table></div>`;
+} window.renderDependencies=renderDependencies;
+
+function renderHistory(){
+ navActive('history'); currentProjectId=null;
+ document.getElementById('app').innerHTML=`
+ <div class="topbar">
+   <div><h1>Histórico das reuniões</h1><div class="muted">Cada ciclo fechado preserva prestação de contas, discussão, decisões e próximos compromissos.</div></div>
+ </div>
+
+ ${[...db.meetings].reverse().map(rec=>{
+   const rs=resultSummary(rec);
+   const deps=rec.openDependencies||[];
+   return `<div class="history-card">
+     <div class="history-head">
+       <div>
+         <div class="small">${esc(rec.type==='inaugural'?'REUNIÃO INAUGURAL':'REUNIÃO SEMANAL')}</div>
+         <h3 style="margin-top:4px">${esc(rec.projectName)}</h3>
+         <div class="small">Dono: ${esc(rec.owner)} • ${esc(rec.closedAt)}</div>
+       </div>
+       <span class="badge">${(rec.nextCommitments||[]).length} compromisso(s) seguinte(s)</span>
+     </div>
+
+     <div class="history-body">
+       ${rs.total?`<div class="meeting-status-grid" style="margin-top:0">
+         <div class="meeting-status-card"><div class="small">REALIZADOS</div><div class="n result-ok">${rs.done}</div></div>
+         <div class="meeting-status-card"><div class="small">PARCIAIS</div><div class="n result-partial">${rs.partial}</div></div>
+         <div class="meeting-status-card"><div class="small">NÃO REALIZADOS</div><div class="n result-no">${rs.no}</div></div>
+         <div class="meeting-status-card"><div class="small">PENDÊNCIAS ABERTAS</div><div class="n">${deps.length}</div></div>
+       </div>`:''}
+
+       <div class="history-grid">
+         <div class="history-section">
+           <h4>Semana anterior</h4>
+           ${(rec.previous||[]).length?rec.previous.map((c,i)=>{
+              const rr=rec.results&&rec.results[i]?rec.results[i]:{};
+              const cls=rr.status==='Realizado'?'result-ok':rr.status==='Parcial'?'result-partial':rr.status==='Não realizado'?'result-no':'';
+              return `<div style="margin-bottom:10px"><b>${i+1}. ${esc(c)}</b><div class="small ${cls}" style="margin-top:3px">${esc(rr.status||'Sem avaliação')}${rr.comment?' — '+esc(rr.comment):''}</div></div>`;
+           }).join(''):'<div class="muted">Primeiro ciclo — sem semana anterior.</div>'}
+         </div>
+
+         <div class="history-section">
+           <h4>Decisões tomadas</h4>
+           <div>${esc(rec.decisions||'Nenhuma decisão registrada.')}</div>
+         </div>
+
+         <div class="history-section">
+           <h4>Registro / análise da reunião</h4>
+           ${rec.discussion?`<div>${esc(rec.discussion)}</div>`:'<div class="muted">Sem registro de discussão.</div>'}
+           ${rec.analysis?`<div class="hr"></div><div class="small">ANÁLISE</div><div style="margin-top:5px">${esc(rec.analysis)}</div>`:''}
+         </div>
+
+         <div class="history-section">
+           <h4>Próxima semana</h4>
+           ${(rec.nextCommitments||[]).map((c,i)=>`<div style="margin-bottom:8px"><b>${i+1}.</b> ${esc(c)}</div>`).join('')||'<div class="muted">Nenhum compromisso registrado.</div>'}
+           <div class="hr"></div>
+           <div class="small">PENDÊNCIAS EXTERNAS</div>
+           <div style="margin-top:7px">${deps.map(d=>`<div style="margin-bottom:8px"><b>${esc(d.person)}</b> — ${esc(d.need)} <span class="small">(${fmtDate(d.deadline)})</span></div>`).join('')||'<div class="muted">Nenhuma pendência externa.</div>'}</div>
+         </div>
+       </div>
+     </div>
+   </div>`;
+ }).join('') || '<div class="panel muted">Nenhuma reunião fechada ainda.</div>'}`;
+}
+window.renderHistory=renderHistory;
+
+
+function startMeeting(id){
+ const p=project(id);
+ meeting={projectId:id,step:0,draft:{
+   previous:clone(p.weeklyCommitments||[]),
+   results:{},
+   discussion:'',
+   decisions:'',
+   analysis:'',
+   nextCommitments:['','','']
+ }};
+ renderMeeting();
+}
+window.startMeeting=startMeeting;
+
+function meetingSteps(){
+ return [
+   'Resumo do projeto',
+   'Semana anterior',
+   'Andamento da reunião',
+   'Próxima semana'
+ ];
+}
+
+function renderMeeting(){
+ const p=project(meeting.projectId), steps=meetingSteps();
+ document.getElementById('app').innerHTML=`
+ <div class="meeting-shell">
+   <div class="meeting-header">
+     <div>
+       <div class="small">REUNIÃO SEMANAL • TRANSFORMAÇÃO KAZ</div>
+       <div class="meeting-title">${esc(p.name)}</div>
+       <div class="meeting-owner">Dono do projeto: <b style="color:#fff">${esc(p.owner)}</b></div>
+     </div>
+     <button class="btn ghost" onclick="openProject('${p.id}')">Sair do Modo Reunião</button>
+   </div>
+
+   <div class="meeting-stepper" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+     ${steps.map((name,i)=>`<div class="meeting-step-pill ${i===meeting.step?'active':i<meeting.step?'done':''}">
+       <b>${i+1}</b><br>${esc(name)}
+     </div>`).join('')}
+   </div>
+
+   <div id="meetingBody" class="meeting-stage"></div>
+
+   <div class="meeting-controls">
+     <button class="btn secondary" onclick="meetingPrev()" ${meeting.step===0?'disabled':''}>← Anterior</button>
+     <div class="small">Etapa ${meeting.step+1} de 4</div>
+     <button class="btn meeting-big-btn" onclick="meetingNext()">${meeting.step===3?'Encerrar e congelar ciclo':'Continuar →'}</button>
+   </div>
+ </div>`;
+ renderMeetingStep();
+}
+
+function renderMeetingStep(){
+ const p=project(meeting.projectId), d=meeting.draft, body=document.getElementById('meetingBody');
+
+ if(meeting.step===0){
+   const done=p.milestones.filter(m=>m.status==='Concluído').length;
+   const prog=p.milestones.filter(m=>m.status==='Em andamento').length;
+   const risk=p.milestones.filter(m=>m.status==='Em risco').length;
+   const openDeps=db.dependencies.filter(x=>x.projectId===p.id&&x.status!=='Resolvida').length;
+
+   const records=[];
+   p.generalMemos.forEach(x=>records.push({...x,source:'Projeto'}));
+   p.milestones.forEach(m=>m.memos.forEach(x=>records.push({...x,source:m.name})));
+   const recent=records.slice().reverse().slice(0,5);
+
+   body.innerHTML=`
+     <div class="small">1 • LEITURA EXECUTIVA</div>
+     <h2>Resumo do projeto</h2>
+     <div class="meeting-note">Esta primeira tela é apenas informativa: ela coloca todos na mesma página antes da discussão começar.</div>
+
+     <div class="panel" style="margin-top:16px">
+       <div class="small">OBJETIVO</div>
+       <div style="font-size:18px;line-height:1.55;margin-top:6px">${esc(p.objective)}</div>
+     </div>
+
+     <div class="meeting-status-grid">
+       <div class="meeting-status-card"><div class="small">SITUAÇÃO</div><div class="n" style="font-size:18px">${esc(p.status)}</div></div>
+       <div class="meeting-status-card"><div class="small">MARCOS CONCLUÍDOS</div><div class="n">${done} / ${p.milestones.length}</div></div>
+       <div class="meeting-status-card"><div class="small">EM ANDAMENTO / RISCO</div><div class="n">${prog} / ${risk}</div></div>
+       <div class="meeting-status-card"><div class="small">PENDÊNCIAS EXTERNAS</div><div class="n">${openDeps}</div></div>
+     </div>
+
+     <div class="panel">
+       <div class="project-head">
+         <div><h3>Roadmap dos marcos</h3><div class="small">Visão do estágio atual da transformação.</div></div>
+         <span class="badge">${p.milestones.length} marcos</span>
+       </div>
+       <div style="margin-top:8px">
+         ${p.milestones.map((m,i)=>`<div class="meeting-mark-row">
+           <div class="roadmap-index">${i+1}</div>
+           <div>
+             <b>${esc(m.name)}</b>
+             <div class="small">${m.memos.length} registro(s) • ${m.files.length} arquivo(s)${m.conclusion?' • conclusão registrada':''}</div>
+           </div>
+           <div class="small">Deadline: ${fmtDate(m.deadline)}</div>
+           <span class="badge"><span class="status-dot ${statusClass(m.status)}"></span>${esc(m.status)}</span>
+         </div>`).join('')}
+       </div>
+     </div>
+
+     <div class="panel">
+       <div class="project-head"><div><h3>Evoluções recentes</h3><div class="small">Últimos memorandos do projeto e dos marcos.</div></div><span class="badge">${records.length} registro(s)</span></div>
+       <div class="recent-list" style="margin-top:8px">
+         ${recent.map(r=>`<div class="item"><div class="small">${esc(r.date)} • ${esc(r.source)}</div><div style="margin-top:4px">${esc(r.text)}</div></div>`).join('')||'<div class="muted">Nenhum registro ainda.</div>'}
+       </div>
+     </div>`;
+ }
+
+ if(meeting.step===1){
+   const openDeps=db.dependencies.filter(x=>x.projectId===p.id&&x.status!=='Resolvida');
+   body.innerHTML=`
+     <div class="small">2 • PRESTAÇÃO DE CONTAS</div>
+     <h2>Pendências e compromissos da semana anterior</h2>
+     <div class="meeting-note">Aqui a reunião olha para trás: o que estava combinado e o que ainda dependia de outras pessoas.</div>
+
+     <div class="meeting-two" style="margin-top:16px">
+       <div class="panel" style="margin:0">
+         <div class="project-head"><div><h3>Compromissos assumidos</h3><div class="small">O que ficou congelado na reunião anterior.</div></div><span class="badge">${d.previous.length}</span></div>
+         <div style="margin-top:12px">
+           ${d.previous.map((c,i)=>{
+             const r=d.results[i]||{};
+             return `<div class="meeting-commitment-card">
+               <div class="meeting-commitment-title">${i+1}. ${esc(c)}</div>
+               <div>
+                 <label class="small">RESULTADO</label>
+                 <select class="select" onchange="meetingSetResult(${i},'status',this.value)">
+                   <option value="">Selecione...</option>
+                   ${['Realizado','Parcial','Não realizado'].map(x=>`<option ${r.status===x?'selected':''}>${x}</option>`).join('')}
+                 </select>
+               </div>
+               <div style="margin-top:9px">
+                 <label class="small">O QUE ACONTECEU?</label>
+                 <textarea class="textarea" style="min-height:78px" placeholder="Comentário curto..." oninput="meetingSetResult(${i},'comment',this.value)">${esc(r.comment||'')}</textarea>
+               </div>
+             </div>`;
+           }).join('') || '<div class="muted">Esta é a primeira reunião: ainda não existem compromissos da semana anterior.</div>'}
+         </div>
+       </div>
+
+       <div class="panel" style="margin:0">
+         <div class="project-head"><div><h3>Pendências trazidas para a reunião</h3><div class="small">Dependências externas ainda abertas.</div></div><span class="badge">${openDeps.length}</span></div>
+         <div style="margin-top:12px">
+           ${openDeps.map(d=>dependencyRow(d)).join('')||'<div class="muted">Nenhuma pendência externa em aberto.</div>'}
+         </div>
+       </div>
+     </div>`;
+ }
+
+ if(meeting.step===2){
+   body.innerHTML=`
+     <div class="small">3 • REUNIÃO EM ANDAMENTO</div>
+     <h2>O que está sendo discutido e decidido</h2>
+     <div class="meeting-note">Esta é a tela que fica aberta durante a conversa. O registro acontece na hora.</div>
+
+     <div class="meeting-two" style="margin-top:16px">
+       <div>
+         <div class="panel" style="margin:0">
+           <label class="small">REGISTRO DA REUNIÃO</label>
+           <textarea class="textarea" style="min-height:260px" placeholder="Discussões, explicações, orientações, dificuldades e avanços relatados..." oninput="meeting.draft.discussion=this.value">${esc(d.discussion)}</textarea>
+         </div>
+
+         <div class="panel">
+           <label class="small">ANÁLISE GERAL DO DONO / DIREÇÃO</label>
+           <textarea class="textarea" style="min-height:130px" placeholder="Leitura geral do estágio do projeto após a discussão..." oninput="meeting.draft.analysis=this.value">${esc(d.analysis)}</textarea>
+         </div>
+       </div>
+
+       <div>
+         <div class="panel" style="margin:0">
+           <label class="small">DECISÕES TOMADAS</label>
+           <textarea class="textarea" style="min-height:260px" placeholder="O que ficou efetivamente decidido nesta reunião..." oninput="meeting.draft.decisions=this.value">${esc(d.decisions)}</textarea>
+         </div>
+
+         <div class="panel">
+           <h3>Registrar evolução em um marco</h3>
+           <select id="meetingMemoTarget" class="select">
+             <option value="general">Projeto — registro geral</option>
+             ${p.milestones.map(m=>`<option value="${m.id}">Marco — ${esc(m.name)}</option>`).join('')}
+           </select>
+           <textarea id="meetingMemoText" class="textarea" style="min-height:95px;margin-top:9px" placeholder="Memorando que surgiu na reunião..."></textarea>
+           <div class="right" style="margin-top:8px"><button class="btn secondary" onclick="meetingAddMemo()">Registrar memorando</button></div>
+         </div>
+       </div>
+     </div>`;
+ }
+
+ if(meeting.step===3){
+   body.innerHTML=`
+     <div class="small">4 • PRÓXIMA SEMANA</div>
+     <h2>O que fica para ser resolvido</h2>
+     <div class="meeting-note">A reunião termina deixando explícitos os compromissos do dono e as novas dependências externas.</div>
+
+     <div class="meeting-two" style="margin-top:16px">
+       <div class="panel" style="margin:0">
+         <div class="project-head"><div><h3>Compromissos até a próxima reunião</h3><div class="small">Resultados esperados — não microtarefas.</div></div></div>
+         ${[0,1,2].map(i=>`<div class="meeting-commitment-card">
+           <div class="small">COMPROMISSO ${i+1}</div>
+           <textarea class="textarea" style="min-height:82px;margin-top:7px" placeholder="O que precisa estar diferente na próxima semana?" oninput="meeting.draft.nextCommitments[${i}]=this.value">${esc(d.nextCommitments[i]||'')}</textarea>
+         </div>`).join('')}
+       </div>
+
+       <div class="panel" style="margin:0">
+         <div class="project-head"><div><h3>Novas pendências externas</h3><div class="small">Quando o dono precisa acionar outra pessoa.</div></div></div>
+
+         <div style="margin-top:12px">
+           <label class="small">ACIONADO</label>
+           <input id="meetingDepPerson" class="input" placeholder="Quem precisa agir">
+
+           <label class="small" style="display:block;margin-top:10px">O QUE PRECISA SER RESOLVIDO</label>
+           <textarea id="meetingDepNeed" class="textarea" style="min-height:110px" placeholder="Qual dependência precisa ser resolvida?"></textarea>
+
+           <label class="small" style="display:block;margin-top:10px">PRAZO</label>
+           <input id="meetingDepDeadline" class="input" type="date">
+
+           <div class="right" style="margin-top:10px">
+             <button class="btn secondary" onclick="meetingAddDependency()">Adicionar pendência</button>
+           </div>
+         </div>
+
+         <div class="hr"></div>
+         <div class="small">PENDÊNCIAS QUE FICARÃO ABERTAS</div>
+         <div style="margin-top:9px">
+           ${db.dependencies.filter(x=>x.projectId===p.id&&x.status!=='Resolvida').map(d=>`<div class="file-row"><div><b>${esc(d.person)}</b><div class="small">${esc(d.need)} • ${fmtDate(d.deadline)}</div></div><span class="badge">${esc(d.status)}</span></div>`).join('')||'<div class="muted">Nenhuma pendência externa.</div>'}
+         </div>
+       </div>
+     </div>
+
+     <div class="meeting-summary" style="margin-top:16px">
+       <div class="small">AO ENCERRAR A REUNIÃO</div>
+       <div style="margin-top:5px;font-weight:750">O ciclo fica congelado no histórico. Os compromissos e pendências acima serão a base da próxima reunião.</div>
+     </div>`;
+ }
+}
+
+function meetingSetResult(i,k,v){
+ if(!meeting.draft.results[i])meeting.draft.results[i]={};
+ meeting.draft.results[i][k]=v;
+}
+window.meetingSetResult=meetingSetResult;
+
+function meetingAddMemo(){
+ const p=project(meeting.projectId);
+ const target=document.getElementById('meetingMemoTarget').value;
+ const text=document.getElementById('meetingMemoText').value.trim();
+ if(!text)return alert('Escreva o memorando.');
+ const item={date:nowBR(),text};
+ if(target==='general')p.generalMemos.push(item);
+ else {
+   const [pp,m]=findMilestone(target);
+   if(m)m.memos.push(item);
+ }
+ p.lastUpdate=nowBR();
+ save();
+ document.getElementById('meetingMemoText').value='';
+ alert('Memorando registrado.');
+}
+window.meetingAddMemo=meetingAddMemo;
+
+function meetingAddDependency(){
+ const p=project(meeting.projectId);
+ const person=document.getElementById('meetingDepPerson').value.trim();
+ const need=document.getElementById('meetingDepNeed').value.trim();
+ const deadline=document.getElementById('meetingDepDeadline').value;
+ if(!person||!need)return alert('Preencha quem foi acionado e o que precisa.');
+ db.dependencies.push({
+   id:'d'+Date.now(),
+   projectId:p.id,
+   requester:p.owner,
+   person,
+   need,
+   deadline,
+   status:'Aberta',
+   createdAt:nowBR()
+ });
+ save();
+ renderMeeting();
+}
+window.meetingAddDependency=meetingAddDependency;
+
+function meetingPrev(){
+ if(meeting.step>0){
+   meeting.step--;
+   renderMeeting();
+ }
+}
+window.meetingPrev=meetingPrev;
+
+function meetingNext(){
+ if(meeting.step<3){
+   meeting.step++;
+   renderMeeting();
+   return;
+ }
+
+ const d=meeting.draft;
+
+ if(d.previous.length){
+   const missing=d.previous.some((_,i)=>!d.results[i]||!d.results[i].status);
+   if(missing)return alert('Antes de fechar, classifique todos os compromissos da semana anterior.');
+ }
+
+ const next=d.nextCommitments.map(x=>x.trim()).filter(Boolean);
+ if(!next.length)return alert('Defina pelo menos um compromisso para a próxima reunião.');
+
+ closeMeeting();
+}
+window.meetingNext=meetingNext;
+
+function closeMeeting(){
+ const p=project(meeting.projectId), d=meeting.draft;
+ const next=d.nextCommitments.map(x=>x.trim()).filter(Boolean);
+
+ const rec={
+   id:'mtg'+Date.now(),
+   projectId:p.id,
+   projectName:p.name,
+   owner:p.owner,
+   type:p.weeklyCommitments&&p.weeklyCommitments.length?'semanal':'inaugural',
+   closedAt:nowBR(),
+   previous:d.previous,
+   results:d.results,
+   analysis:d.analysis,
+   discussion:d.discussion,
+   decisions:d.decisions,
+   nextCommitments:next,
+   openDependencies:clone(db.dependencies.filter(x=>x.projectId===p.id&&x.status!=='Resolvida'))
+ };
+
+ db.meetings.push(rec);
+ p.weeklyCommitments=next;
+ p.validated=true;
+ p.lastUpdate=rec.closedAt;
+ if(p.status==='Não iniciado')p.status='Em andamento';
+
+ save();
+ renderMeetingClosed(p,rec);
+}
+
+function renderMeetingClosed(p,rec){
+ const idx=db.projects.findIndex(x=>x.id===p.id);
+ const next=idx>=0 && idx<db.projects.length-1 ? db.projects[idx+1] : null;
+
+ document.getElementById('app').innerHTML=`
+   <div class="meeting-closed">
+     <div class="check">✓</div>
+     <div class="small">CICLO CONGELADO NO HISTÓRICO</div>
+     <h1 style="font-size:34px;margin-top:7px">${esc(p.name)} — reunião encerrada</h1>
+     <div class="muted">Fechada em ${esc(rec.closedAt)}</div>
+
+     <div class="panel" style="text-align:left;margin-top:22px">
+       <h3>Compromissos para a próxima reunião</h3>
+       ${rec.nextCommitments.map((c,i)=>`<div class="file-row"><div><b>${i+1}.</b> ${esc(c)}</div></div>`).join('')}
+
+       <div class="hr"></div>
+       <h3>Pendências externas em aberto</h3>
+       ${(rec.openDependencies||[]).map(d=>`<div class="file-row"><div><b>${esc(d.person)}</b><div class="small">${esc(d.need)} • ${fmtDate(d.deadline)}</div></div><span class="badge">${esc(d.status)}</span></div>`).join('')||'<div class="muted">Nenhuma pendência externa.</div>'}
+
+       ${rec.decisions?`<div class="hr"></div><div class="small">DECISÕES REGISTRADAS</div><div style="margin-top:6px">${esc(rec.decisions)}</div>`:''}
+     </div>
+
+     <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px">
+       <button class="btn secondary" onclick="openProject('${p.id}')">Voltar ao projeto</button>
+       <button class="btn secondary" onclick="renderDashboard()">Visão Geral</button>
+       ${next?`<button class="btn" onclick="startMeeting('${next.id}')">Próximo projeto: ${esc(next.name)} →</button>`:''}
+     </div>
+   </div>`;
+}
+
+
+document.querySelectorAll('.nav button[data-view]').forEach(b=>b.addEventListener('click',()=>{ if(b.dataset.view==='dashboard')renderDashboard(); if(b.dataset.view==='dependencies')renderDependencies(); if(b.dataset.view==='history')renderHistory(); }));
+document.getElementById('exportBackup').addEventListener('click', exportBackup);
+renderDashboard();
 </script>
 </body>
 </html>

@@ -1,0 +1,581 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "id": "comercial",
+      "name": "Comercial",
+      "owner": "Ana Silvia",
+      "objective": "Implantar um Comercial focado em captação, relacionamento, negociação e crescimento, com carteiras claras, equipe corretamente dimensionada, funções bem definidas, política de comissionamento estabelecida e operação integralmente registrada e acompanhada.",
+      "milestones": [
+        {
+          "id": "comercial-m1",
+          "name": "Carteiras / portfólio definidos",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "comercial-m2",
+          "name": "Estrutura e dimensionamento do time definidos",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "comercial-m3",
+          "name": "Política de comissionamento estabelecida",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "comercial-m4",
+          "name": "Funções e atividades muito bem estabelecidas",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "comercial-m5",
+          "name": "Comercial operando 100% no sistema",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "comercial-m6",
+          "name": "Modelos de reunião e treinamento implementados",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "comercial-m7",
+          "name": "Roadmap do relacionamento criado — onde e como se relacionar",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "comercial-m8",
+          "name": "Nova rotina comercial implantada",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "comercial-m9",
+          "name": "Modelo estabilizado e acompanhado por indicadores",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        }
+      ],
+      "status": "Não iniciado",
+      "lastUpdate": "",
+      "generalMemos": [],
+      "files": [],
+      "weeklyCommitments": [],
+      "validated": false
+    },
+    {
+      "id": "projetos",
+      "name": "Projetos / Assessor",
+      "owner": "Oscar",
+      "objective": "Estruturar a área responsável por transformar o briefing e a necessidade comercial em um projeto completo, claro e executável, garantindo uma passagem organizada do projeto aprovado para sua execução pela Produção.",
+      "milestones": [
+        {
+          "id": "projetos-m1",
+          "name": "Papel e escopo de Projetos definidos",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "projetos-m2",
+          "name": "Estrutura e dimensionamento do time definidos",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "projetos-m3",
+          "name": "Processo definido da aprovação do projeto até a solicitação de execução para Produção",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "projetos-m4",
+          "name": "Funções e atividades muito bem estabelecidas",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "projetos-m5",
+          "name": "Fluxo implantado no sistema",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "projetos-m6",
+          "name": "Projeto real executado ponta a ponta",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        }
+      ],
+      "status": "Não iniciado",
+      "lastUpdate": "",
+      "generalMemos": [],
+      "files": [],
+      "weeklyCommitments": [],
+      "validated": false
+    },
+    {
+      "id": "posvenda",
+      "name": "Pós-venda",
+      "owner": "Raquel",
+      "objective": "Implantar um Pós-venda estruturado, dimensionado e com responsabilidades claras, garantindo relacionamento, acompanhamento e passagens organizadas entre as demais áreas e o cliente.",
+      "milestones": [
+        {
+          "id": "posvenda-m1",
+          "name": "Diagnóstico do Pós-venda atual",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "posvenda-m2",
+          "name": "Tamanho e estrutura definidos",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "posvenda-m3",
+          "name": "Funções e responsabilidades definidas",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "posvenda-m4",
+          "name": "Passagens entre áreas definidas",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "posvenda-m5",
+          "name": "Processo implantado no sistema",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "posvenda-m6",
+          "name": "Pós-venda operando no novo modelo",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        }
+      ],
+      "status": "Não iniciado",
+      "lastUpdate": "",
+      "generalMemos": [],
+      "files": [],
+      "weeklyCommitments": [],
+      "validated": false
+    },
+    {
+      "id": "producao",
+      "name": "Produção",
+      "owner": "Ju Hirota",
+      "objective": "Implantar uma Produção organizada, previsível e capaz de receber um projeto detalhado, transformá-lo em execução e conduzir a operação com responsabilidades e processos claros.",
+      "milestones": [
+        {
+          "id": "producao-m1",
+          "name": "Estrutura atual diagnosticada",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "producao-m2",
+          "name": "Processos atuais organizados",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "producao-m3",
+          "name": "Papéis e responsabilidades definidos",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "producao-m4",
+          "name": "Fluxo com Projetos para recebimento e detalhamento do projeto definido",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "producao-m5",
+          "name": "Fluxo implantado no sistema",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "producao-m6",
+          "name": "Novo processo testado em operação real",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "producao-m7",
+          "name": "Produção operando no novo modelo",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        }
+      ],
+      "status": "Não iniciado",
+      "lastUpdate": "",
+      "generalMemos": [],
+      "files": [],
+      "weeklyCommitments": [],
+      "validated": false
+    },
+    {
+      "id": "compras",
+      "name": "Compras",
+      "owner": "Wancler",
+      "objective": "Implantar uma área de Compras estruturada, com processo claro de contratação, cotação/licitação, fornecedores, integração financeira e passagem organizada para a operação.",
+      "milestones": [
+        {
+          "id": "compras-m1",
+          "name": "Processo atual diagnosticado",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "compras-m2",
+          "name": "Modelo de licitação / escolha definido",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "compras-m3",
+          "name": "Critérios e base de fornecedores definidos",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "compras-m4",
+          "name": "Fluxo Compras → Financeiro → Produção criado",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "compras-m5",
+          "name": "Fluxo implementado no sistema",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "compras-m6",
+          "name": "Ciclo real de compra testado",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        }
+      ],
+      "status": "Não iniciado",
+      "lastUpdate": "",
+      "generalMemos": [],
+      "files": [],
+      "weeklyCommitments": [],
+      "validated": false
+    },
+    {
+      "id": "planejamento",
+      "name": "Planejamento Financeiro",
+      "owner": "Vini",
+      "objective": "Implantar um modelo de planejamento financeiro capaz de definir a rentabilidade esperada, planejar economicamente cada turma, comparar planejado e realizado e gerar informação gerencial para tomada de decisão.",
+      "milestones": [
+        {
+          "id": "planejamento-m1",
+          "name": "Conceito de rentabilidade target definido",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "planejamento-m2",
+          "name": "Metodologia de cálculo definida",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "planejamento-m3",
+          "name": "Plano padrão por turma criado",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "planejamento-m4",
+          "name": "Planejado × realizado estruturado",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "planejamento-m5",
+          "name": "Indicadores gerenciais definidos",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "planejamento-m6",
+          "name": "Desenho e implementação no sistema",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "planejamento-m7",
+          "name": "Modelo aplicado às turmas reais",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        }
+      ],
+      "status": "Não iniciado",
+      "lastUpdate": "",
+      "generalMemos": [],
+      "files": [],
+      "weeklyCommitments": [],
+      "validated": false
+    },
+    {
+      "id": "financeiro",
+      "name": "Financeiro",
+      "owner": "Erik",
+      "objective": "Implantar uma operação financeira estruturada e previsível, integrada às demais áreas e capaz de fornecer informação confiável para a operação e para o Planejamento Financeiro.",
+      "milestones": [
+        {
+          "id": "financeiro-m1",
+          "name": "Fluxo financeiro atual diagnosticado",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "financeiro-m2",
+          "name": "Fronteira Financeiro × Planejamento Financeiro definida",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "financeiro-m3",
+          "name": "Modelo de previsibilidade financeira criado",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "financeiro-m4",
+          "name": "Interfaces com Compras e Produção definidas",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "financeiro-m5",
+          "name": "Rotina e informações implantadas no sistema",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        },
+        {
+          "id": "financeiro-m6",
+          "name": "Modelo validado com dados reais",
+          "status": "Não iniciado",
+          "deadline": "",
+          "memos": [],
+          "files": [],
+          "conclusion": "",
+          "concludedAt": ""
+        }
+      ],
+      "status": "Não iniciado",
+      "lastUpdate": "",
+      "generalMemos": [],
+      "files": [],
+      "weeklyCommitments": [],
+      "validated": false
+    }
+  ],
+  "dependencies": [],
+  "meetings": [],
+  "direction": [
+    "Rachid",
+    "Márcio",
+    "Marcinho",
+    "Leo"
+  ]
+}

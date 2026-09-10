@@ -1,21 +1,19 @@
-# Central de Gestão — V3.3
+# Transformação KAZ
 
-Correção do seed inicial no PostgreSQL.
+Sistema estratégico multiusuário derivado do MVP HTML validado em reunião.
 
-## O que foi corrigido
-O deploy anterior conectava corretamente ao PostgreSQL, mas falhava ao inserir
-`fronts` porque o PostgreSQL recebia registros filhos antes de os respectivos
-`projects` estarem persistidos.
+## Stack
+- Flask
+- PostgreSQL
+- Render
+- Sessão + CSRF
+- Estado estratégico versionado no PostgreSQL
+- Arquivos binários armazenados separadamente no PostgreSQL
 
-A V3.3:
-- persiste/flush os projetos antes de frentes, tarefas e diário;
-- torna o seed idempotente para permitir reinícios sem duplicar dados;
-- preserva os mesmos serviços Render já criados;
-- mantém psycopg 3.3.5 e a configuração atual do banco.
+## Execução local
+```bash
+pip install -r requirements.txt
+ADMIN_PASSWORD='defina-uma-senha' python app.py
+```
 
-## Como atualizar
-Suba todo o conteúdo deste pacote na raiz do repositório `central-gestao`,
-sobrescrevendo os arquivos existentes, e faça commit na branch `main`.
-
-Não crie novo Blueprint, novo Web Service ou novo banco. O serviço
-`central-gestao-app-v31` deve fazer Auto-Deploy após o commit.
+Acesse `/admin/users` com o usuário `rachid` para ativar os demais participantes e definir senhas.

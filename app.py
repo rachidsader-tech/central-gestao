@@ -1,452 +1,335 @@
 import os, json, secrets
 from datetime import datetime
 from functools import wraps
+from io import BytesIO
+
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file, abort
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import UniqueConstraint
-from werkzeug.security import check_password_hash, generate_password_hash
+from sqlalchemy import select
+from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from io import BytesIO
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or secrets.token_hex(32)
-db_url = os.getenv('DATABASE_URL', 'sqlite:///central_gestao.db')
+app.config['MAX_CONTENT_LENGTH'] = 12 * 1024 * 1024
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = os.getenv('RENDER', '').lower() == 'true'
+
+db_url = os.getenv('DATABASE_URL', 'sqlite:///transformacao_kaz.db')
 if db_url.startswith('postgres://'):
     db_url = db_url.replace('postgres://', 'postgresql://', 1)
 if db_url.startswith('postgresql://'):
     db_url = db_url.replace('postgresql://', 'postgresql+psycopg://', 1)
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['MAX_CONTENT_LENGTH'] = 12 * 1024 * 1024
 
 db = SQLAlchemy(app)
 
-class Project(db.Model):
-    __tablename__='projects'
-    id=db.Column(db.String(120), primary_key=True)
-    name=db.Column(db.String(255), nullable=False)
-    area=db.Column(db.String(255))
-    health=db.Column(db.String(80))
-    status=db.Column(db.String(80))
-    movement=db.Column(db.Text)
-    owner=db.Column(db.String(255))
-    priority=db.Column(db.String(50))
-    deadline=db.Column(db.String(120))
-    deadline_label=db.Column(db.String(120))
-    needs_user=db.Column(db.Text)
-    objective=db.Column(db.Text)
-    done_criteria=db.Column(db.Text)
-    current_state=db.Column(db.Text)
-    next_action=db.Column(db.Text)
-    people=db.Column(db.JSON, default=list)
-    created_at=db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at=db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+class User(db.Model):
+    __tablename__ = 'kaz_users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    display_name = db.Column(db.String(160), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(30), nullable=False, default='owner')  # admin, direction, owner
+    project_id = db.Column(db.String(80), nullable=True)
+    active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-class Front(db.Model):
-    __tablename__='fronts'
-    id=db.Column(db.String(160), primary_key=True)
-    project_id=db.Column(db.String(120), db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False, index=True)
-    name=db.Column(db.String(255), nullable=False)
-    status=db.Column(db.String(80))
-    owner=db.Column(db.String(255))
-    next_action=db.Column(db.Text)
-    position=db.Column(db.Integer, default=0)
-
-class Task(db.Model):
-    __tablename__='tasks'
-    id=db.Column(db.String(160), primary_key=True)
-    project_id=db.Column(db.String(120), db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False, index=True)
-    title=db.Column(db.Text, nullable=False)
-    owner=db.Column(db.String(255))
-    due=db.Column(db.String(120))
-    priority=db.Column(db.String(50))
-    status=db.Column(db.String(80))
-    front=db.Column(db.String(255))
-    created_at=db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at=db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-class Note(db.Model):
-    __tablename__='notes'
-    id=db.Column(db.String(160), primary_key=True)
-    title=db.Column(db.String(255), nullable=False)
-    body=db.Column(db.Text)
-    project=db.Column(db.String(255))
-    status=db.Column(db.String(80))
-    pinned=db.Column(db.Boolean, default=False)
-    created_label=db.Column(db.String(80))
-    created_at=db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at=db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-class AgendaEvent(db.Model):
-    __tablename__='agenda_events'
-    id=db.Column(db.String(160), primary_key=True)
-    date=db.Column(db.String(20), nullable=False)
-    time_label=db.Column(db.String(80))
-    title=db.Column(db.String(255), nullable=False)
-    project=db.Column(db.String(255))
-    location=db.Column(db.String(255))
-    people=db.Column(db.String(500))
-    status=db.Column(db.String(80))
-    notes=db.Column(db.Text)
-    created_at=db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at=db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-class JournalEntry(db.Model):
-    __tablename__='journal_entries'
-    id=db.Column(db.Integer, primary_key=True)
-    project_id=db.Column(db.String(120), db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False, index=True)
-    entry_date=db.Column(db.String(20))
-    title=db.Column(db.String(255))
-    summary=db.Column(db.Text)
-    next_action=db.Column(db.Text)
-    source=db.Column(db.String(80), default='manual')
-    created_at=db.Column(db.DateTime, default=datetime.utcnow)
+class AppState(db.Model):
+    __tablename__ = 'kaz_app_state'
+    id = db.Column(db.Integer, primary_key=True, default=1)
+    payload = db.Column(db.JSON, nullable=False)
+    revision = db.Column(db.Integer, nullable=False, default=1)
+    updated_by = db.Column(db.String(160))
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Attachment(db.Model):
-    __tablename__='attachments'
-    id=db.Column(db.Integer, primary_key=True)
-    project_id=db.Column(db.String(120), db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False, index=True)
-    name=db.Column(db.String(255), nullable=False)
-    mime_type=db.Column(db.String(150))
-    source=db.Column(db.String(120), default='Upload')
-    file_data=db.Column(db.LargeBinary, nullable=False)
-    size=db.Column(db.Integer, nullable=False)
-    created_at=db.Column(db.DateTime, default=datetime.utcnow)
+    __tablename__ = 'kaz_attachments'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.String(80), nullable=False, index=True)
+    milestone_id = db.Column(db.String(120), nullable=True, index=True)
+    name = db.Column(db.String(255), nullable=False)
+    note = db.Column(db.String(500))
+    mime_type = db.Column(db.String(180))
+    size = db.Column(db.Integer, nullable=False)
+    file_data = db.Column(db.LargeBinary, nullable=False)
+    uploaded_by = db.Column(db.String(160))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-class DailyImport(db.Model):
-    __tablename__='daily_imports'
-    id=db.Column(db.Integer, primary_key=True)
-    import_key=db.Column(db.String(160), unique=True, nullable=False)
-    payload=db.Column(db.JSON, nullable=False)
-    created_at=db.Column(db.DateTime, default=datetime.utcnow)
+OWNER_SEEDS = [
+    ('ana','Ana Silvia','owner','comercial'),
+    ('oscar','Oscar','owner','projetos'),
+    ('raquel','Raquel','owner','posvenda'),
+    ('ju','Ju Hirota','owner','producao'),
+    ('wancler','Wancler','owner','compras'),
+    ('erik','Erik','owner','financeiro'),
+    ('vini','Vini','owner','planejamento'),
+    ('marcio','Márcio','direction',None),
+    ('marcinho','Marcinho','direction',None),
+    ('leo','Leo','direction',None),
+]
 
+def load_seed():
+    path = os.path.join(app.root_path, 'seed_state.json')
+    with open(path, encoding='utf-8') as f:
+        return json.load(f)
+
+def seed_if_empty():
+    state = db.session.get(AppState, 1)
+    if not state:
+        db.session.add(AppState(id=1, payload=load_seed(), revision=1, updated_by='Sistema'))
+
+    admin_username = os.getenv('ADMIN_USERNAME', 'rachid').strip().lower()
+    admin_password = os.getenv('ADMIN_PASSWORD')
+    if not admin_password:
+        admin_password = 'change-me-now'
+    admin = User.query.filter_by(username=admin_username).first()
+    if not admin:
+        db.session.add(User(
+            username=admin_username,
+            display_name='Rachid',
+            password_hash=generate_password_hash(admin_password),
+            role='admin', active=True
+        ))
+
+    # Pre-create the known participants, but keep them inactive until the admin defines passwords.
+    for username, display_name, role, project_id in OWNER_SEEDS:
+        if not User.query.filter_by(username=username).first():
+            db.session.add(User(
+                username=username,
+                display_name=display_name,
+                password_hash=generate_password_hash(secrets.token_urlsafe(32)),
+                role=role, project_id=project_id, active=False
+            ))
+    db.session.commit()
+
+def current_user():
+    uid = session.get('user_id')
+    return db.session.get(User, uid) if uid else None
 
 def login_required(fn):
     @wraps(fn)
     def wrapped(*args, **kwargs):
-        if not session.get('authenticated'):
+        u = current_user()
+        if not u or not u.active:
+            session.clear()
             if request.path.startswith('/api/'):
-                return jsonify({'error':'unauthorized'}),401
+                return jsonify({'error':'unauthorized'}), 401
             return redirect(url_for('login'))
         return fn(*args, **kwargs)
     return wrapped
 
+def admin_required(fn):
+    @wraps(fn)
+    @login_required
+    def wrapped(*args, **kwargs):
+        if current_user().role != 'admin':
+            abort(403)
+        return fn(*args, **kwargs)
+    return wrapped
+
+def require_csrf():
+    token = request.headers.get('X-CSRF-Token') or request.form.get('csrf_token')
+    if not token or not secrets.compare_digest(token, session.get('csrf','')):
+        abort(403)
+
+def public_user(u):
+    return {
+        'id':u.id, 'username':u.username, 'display_name':u.display_name,
+        'role':u.role, 'project_id':u.project_id, 'active':u.active
+    }
+
+
+def canonical(obj):
+    return json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(',',':'))
+
+def enforce_owner_state_change(old, new, u):
+    """Owners may edit their project, create meetings/dependencies from it,
+    and update dependencies assigned to them. Direction/admin may edit everything."""
+    if u.role in ('admin','direction'):
+        return
+    if u.role != 'owner' or not u.project_id:
+        abort(403)
+
+    old_projects = {p.get('id'):p for p in old.get('projects',[])}
+    new_projects = {p.get('id'):p for p in new.get('projects',[])}
+    if set(old_projects) != set(new_projects):
+        abort(403)
+    for pid, oldp in old_projects.items():
+        if pid != u.project_id and canonical(oldp) != canonical(new_projects[pid]):
+            abort(403)
+
+    old_meetings = {str(m.get('id')):m for m in old.get('meetings',[])}
+    for m in new.get('meetings',[]):
+        mid=str(m.get('id'))
+        if mid in old_meetings:
+            if canonical(m) != canonical(old_meetings[mid]):
+                abort(403)
+        elif m.get('projectId') != u.project_id:
+            abort(403)
+    if any(str(mid) not in {str(m.get('id')) for m in new.get('meetings',[])} for mid in old_meetings):
+        abort(403)
+
+    old_deps = {str(d.get('id')):d for d in old.get('dependencies',[])}
+    new_dep_ids=set()
+    uname=(u.display_name or '').strip().casefold()
+    for d in new.get('dependencies',[]):
+        did=str(d.get('id')); new_dep_ids.add(did)
+        if did not in old_deps:
+            if d.get('projectId') != u.project_id:
+                abort(403)
+        elif canonical(d) != canonical(old_deps[did]):
+            oldd=old_deps[did]
+            assigned=(oldd.get('person') or '').strip().casefold()==uname
+            own=oldd.get('projectId')==u.project_id
+            if not (assigned or own):
+                abort(403)
+    if any(did not in new_dep_ids for did in old_deps):
+        abort(403)
+
+@app.route('/health')
+def health():
+    return jsonify({'ok': True, 'service':'transformacao-kaz'})
+
 @app.route('/login', methods=['GET','POST'])
 def login():
-    error=None
-    if request.method=='POST':
-        email=request.form.get('email','').strip().lower()
-        password=request.form.get('password','')
-        expected_email=os.getenv('ADMIN_EMAIL','admin@local').lower()
-        password_hash=os.getenv('ADMIN_PASSWORD_HASH')
-        password_plain=os.getenv('ADMIN_PASSWORD','changeme')
-        ok = check_password_hash(password_hash,password) if password_hash else secrets.compare_digest(password,password_plain)
-        if email==expected_email and ok:
-            session['authenticated']=True
-            session['email']=email
+    if current_user() and current_user().active:
+        return redirect(url_for('index'))
+    error = None
+    if request.method == 'POST':
+        username = request.form.get('username','').strip().lower()
+        password = request.form.get('password','')
+        u = User.query.filter_by(username=username).first()
+        if u and u.active and check_password_hash(u.password_hash, password):
+            session.clear()
+            session['user_id'] = u.id
+            session['csrf'] = secrets.token_urlsafe(24)
             return redirect(url_for('index'))
-        error='E-mail ou senha inválidos.'
-    return render_template('login.html',error=error)
+        error = 'Usuário ou senha inválidos.'
+    return render_template('login.html', error=error)
 
 @app.route('/logout')
 def logout():
-    session.clear(); return redirect(url_for('login'))
+    session.clear()
+    return redirect(url_for('login'))
 
 @app.route('/')
 @login_required
 def index():
-    return render_template('index.html')
+    state = db.session.get(AppState, 1)
+    return render_template(
+        'index.html',
+        initial_state=state.payload,
+        revision=state.revision,
+        user=public_user(current_user()),
+        csrf=session['csrf']
+    )
 
-
-def seed_if_empty():
-    """
-    Carrega a base inicial de forma idempotente.
-
-    No PostgreSQL, os registros filhos (frentes, tarefas e diário) possuem
-    foreign key para projects.id. Portanto primeiro garantimos e persistimos
-    todos os projetos; só depois inserimos os registros dependentes.
-    """
-    seed_path=os.path.join(app.root_path,'data','seed.json')
-    with open(seed_path,encoding='utf-8') as f:
-        seed=json.load(f)
-
-    # 1) Pais primeiro: projetos.
-    for p in seed.get('projects',[]):
-        pr=db.session.get(Project,p['id'])
-        if not pr:
-            pr=Project(id=p['id'],name=p['name'])
-        pr.name=p['name']
-        pr.area=p.get('area')
-        pr.health=p.get('health')
-        pr.status=p.get('status')
-        pr.movement=p.get('movement')
-        pr.owner=p.get('owner')
-        pr.priority=p.get('priority')
-        pr.deadline=p.get('deadline')
-        pr.deadline_label=p.get('deadline_label')
-        pr.needs_user=p.get('needs_user')
-        pr.objective=p.get('objective')
-        pr.done_criteria=p.get('done')
-        pr.current_state=p.get('current')
-        pr.next_action=p.get('next')
-        pr.people=p.get('people',[])
-        db.session.add(pr)
-
-    # Flush força os INSERTs de projects antes dos filhos, sem encerrar a transação.
-    db.session.flush()
-
-    # 2) Filhos: frentes, tarefas e histórico.
-    for p in seed.get('projects',[]):
-        for i,f in enumerate(p.get('fronts',[])):
-            fid=f.get('id') or f"{p['id']}-front-{i+1}"
-            front=db.session.get(Front,fid)
-            if not front:
-                front=Front(id=fid,project_id=p['id'],name=f.get('name',''))
-            front.project_id=p['id']
-            front.name=f.get('name','')
-            front.status=f.get('status')
-            front.owner=f.get('owner')
-            front.next_action=f.get('next')
-            front.position=i
-            db.session.add(front)
-
-        for i,t in enumerate(p.get('tasks',[])):
-            tid=t.get('id') or f"{p['id']}-task-{i+1}"
-            task=db.session.get(Task,tid)
-            if not task:
-                task=Task(id=tid,project_id=p['id'],title=t.get('title',''))
-            task.project_id=p['id']
-            task.title=t.get('title','')
-            task.owner=t.get('owner')
-            task.due=t.get('due')
-            task.priority=t.get('priority')
-            task.status=t.get('status')
-            task.front=t.get('front')
-            db.session.add(task)
-
-        for u in p.get('updates',[]):
-            if isinstance(u,list) and len(u)>=4:
-                exists=JournalEntry.query.filter_by(
-                    project_id=p['id'], entry_date=u[0], title=u[1], source='seed'
-                ).first()
-                if not exists:
-                    db.session.add(JournalEntry(
-                        project_id=p['id'],entry_date=u[0],title=u[1],
-                        summary=u[2],next_action=u[3],source='seed'
-                    ))
-
-    # 3) Dados independentes.
-    for n in seed.get('notes',[]):
-        note=db.session.get(Note,n['id'])
-        if not note:
-            note=Note(id=n['id'],title=n.get('title','Sem título'))
-        note.title=n.get('title','Sem título')
-        note.body=n.get('body')
-        note.project=n.get('project')
-        note.status=n.get('status')
-        note.pinned=bool(n.get('pinned'))
-        note.created_label=n.get('created')
-        db.session.add(note)
-
-    for e in seed.get('agenda',[]):
-        event=db.session.get(AgendaEvent,e['id'])
-        if not event:
-            event=AgendaEvent(id=e['id'],date=e.get('date',''),title=e.get('title','Sem título'))
-        event.date=e.get('date','')
-        event.time_label=e.get('time')
-        event.title=e.get('title','Sem título')
-        event.project=e.get('project')
-        event.location=e.get('location')
-        event.people=e.get('people')
-        event.status=e.get('status')
-        event.notes=e.get('notes')
-        db.session.add(event)
-
-    db.session.commit()
-
-
-def project_to_dict(p):
-    fronts=Front.query.filter_by(project_id=p.id).order_by(Front.position).all()
-    tasks=Task.query.filter_by(project_id=p.id).order_by(Task.created_at).all()
-    journal=JournalEntry.query.filter_by(project_id=p.id).order_by(JournalEntry.id.desc()).all()
-    attachments=Attachment.query.filter_by(project_id=p.id).order_by(Attachment.id.desc()).all()
-    return {
-        'id':p.id,'name':p.name,'area':p.area,'health':p.health,'status':p.status,'movement':p.movement,'owner':p.owner,'priority':p.priority,
-        'deadline':p.deadline,'deadline_label':p.deadline_label,'needs_user':p.needs_user,'objective':p.objective,'done':p.done_criteria,'current':p.current_state,'next':p.next_action,
-        'people':p.people or [],
-        'fronts':[{'id':f.id,'name':f.name,'status':f.status,'owner':f.owner,'next':f.next_action} for f in fronts],
-        'tasks':[{'id':t.id,'title':t.title,'owner':t.owner,'due':t.due,'priority':t.priority,'status':t.status,'front':t.front} for t in tasks],
-        'updates':[[j.entry_date,j.title,j.summary,j.next_action] for j in journal],
-        'files':[{'id':a.id,'name':a.name,'type':a.mime_type or 'Arquivo','date':a.created_at.strftime('%d/%m/%Y'),'source':a.source,'real':True,'size':a.size} for a in attachments]
-    }
-
-@app.route('/api/state')
+@app.route('/api/state', methods=['GET'])
 @login_required
-def api_state():
+def api_get_state():
+    state = db.session.get(AppState, 1)
+    return jsonify({'state':state.payload, 'revision':state.revision, 'updated_by':state.updated_by,
+                    'updated_at':state.updated_at.isoformat() if state.updated_at else None})
+
+@app.route('/api/state', methods=['POST'])
+@login_required
+def api_save_state():
+    require_csrf()
+    body = request.get_json(force=True)
+    payload = body.get('state')
+    client_revision = int(body.get('revision', 0))
+    if not isinstance(payload, dict) or not isinstance(payload.get('projects'), list):
+        return jsonify({'error':'invalid_state'}), 400
+
+    # PostgreSQL locks the single state row during the revision check/update.
+    state = db.session.execute(select(AppState).where(AppState.id==1).with_for_update()).scalar_one()
+    if client_revision != state.revision:
+        return jsonify({'error':'conflict','revision':state.revision,'state':state.payload}), 409
+
+    enforce_owner_state_change(state.payload, payload, current_user())
+    state.payload = payload
+    state.revision += 1
+    state.updated_by = current_user().display_name
+    state.updated_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify({'ok':True, 'revision':state.revision})
+
+@app.route('/api/attachments', methods=['POST'])
+@login_required
+def upload_attachment():
+    require_csrf()
+    f = request.files.get('file')
+    if not f or not f.filename:
+        return jsonify({'error':'missing_file'}), 400
+    data = f.read()
+    if len(data) > 12 * 1024 * 1024:
+        return jsonify({'error':'too_large'}), 413
+    name = secure_filename(f.filename) or 'arquivo'
+    project_id=request.form.get('project_id','')
+    u=current_user()
+    if u.role=='owner' and project_id != u.project_id:
+        abort(403)
+    a = Attachment(
+        project_id=project_id,
+        milestone_id=request.form.get('milestone_id') or None,
+        name=name,
+        note=request.form.get('note','').strip(),
+        mime_type=f.mimetype,
+        size=len(data), file_data=data,
+        uploaded_by=current_user().display_name
+    )
+    db.session.add(a); db.session.commit()
     return jsonify({
-        'version':'3.3',
-        'projects':[project_to_dict(p) for p in Project.query.order_by(Project.created_at).all()],
-        'notes':[{'id':n.id,'title':n.title,'body':n.body,'project':n.project,'status':n.status,'pinned':n.pinned,'created':n.created_label} for n in Note.query.order_by(Note.pinned.desc(),Note.updated_at.desc()).all()],
-        'agenda':[{'id':e.id,'date':e.date,'time':e.time_label,'title':e.title,'project':e.project,'location':e.location,'people':e.people,'status':e.status,'notes':e.notes} for e in AgendaEvent.query.order_by(AgendaEvent.date,AgendaEvent.time_label).all()]
+        'id':a.id, 'name':a.name, 'size':a.size, 'note':a.note,
+        'date':a.created_at.strftime('%d/%m/%Y %H:%M'),
+        'url':url_for('download_attachment', attachment_id=a.id)
     })
 
-@app.route('/api/notes',methods=['POST'])
+@app.route('/attachments/<int:attachment_id>')
 @login_required
-def save_note():
-    d=request.get_json(force=True); nid=d.get('id') or f"note-{int(datetime.utcnow().timestamp()*1000)}"
-    n=db.session.get(Note,nid) or Note(id=nid)
-    n.title=d.get('title') or 'Sem título'; n.body=d.get('body'); n.project=d.get('project'); n.status=d.get('status'); n.pinned=bool(d.get('pinned')); n.created_label=d.get('created') or datetime.now().strftime('%d/%m/%Y')
-    db.session.add(n); db.session.commit(); return jsonify({'ok':True,'id':n.id})
-
-@app.route('/api/agenda',methods=['POST'])
-@login_required
-def save_event():
-    d=request.get_json(force=True); eid=d.get('id') or f"event-{int(datetime.utcnow().timestamp()*1000)}"
-    e=db.session.get(AgendaEvent,eid) or AgendaEvent(id=eid)
-    e.date=d.get('date') or ''; e.time_label=d.get('time'); e.title=d.get('title') or 'Sem título'; e.project=d.get('project'); e.location=d.get('location'); e.people=d.get('people'); e.status=d.get('status'); e.notes=d.get('notes')
-    db.session.add(e); db.session.commit(); return jsonify({'ok':True,'id':e.id})
-
-@app.route('/api/tasks',methods=['POST'])
-@login_required
-def save_task():
-    d=request.get_json(force=True); tid=d.get('id') or f"task-{int(datetime.utcnow().timestamp()*1000)}"
-    t=db.session.get(Task,tid) or Task(id=tid,project_id=d['project_id'])
-    t.project_id=d['project_id']; t.title=d.get('title') or 'Sem título'; t.owner=d.get('owner'); t.due=d.get('due'); t.priority=d.get('priority'); t.status=d.get('status'); t.front=d.get('front')
-    db.session.add(t); db.session.commit(); return jsonify({'ok':True,'id':t.id})
-
-@app.route('/api/tasks/<tid>/toggle',methods=['POST'])
-@login_required
-def toggle_task(tid):
-    t=db.session.get(Task,tid)
-    if not t: abort(404)
-    t.status='Pendente' if t.status=='Concluído' else 'Concluído'; db.session.commit(); return jsonify({'ok':True,'status':t.status})
-
-@app.route('/api/fronts/<fid>',methods=['POST'])
-@login_required
-def save_front(fid):
-    f=db.session.get(Front,fid)
-    if not f: abort(404)
-    d=request.get_json(force=True); f.name=d.get('name',f.name); f.status=d.get('status'); f.owner=d.get('owner'); f.next_action=d.get('next')
-    db.session.commit(); return jsonify({'ok':True})
-
-@app.route('/api/projects/<pid>',methods=['POST'])
-@login_required
-def save_project(pid):
-    p=db.session.get(Project,pid)
-    if not p: abort(404)
-    d=request.get_json(force=True)
-    mapping={'name':'name','area':'area','health':'health','status':'status','movement':'movement','owner':'owner','priority':'priority','deadline':'deadline','deadline_label':'deadline_label','needs_user':'needs_user','objective':'objective','done':'done_criteria','current':'current_state','next':'next_action'}
-    for k,attr in mapping.items():
-        if k in d: setattr(p,attr,d[k])
-    db.session.commit(); return jsonify({'ok':True})
-
-@app.route('/api/journal/<pid>',methods=['POST'])
-@login_required
-def add_journal(pid):
-    if not db.session.get(Project,pid): abort(404)
-    d=request.get_json(force=True)
-    j=JournalEntry(project_id=pid,entry_date=d.get('date') or datetime.now().strftime('%d/%m/%Y'),title=d.get('title') or 'Atualização',summary=d.get('summary'),next_action=d.get('next'),source=d.get('source') or 'manual')
-    db.session.add(j); db.session.commit(); return jsonify({'ok':True,'id':j.id})
-
-@app.route('/api/files/<pid>',methods=['POST'])
-@login_required
-def upload_file(pid):
-    if not db.session.get(Project,pid): abort(404)
-    f=request.files.get('file')
-    if not f or not f.filename: return jsonify({'error':'Arquivo ausente'}),400
-    data=f.read()
-    a=Attachment(project_id=pid,name=secure_filename(f.filename) or 'arquivo',mime_type=f.mimetype,source='Upload',file_data=data,size=len(data))
-    db.session.add(a); db.session.commit(); return jsonify({'ok':True,'id':a.id})
-
-@app.route('/files/<int:file_id>')
-@login_required
-def download_file(file_id):
-    a=db.session.get(Attachment,file_id)
+def download_attachment(attachment_id):
+    a = db.session.get(Attachment, attachment_id)
     if not a: abort(404)
-    return send_file(BytesIO(a.file_data),mimetype=a.mime_type or 'application/octet-stream',download_name=a.name,as_attachment=False)
+    return send_file(BytesIO(a.file_data), mimetype=a.mime_type or 'application/octet-stream',
+                     as_attachment=True, download_name=a.name)
 
-@app.route('/api/daily-import',methods=['POST'])
-def daily_import():
-    token=os.getenv('DAILY_IMPORT_TOKEN')
-    if not token or request.headers.get('X-Import-Token')!=token:
-        return jsonify({'error':'unauthorized'}),401
-    payload=request.get_json(force=True)
-    key=payload.get('import_key') or payload.get('date') or str(hash(json.dumps(payload,sort_keys=True)))
-    if DailyImport.query.filter_by(import_key=key).first(): return jsonify({'ok':True,'duplicate':True})
-    for upd in payload.get('projects',[]):
-        p=db.session.get(Project,upd.get('project_id'))
-        if not p: continue
-        if 'health' in upd: p.health=upd['health']
-        if 'status' in upd: p.status=upd['status']
-        if 'current' in upd: p.current_state=upd['current']
-        if 'next' in upd: p.next_action=upd['next']
-        if upd.get('journal'):
-            j=upd['journal']; db.session.add(JournalEntry(project_id=p.id,entry_date=j.get('date'),title=j.get('title'),summary=j.get('summary'),next_action=j.get('next'),source='daily_import'))
-        for t in upd.get('tasks_create',[]):
-            db.session.add(Task(id=t.get('id') or f"task-{int(datetime.utcnow().timestamp()*1000)}-{secrets.token_hex(2)}",project_id=p.id,title=t.get('title','Sem título'),owner=t.get('owner'),due=t.get('due'),priority=t.get('priority'),status=t.get('status','Pendente'),front=t.get('front','Geral')))
-    db.session.add(DailyImport(import_key=key,payload=payload)); db.session.commit(); return jsonify({'ok':True})
-
-
-@app.route('/api/import-backup',methods=['POST'])
+@app.route('/api/users')
 @login_required
-def import_backup():
-    payload=request.get_json(force=True)
-    if not isinstance(payload,dict):
-        return jsonify({'error':'backup inválido'}),400
+def api_users():
+    return jsonify([public_user(u) for u in User.query.order_by(User.display_name).all()])
 
-    project_ids={p.id for p in Project.query.all()}
-    for p in payload.get('projects',[]):
-        pid=p.get('id')
-        if not pid:
-            continue
-        pr=db.session.get(Project,pid)
-        if not pr:
-            pr=Project(id=pid,name=p.get('name') or pid)
-            db.session.add(pr)
-            project_ids.add(pid)
-        mapping={
-            'name':'name','area':'area','health':'health','status':'status','movement':'movement',
-            'owner':'owner','priority':'priority','deadline':'deadline','deadline_label':'deadline_label',
-            'needs_user':'needs_user','objective':'objective','done':'done_criteria','current':'current_state','next':'next_action'
-        }
-        for k,attr in mapping.items():
-            if k in p:
-                setattr(pr,attr,p.get(k))
-        if 'people' in p:
-            pr.people=p.get('people') or []
-        for i,f in enumerate(p.get('fronts',[])):
-            fid=f.get('id') or f"{pid}-front-{i+1}"
-            fr=db.session.get(Front,fid) or Front(id=fid,project_id=pid,name=f.get('name') or '')
-            fr.project_id=pid; fr.name=f.get('name') or fr.name; fr.status=f.get('status'); fr.owner=f.get('owner'); fr.next_action=f.get('next'); fr.position=i
-            db.session.add(fr)
-        for i,t in enumerate(p.get('tasks',[])):
-            tid=t.get('id') or f"{pid}-task-{i+1}"
-            task=db.session.get(Task,tid) or Task(id=tid,project_id=pid,title=t.get('title') or 'Sem título')
-            task.project_id=pid; task.title=t.get('title') or task.title; task.owner=t.get('owner'); task.due=t.get('due'); task.priority=t.get('priority'); task.status=t.get('status'); task.front=t.get('front')
-            db.session.add(task)
-
-    for n in payload.get('notes',[]):
-        nid=n.get('id')
-        if not nid: continue
-        note=db.session.get(Note,nid) or Note(id=nid,title=n.get('title') or 'Sem título')
-        note.title=n.get('title') or note.title; note.body=n.get('body'); note.project=n.get('project'); note.status=n.get('status'); note.pinned=bool(n.get('pinned')); note.created_label=n.get('created')
-        db.session.add(note)
-
-    for e in payload.get('agenda',[]):
-        eid=e.get('id')
-        if not eid: continue
-        ev=db.session.get(AgendaEvent,eid) or AgendaEvent(id=eid,date=e.get('date') or '',title=e.get('title') or 'Sem título')
-        ev.date=e.get('date') or ev.date; ev.time_label=e.get('time'); ev.title=e.get('title') or ev.title; ev.project=e.get('project'); ev.location=e.get('location'); ev.people=e.get('people'); ev.status=e.get('status'); ev.notes=e.get('notes')
-        db.session.add(ev)
-
-    db.session.commit()
-    return jsonify({'ok':True})
-
-@app.route('/health')
-def health(): return jsonify({'ok':True})
+@app.route('/admin/users', methods=['GET','POST'])
+@admin_required
+def admin_users():
+    message = None; error = None
+    if request.method == 'POST':
+        require_csrf()
+        uid = int(request.form['user_id'])
+        u = db.session.get(User, uid)
+        if not u: abort(404)
+        u.display_name = request.form.get('display_name',u.display_name).strip() or u.display_name
+        u.role = request.form.get('role',u.role)
+        u.project_id = request.form.get('project_id') or None
+        u.active = request.form.get('active') == 'on'
+        password = request.form.get('password','')
+        if password:
+            if len(password) < 8:
+                error = 'A senha precisa ter pelo menos 8 caracteres.'
+            else:
+                u.password_hash = generate_password_hash(password)
+        if not error:
+            db.session.commit(); message = f'Usuário {u.display_name} atualizado.'
+    users = User.query.order_by(User.display_name).all()
+    state = db.session.get(AppState,1).payload
+    projects = [(p['id'],p['name']) for p in state.get('projects',[])]
+    return render_template('users.html', users=users, projects=projects, csrf=session['csrf'], message=message, error=error)
 
 with app.app_context():
-    db.create_all(); seed_if_empty()
+    db.create_all()
+    seed_if_empty()
 
-if __name__=='__main__':
-    app.run(host='0.0.0.0',port=int(os.getenv('PORT','5000')),debug=os.getenv('FLASK_DEBUG')=='1')
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT','5000')), debug=os.getenv('FLASK_DEBUG')=='1')
