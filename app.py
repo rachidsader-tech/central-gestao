@@ -1,9 +1,9 @@
-import os, json, secrets
+import os, json, secrets, gzip
 from datetime import datetime
 from functools import wraps
 from io import BytesIO
 
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file, abort
+from flask import Flask, render_template, render_template_string, request, jsonify, session, redirect, url_for, send_file, abort
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -82,27 +82,43 @@ def seed_if_empty():
         db.session.add(AppState(id=1, payload=load_seed(), revision=1, updated_by='Sistema'))
 
     admin_username = os.getenv('ADMIN_USERNAME', 'rachid').strip().lower()
-    admin_password = os.getenv('ADMIN_PASSWORD')
-    if not admin_password:
-        admin_password = 'change-me-now'
+    admin_password = os.getenv('KAZ_ADMIN_PASSWORD') or os.getenv('ADMIN_PASSWORD') or 'change-me-now'
     admin = User.query.filter_by(username=admin_username).first()
     if not admin:
-        db.session.add(User(
+        admin = User(
             username=admin_username,
             display_name='Rachid',
             password_hash=generate_password_hash(admin_password),
             role='admin', active=True
-        ))
+        )
+        db.session.add(admin)
+    else:
+        if os.getenv('KAZ_ADMIN_PASSWORD'):
+            admin.password_hash = generate_password_hash(admin_password)
+        admin.role = 'admin'
+        admin.active = True
 
-    # Pre-create the known participants, but keep them inactive until the admin defines passwords.
+    # Accounts become active when a dedicated KAZ_PASSWORD_<USERNAME>
+    # variable is supplied. This keeps credentials out of the repository.
     for username, display_name, role, project_id in OWNER_SEEDS:
-        if not User.query.filter_by(username=username).first():
-            db.session.add(User(
+        env_key = f"KAZ_PASSWORD_{username.upper()}"
+        supplied_password = os.getenv(env_key)
+        u = User.query.filter_by(username=username).first()
+        if not u:
+            u = User(
                 username=username,
                 display_name=display_name,
-                password_hash=generate_password_hash(secrets.token_urlsafe(32)),
-                role=role, project_id=project_id, active=False
-            ))
+                password_hash=generate_password_hash(supplied_password or secrets.token_urlsafe(32)),
+                role=role, project_id=project_id, active=bool(supplied_password)
+            )
+            db.session.add(u)
+        else:
+            u.display_name = display_name
+            u.role = role
+            u.project_id = project_id
+            if supplied_password:
+                u.password_hash = generate_password_hash(supplied_password)
+                u.active = True
     db.session.commit()
 
 def current_user():
@@ -219,6 +235,17 @@ def logout():
 @login_required
 def index():
     state = db.session.get(AppState, 1)
+    gz_path = os.path.join(app.root_path, 'templates', 'index.html.gz')
+    if os.path.exists(gz_path):
+        with gzip.open(gz_path, 'rt', encoding='utf-8') as f:
+            template_source = f.read()
+        return render_template_string(
+            template_source,
+            initial_state=state.payload,
+            revision=state.revision,
+            user=public_user(current_user()),
+            csrf=session['csrf']
+        )
     return render_template(
         'index.html',
         initial_state=state.payload,
