@@ -5,6 +5,7 @@ from io import BytesIO
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file, abort
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select
+from sqlalchemy.orm.attributes import flag_modified
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
@@ -34,6 +35,7 @@ def load_seed():
 def normalize_state(payload):
     changed=False
     if not isinstance(payload,dict): payload=load_seed(); changed=True
+    else: payload=json.loads(json.dumps(payload,ensure_ascii=False))
     version=int(payload.get('schemaVersion') or 1); payload.setdefault('dependencies',[]); payload.setdefault('meetings',[]); payload['direction']=DIRECTOR_NAMES
     for p in payload.get('projects',[]):
         if p.get('status') not in PROJECT_STATUSES: p['status']='Não iniciado'; changed=True
@@ -55,7 +57,7 @@ def seed_if_empty():
     if not state: db.session.add(AppState(id=1,payload=load_seed(),revision=1,updated_by='Sistema'))
     else:
         normalized,changed=normalize_state(state.payload)
-        if changed: state.payload=normalized; state.revision+=1; state.updated_by='Migração V2'; state.updated_at=datetime.utcnow()
+        if changed: state.payload=normalized; flag_modified(state,'payload'); state.revision+=1; state.updated_by='Migração V2'; state.updated_at=datetime.utcnow()
     admin_username=os.getenv('ADMIN_USERNAME','rachid').strip().lower(); admin_password=os.getenv('ADMIN_PASSWORD') or 'change-me-now'; admin=User.query.filter_by(username=admin_username).first()
     if not admin: db.session.add(User(username=admin_username,display_name='Rachid',password_hash=generate_password_hash(admin_password),role='admin',active=True))
     for username,name,role,pid in OWNER_SEEDS:
@@ -143,7 +145,7 @@ def api_save_state():
     if not isinstance(payload,dict) or not isinstance(payload.get('projects'),list): return jsonify({'error':'invalid_state'}),400
     s=db.session.execute(select(AppState).where(AppState.id==1).with_for_update()).scalar_one()
     if rev!=s.revision: return jsonify({'error':'conflict','revision':s.revision,'state':s.payload}),409
-    enforce_state_change(s.payload,payload,current_user()); payload['schemaVersion']=2; s.payload=payload; s.revision+=1; s.updated_by=current_user().display_name; s.updated_at=datetime.utcnow(); db.session.commit(); return jsonify({'ok':True,'revision':s.revision})
+    enforce_state_change(s.payload,payload,current_user()); payload['schemaVersion']=2; s.payload=payload; flag_modified(s,'payload'); s.revision+=1; s.updated_by=current_user().display_name; s.updated_at=datetime.utcnow(); db.session.commit(); return jsonify({'ok':True,'revision':s.revision})
 @app.route('/api/dependencies',methods=['POST'])
 @login_required
 def create_dependency():
@@ -154,7 +156,7 @@ def create_dependency():
     s=db.session.execute(select(AppState).where(AppState.id==1).with_for_update()).scalar_one()
     if not find_project(s.payload,pid): abort(404)
     dep={'id':secrets.token_hex(8),'projectId':pid,'requester':u.display_name,'createdBy':u.username,'subject':subject,'description':description,'director':director,'deadline':body.get('deadline',''),'status':'Aberta','createdAt':now_iso(),'updatedAt':now_iso(),'responses':[],'comments':[],'history':[],'resolution':''}
-    append_history(dep,'Pendência aberta',u,f'Diretor responsável: {director}'); s.payload.setdefault('dependencies',[]).append(dep); s.revision+=1; s.updated_by=u.display_name; s.updated_at=datetime.utcnow(); db.session.commit(); return jsonify({'ok':True,'dependency':dep,'revision':s.revision})
+    append_history(dep,'Pendência aberta',u,f'Diretor responsável: {director}'); s.payload.setdefault('dependencies',[]).append(dep); flag_modified(s,'payload'); s.revision+=1; s.updated_by=u.display_name; s.updated_at=datetime.utcnow(); db.session.commit(); return jsonify({'ok':True,'dependency':dep,'revision':s.revision})
 @app.route('/api/dependencies/<dep_id>/action',methods=['POST'])
 @login_required
 def dependency_action(dep_id):
@@ -190,7 +192,7 @@ def dependency_action(dep_id):
         if not (director or own): abort(403)
         old=dep.get('deadline',''); dep['deadline']=body.get('deadline',''); append_history(dep,'Prazo alterado',u,f'{old or "sem prazo"} → {dep["deadline"] or "sem prazo"}')
     else: return jsonify({'error':'invalid_action'}),400
-    s.revision+=1; s.updated_by=u.display_name; s.updated_at=datetime.utcnow(); db.session.commit(); return jsonify({'ok':True,'dependency':dep,'revision':s.revision})
+    flag_modified(s,'payload'); s.revision+=1; s.updated_by=u.display_name; s.updated_at=datetime.utcnow(); db.session.commit(); return jsonify({'ok':True,'dependency':dep,'revision':s.revision})
 @app.route('/api/attachments',methods=['POST'])
 @login_required
 def upload_attachment():
