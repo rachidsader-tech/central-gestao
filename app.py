@@ -6,6 +6,7 @@ from io import BytesIO
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file, abort
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select
+from sqlalchemy.orm.attributes import flag_modified
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
@@ -93,6 +94,8 @@ def migrate_payload(payload):
     changed = False
     if not isinstance(payload, dict):
         payload = load_seed(); changed = True
+    else:
+        payload = json.loads(json.dumps(payload, ensure_ascii=False))
     if payload.get('schemaVersion', 1) < 2:
         payload['schemaVersion'] = 2; changed = True
     payload.setdefault('dependencies', [])
@@ -135,6 +138,7 @@ def seed_if_empty():
         payload, changed = migrate_payload(state.payload)
         if changed:
             state.payload = payload
+            flag_modified(state, 'payload')
             state.revision += 1
             state.updated_by = 'Migração V2'
             state.updated_at = datetime.utcnow()
@@ -196,6 +200,7 @@ def locked_state():
     return db.session.execute(select(AppState).where(AppState.id==1).with_for_update()).scalar_one()
 
 def save_state(state, actor):
+    flag_modified(state, 'payload')
     state.revision += 1
     state.updated_by = actor
     state.updated_at = datetime.utcnow()
