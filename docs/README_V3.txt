@@ -1,0 +1,1 @@
+Transformação KAZ V3: visão geral de marcos com resumo inteligente; edição única dos marcos pelo responsável; microfone/transcrição/resumo no Modo Reunião; configurações individuais de senha; Ajuda com manual e tutorial tela a tela.
