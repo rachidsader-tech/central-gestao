@@ -143,6 +143,93 @@ def _seed_personal_projects_once():
             db.session.add(PersonalTask(id=f"{item['id']}-t{pos}",project_id=item['id'],milestone_id=mid,title=title,responsible_name=responsible,status=status,priority=priority,due=due))
         db.session.flush(); _history(item['id'],'Sistema','Projeto criado em Minha Gestão',item['last'])
 
+def _reconstruct_personal_content_v7_once():
+    """Atualiza somente o conteúdo dos 7 projetos de Minha Gestão.
+    Não altera registros KAZ, donos, visibilidade, permissões ou estrutura.
+    """
+    if PersonalHistory.query.filter_by(action='Reconstrução de conteúdo V7', detail='CENTRAL DE GESTÃO - PROJETOS').first():
+        return
+    projects = {
+      'my-annexo': {
+        'phase':'Pré-operação', 'health':'Crítico', 'status':'Em risco',
+        'objective':'Concluir a obra e colocar o Annexo em operação, com estrutura, cronograma, evidências e primeiros eventos viáveis.',
+        'current_state':'Obra e abertura seguem críticas, sem atualização física confirmada.',
+        'last_advance':'Reconstrução consolidada: obra, cronograma, evidências e eventos de 24/09, 25/09 e 27/09.',
+        'next_step':'Confirmar o marco de 25/09, a execução física e o cronograma com Cris, Ricardo e Lucca.',
+        'deadline':'25/09/2026',
+        'milestones':[('m1','Obra e infraestrutura','Em risco','Cris / Ricardo / Lucca','Concluir frentes físicas críticas.'),('m2','Eventos de 24/09, 25/09 e 27/09','Em risco','Rachid / Cris / Ricardo','Confirmar prontidão de cada evento.'),('m3','Cronograma e evidências','Em risco','Cris / Ricardo / Lucca','Consolidar cronograma e evidências atualizadas.')],
+        'tasks':[('t1','Confirmar marco de 25/09, execução física e cronograma','Cris / Ricardo / Lucca','Pendente','Alta','Imediato','m3'),('t2','Consolidar evidências das frentes críticas','Cris / Ricardo / Lucca','Pendente','Alta','Imediato','m3')]
+      },
+      'my-bar': {
+        'phase':'Estruturação', 'health':'Atenção', 'status':'Estruturação',
+        'objective':'Estruturar o Bar com mobiliário, cozinha, layout e identidade, cardápio, custos e uma operação-teste.',
+        'current_state':'Sem atualização operacional confirmada; responsável, cozinha e identidade seguem em definição.',
+        'last_advance':'Reconstrução das frentes de mobiliário, cozinha, layout/identidade, cardápio, custos e operação-teste.',
+        'next_step':'Definir responsável principal, cozinha e identidade do Bar.',
+        'milestones':[('m1','Mobiliário','Não iniciado','A definir','Definir necessidades e padrão.'),('m2','Cozinha','Não iniciado','A definir','Definir modelo e infraestrutura de apoio.'),('m3','Layout / identidade','Em andamento','Rachid','Definir conceito e identidade.'),('m4','Cardápio','Não iniciado','A definir','Definir proposta inicial.'),('m5','Custos','Não iniciado','A definir','Consolidar custos e premissas.'),('m6','Operação-teste','Não iniciado','Rachid / A definir','Planejar teste operacional.')],
+        'tasks':[('t1','Definir responsável principal, cozinha e identidade','Rachid / A definir','Pendente','Alta','Próxima revisão','m3')]
+      },
+      'my-financeiro-contabil': {
+        'phase':'Estruturação', 'health':'Atenção', 'status':'Estruturação',
+        'objective':'Organizar a estrutura financeira e contábil, com pagamentos associados, fluxo documentado e fechamento gerencial recorrente.',
+        'current_state':'Pagamentos associados e fluxo parcialmente reconstruído; primeiro fechamento ainda não executado.',
+        'last_advance':'Fluxo financeiro parcialmente reconstruído e pagamentos associados mapeados.',
+        'next_step':'Executar o primeiro fechamento documentado.',
+        'milestones':[('m1','Fluxo financeiro e contábil','Em andamento','Vini / A definir','Documentar fluxo e responsabilidades.'),('m2','Pagamentos associados','Em andamento','Vini','Consolidar associação e controles.'),('m3','Primeiro fechamento documentado','Não iniciado','Vini / A definir','Executar fechamento piloto e registrar resultado.')],
+        'tasks':[('t1','Executar o primeiro fechamento documentado','Vini / A definir','Pendente','Alta','Próxima revisão','m3')]
+      },
+      'my-enjoy-albuns': {
+        'phase':'Desenvolvimento / testes', 'health':'Atenção', 'status':'Em desenvolvimento',
+        'objective':'Validar o Controle de Diagramação e o fluxo de produção de álbuns com painel visual, operação e turma piloto.',
+        'current_state':'Escopo V1 do Controle de Diagramação e painel visual produzidos; validação operacional pendente.',
+        'last_advance':'Escopo V1 e painel visual produzidos; sem atualização operacional posterior confirmada.',
+        'next_step':'Validar com a operação e escolher uma turma piloto.',
+        'milestones':[('m1','Controle de Diagramação — Escopo V1','Em andamento','Kawe / Equipe / Rachid','Validar escopo com operação.'),('m2','Painel visual','Em andamento','Kawe / Equipe','Validar uso operacional.'),('m3','Turma piloto','Não iniciado','Kawe / Equipe / Rachid','Escolher turma e testar ponta a ponta.')],
+        'tasks':[('t1','Validar com a operação e escolher turma piloto','Kawe / Equipe / Rachid','Pendente','Alta','Próxima revisão','m3')]
+      },
+      'my-novo-sistema-vendas': {
+        'phase':'Implantação', 'health':'Atenção', 'status':'Em andamento',
+        'objective':'Ativar o novo fluxo comercial com ata e compromissos consolidados, carteiras e contas em uso real.',
+        'current_state':'Fluxo comercial consolidado e 2ª reunião realizada; ativação comprovada ainda pendente.',
+        'last_advance':'2ª reunião comercial realizada; decisões e compromissos precisam ser consolidados.',
+        'next_step':'Consolidar a ata e os compromissos e comprovar ativação, carteiras e contas em uso.',
+        'milestones':[('m1','Ata e compromissos da 2ª reunião','Em andamento','Ana / Coordenadores','Consolidar ata e responsáveis.'),('m2','Ativação, carteiras e contas em uso','Em andamento','Ana / Coordenadores','Comprovar uso operacional real.')],
+        'tasks':[('t1','Consolidar ata, compromissos e evidências de ativação','Ana / Coordenadores','Pendente','Alta','Próxima reunião','m1')]
+      },
+      'my-novo-sistema-entrega-anexxo': {
+        'phase':'Homologação e ajustes', 'health':'Atenção', 'status':'Em desenvolvimento',
+        'objective':'Homologar o Sistema de Entrega / A.NEXXO V34.4 em operação real, com correções priorizadas, acessos definidos e fluxo ponta a ponta validado.',
+        'current_state':'V34.4 passou por treinamento e homologação real; vídeo, correções, acessos e homologação ponta a ponta são as frentes abertas.',
+        'last_advance':'Treinamento e homologação real da V34.4 concluídos.',
+        'next_step':'Analisar o vídeo, priorizar correções, definir acessos e homologar ponta a ponta.',
+        'milestones':[('m1','Vídeo e priorização de correções','Em andamento','Rachid / Produto-Tecnologia','Analisar gravação e priorizar ajustes.'),('m2','Acessos e perfis','Não iniciado','Rachid / Produto-Tecnologia','Definir acessos necessários.'),('m3','Homologação ponta a ponta','Não iniciado','Rachid / Produto-Tecnologia','Validar fluxo completo em operação.')],
+        'tasks':[('t1','Analisar vídeo e priorizar correções','Rachid / Produto-Tecnologia','Pendente','Alta','Próxima revisão','m1'),('t2','Definir acessos e homologar ponta a ponta','Rachid / Produto-Tecnologia','Pendente','Alta','Após priorização','m2')]
+      },
+      'my-sistema-comissao': {
+        'phase':'Conceituação com requisitos ampliados', 'health':'Atenção', 'status':'Estruturação',
+        'objective':'Definir o Sistema da Comissão com campos obrigatórios, visibilidade e passagem estruturada ao assessor.',
+        'current_state':'Sem atualização operacional confirmada; campos, visibilidade e passagem permanecem em aberto.',
+        'last_advance':'Reconstrução das três frentes estruturantes: campos, visibilidade e passagem.',
+        'next_step':'Definir campos, visibilidade e passagem ao assessor.',
+        'milestones':[('m1','Campos e informações mínimas','Não iniciado','Rachid / Ana','Definir campos obrigatórios.'),('m2','Visibilidade','Não iniciado','Rachid / Ana','Definir o que cada perfil visualiza.'),('m3','Passagem ao assessor','Não iniciado','Rachid / Ana','Definir regra e responsável pela passagem.')],
+        'tasks':[('t1','Definir campos, visibilidade e passagem ao assessor','Rachid / Ana','Pendente','Alta','Próxima revisão','m1')]
+      }
+    }
+    for pid, data in projects.items():
+        p=db.session.get(PersonalProject,pid)
+        if not p: continue
+        for field in ('phase','health','status','objective','current_state','last_advance','next_step','deadline'):
+            if field in data: setattr(p,field,data[field])
+        for suffix,name,status,responsible,next_step in data['milestones']:
+            mid=f'{pid}-{suffix}'; m=db.session.get(PersonalMilestone,mid)
+            if not m: m=PersonalMilestone(id=mid,project_id=pid,position=int(suffix[1:])); db.session.add(m)
+            m.name=name; m.status=status; m.responsible_name=responsible; m.next_step=next_step
+        for suffix,title,responsible,status,priority,due,milestone_suffix in data['tasks']:
+            tid=f'{pid}-{suffix}'; t=db.session.get(PersonalTask,tid)
+            if not t: t=PersonalTask(id=tid,project_id=pid); db.session.add(t)
+            t.title=title; t.responsible_name=responsible; t.status=status; t.priority=priority; t.due=due; t.milestone_id=f'{pid}-{milestone_suffix}'
+        _history(pid,'Sistema','Reconstrução de conteúdo V7','CENTRAL DE GESTÃO - PROJETOS')
+
 def _personal_access(user, project_id, milestone_id=None, task_id=None, permission='view'):
     if not user: return None
     p=db.session.get(PersonalProject,project_id)
@@ -526,6 +613,7 @@ def _initialize_unified_central():
         db.create_all()
         _create_logical_backup_once()
         _seed_personal_projects_once()
+        _reconstruct_personal_content_v7_once()
         db.session.commit()
 
 _initialize_unified_central()
