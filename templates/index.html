@@ -20,6 +20,10 @@
   <button class="nav-btn directionOnly" data-nav="director" onclick="showView('director')">☷ Pendências da Diretoria</button>
   <button class="nav-btn" data-nav="meeting" onclick="showView('meeting')">◫ Modo Reunião</button>
 
+  <div class="nav-section personal-nav" id="personalNavSection">Central unificada</div>
+  <button class="nav-btn personal-nav" id="myManagementNav" onclick="openMyManagement()">◉ Minha Gestão</button>
+  <button class="nav-btn personal-nav" id="integratedNav" onclick="openIntegratedView()">◌ Visão Integrada</button>
+
   <div class="nav-section">Conta</div>
   <button class="nav-btn" data-nav="settings" onclick="showView('settings')">⚙ Configurações</button>
 
@@ -53,6 +57,8 @@
   <section id="meetingView" class="view hidden"></section>
   <section id="helpView" class="view hidden"></section>
   <section id="settingsView" class="view hidden"></section>
+  <section id="myManagementView" class="view hidden"></section>
+  <section id="integratedView" class="view hidden"></section>
 </div>
 <div class="footer-note">Transformação KAZ · Pessoas · Processos · Resultados</div>
 </main>
@@ -72,5 +78,6 @@ window.KAZ_BOOT={
 <script src="/static/kaz2.js?v=5"></script>
 <script src="/static/kaz3.js?v=5"></script>
 <script src="/static/kaz4.js?v=5"></script>
+<script src="/static/central.js?v=6"></script>
 </body>
 </html>
