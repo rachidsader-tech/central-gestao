@@ -133,6 +133,8 @@ def _seed_personal_projects_once():
         if db.session.get(PersonalProject,item['id']): continue
         p=PersonalProject(id=item['id'],name=item['name'],owner_user_id=owner.id,owner_name=item['owner'],visibility='Privado',phase=item['phase'],health=item['health'],status=item['status'],objective=item['objective'],current_state=item['current'],last_advance=item['last'],next_step=item['next'],priority=item['priority'],deadline=item['deadline'])
         db.session.add(p)
+        # A FK dos marcos exige que o projeto pai exista antes dos filhos.
+        db.session.flush()
         for pos,(name,status,responsible,next_step) in enumerate(item['milestones'],1):
             db.session.add(PersonalMilestone(id=f"{item['id']}-m{pos}",project_id=item['id'],name=name,status=status,responsible_name=responsible,next_step=next_step,position=pos))
         for pos,(title,responsible,status,priority,due,milestone_name) in enumerate(item['tasks'],1):
