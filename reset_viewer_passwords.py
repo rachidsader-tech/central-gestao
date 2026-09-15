@@ -2,6 +2,20 @@ import os, json, hashlib
 import psycopg
 from werkzeug.security import generate_password_hash
 
+# O Render ainda inicia gunicorn app:app. Antes do boot, registramos o módulo
+# de processamento de reunião no app.py da instância sem mexer no banco.
+APP_PATH = os.path.join(os.path.dirname(__file__), 'app.py')
+BOOT_MARKER = '# meeting-ai-runtime-bootstrap-v1'
+try:
+    with open(APP_PATH, 'r', encoding='utf-8') as f:
+        source = f.read()
+    if BOOT_MARKER not in source:
+        with open(APP_PATH, 'a', encoding='utf-8') as f:
+            f.write("\n" + BOOT_MARKER + "\nimport meeting_ai as _meeting_ai\n_meeting_ai.register(__import__(__name__))\n")
+        print('Meeting AI runtime bootstrap installed.')
+except Exception as exc:
+    print(f'Meeting AI runtime bootstrap failed: {exc}')
+
 DB_URL = os.environ.get('DATABASE_URL')
 TEMP_PASSWORD = os.environ.get('KAZ_VIEWER_TEMP_PASSWORD')
 MARKER = 'viewer-temp-password-v1'
