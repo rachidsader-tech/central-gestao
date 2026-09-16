@@ -1,7 +1,7 @@
 import gzip, os, secrets, json, hashlib
 from datetime import datetime
 from flask import render_template, jsonify, request, abort, Response
-from sqlalchemy import select, text as sql_text, UniqueConstraint
+from sqlalchemy import inspect, select, text as sql_text, UniqueConstraint
 from werkzeug.security import generate_password_hash
 
 # Carrega o núcleo estável do sistema. A interface V5 usa arquivos HTML/JS normais.
@@ -22,6 +22,10 @@ class PersonalProject(db.Model):
     name = db.Column(db.String(255), nullable=False)
     owner_user_id = db.Column(db.Integer, db.ForeignKey('kaz_users.id'), nullable=False, index=True)
     owner_name = db.Column(db.String(160), nullable=False)
+    # owner_* identifica quem criou e administra o projeto. O responsável pode
+    # ser alterado sem retirar o acesso do proprietário original.
+    responsible_user_id = db.Column(db.Integer, nullable=True, index=True)
+    responsible_name = db.Column(db.String(160), default='')
     visibility = db.Column(db.String(40), nullable=False, default='Privado')
     phase = db.Column(db.String(160), default='')
     health = db.Column(db.String(80), default='Normal')
@@ -40,9 +44,15 @@ class PersonalMilestone(db.Model):
     id = db.Column(db.String(120), primary_key=True)
     project_id = db.Column(db.String(100), db.ForeignKey('personal_projects.id', ondelete='CASCADE'), nullable=False, index=True)
     name = db.Column(db.String(255), nullable=False)
+    category = db.Column(db.String(120), default='')
     status = db.Column(db.String(80), default='Não iniciado')
+    health = db.Column(db.String(80), default='')
+    responsible_user_id = db.Column(db.Integer, nullable=True, index=True)
     responsible_name = db.Column(db.String(160), default='')
     next_step = db.Column(db.Text, default='')
+    deadline = db.Column(db.String(120), default='')
+    notes = db.Column(db.Text, default='')
+    active = db.Column(db.Boolean, nullable=False, default=True, index=True)
     position = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
@@ -125,6 +135,112 @@ def _create_logical_backup_once():
     }
     raw=json.dumps(payload,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()
     db.session.add(MigrationBackup(backup_key='pre-central-unificada-v6',payload=payload,checksum=hashlib.sha256(raw).hexdigest()))
+
+PERSONAL_PROJECT_NAMES = {
+    'my-annexo': 'Annexo',
+    'my-bar': 'Bar',
+    'my-financeiro-contabil': 'Financeiro / Contábil',
+    'my-enjoy-albuns': 'Enjoy / Álbuns',
+    'my-novo-sistema-vendas': 'Sistema de Vendas',
+    'my-novo-sistema-entrega-anexxo': 'Sistema de Entrega',
+    'my-sistema-comissao': 'Sistema da Comissão',
+}
+
+def _ensure_personal_v8_schema():
+    """Migração aditiva restrita às tabelas personal_*.
+
+    db.create_all não adiciona colunas em tabelas existentes. Esta função
+    acrescenta apenas os campos necessários para responsabilidade e para a
+    estrutura completa dos marcos; kaz_app_state e as tabelas KAZ não entram
+    nesta migração.
+    """
+    additions = {
+        'personal_projects': {
+            'responsible_user_id': 'INTEGER',
+            'responsible_name': "VARCHAR(160) DEFAULT ''",
+        },
+        'personal_milestones': {
+            'category': "VARCHAR(120) DEFAULT ''",
+            'health': "VARCHAR(80) DEFAULT ''",
+            'responsible_user_id': 'INTEGER',
+            'deadline': "VARCHAR(120) DEFAULT ''",
+            'notes': "TEXT DEFAULT ''",
+            'active': 'BOOLEAN NOT NULL DEFAULT TRUE',
+        },
+    }
+    db_inspector = inspect(db.engine)
+    with db.engine.begin() as conn:
+        for table_name, columns in additions.items():
+            existing = {column['name'] for column in db_inspector.get_columns(table_name)}
+            for column_name, ddl in columns.items():
+                if column_name not in existing:
+                    conn.execute(sql_text(f'ALTER TABLE {table_name} ADD COLUMN {column_name} {ddl}'))
+        conn.execute(sql_text('CREATE INDEX IF NOT EXISTS ix_personal_projects_responsible_user_id ON personal_projects (responsible_user_id)'))
+        conn.execute(sql_text('CREATE INDEX IF NOT EXISTS ix_personal_milestones_responsible_user_id ON personal_milestones (responsible_user_id)'))
+        conn.execute(sql_text('CREATE INDEX IF NOT EXISTS ix_personal_milestones_active ON personal_milestones (active)'))
+
+def _create_personal_v8_backup_once():
+    if MigrationBackup.query.filter_by(backup_key='personal-before-v8-89-marcos').first():
+        return
+    project_ids = tuple(PERSONAL_PROJECT_NAMES)
+    payload = {
+        'projects': [{column.name:getattr(row,column.name) for column in PersonalProject.__table__.columns if column.name not in ('created_at','updated_at')} for row in PersonalProject.query.filter(PersonalProject.id.in_(project_ids)).all()],
+        'milestones': [{column.name:getattr(row,column.name) for column in PersonalMilestone.__table__.columns if column.name!='created_at'} for row in PersonalMilestone.query.filter(PersonalMilestone.project_id.in_(project_ids)).all()],
+        'tasks': [{column.name:getattr(row,column.name) for column in PersonalTask.__table__.columns if column.name not in ('created_at','updated_at')} for row in PersonalTask.query.filter(PersonalTask.project_id.in_(project_ids)).all()],
+        'access': [{column.name:getattr(row,column.name) for column in PersonalAccess.__table__.columns if column.name!='created_at'} for row in PersonalAccess.query.filter(PersonalAccess.project_id.in_(project_ids)).all()],
+    }
+    raw=json.dumps(payload,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()
+    db.session.add(MigrationBackup(backup_key='personal-before-v8-89-marcos',payload=payload,checksum=hashlib.sha256(raw).hexdigest()))
+
+def _restore_personal_milestones_v8_once():
+    """Restaura as 89 etapas históricas como marcos ativos dos 7 projetos.
+
+    Os marcos-resumo da V7 não são apagados: ficam inativos e permanecem no
+    banco com seus vínculos. Nenhum projeto, usuário ou registro KAZ é lido ou
+    alterado por esta rotina.
+    """
+    marker = '89 etapas históricas restauradas sem excluir a V7'
+    if PersonalHistory.query.filter_by(action='Restauração estrutural V8', detail=marker).first():
+        return
+    path = os.path.join(os.path.dirname(__file__), 'personal_milestones_v8.json')
+    with open(path, encoding='utf-8') as source:
+        data = json.load(source)
+    projects = data.get('projects') or {}
+    if set(projects) != set(PERSONAL_PROJECT_NAMES):
+        raise RuntimeError('A restauração V8 não contém exatamente os 7 projetos pessoais.')
+    if sum(len(items) for items in projects.values()) != 89:
+        raise RuntimeError('A restauração V8 precisa conter exatamente 89 marcos.')
+
+    for project_id, items in projects.items():
+        project = db.session.get(PersonalProject, project_id)
+        if not project:
+            continue
+        project.name = PERSONAL_PROJECT_NAMES[project_id]
+        # Apenas os marcos-resumo conhecidos da V7 são desativados. Nenhuma
+        # linha é excluída e um eventual marco novo permanece intacto.
+        PersonalMilestone.query.filter(
+            PersonalMilestone.project_id == project_id,
+            PersonalMilestone.id.like(f'{project_id}-m%'),
+        ).update({'active': False}, synchronize_session=False)
+        for position, item in enumerate(items, 1):
+            milestone = db.session.get(PersonalMilestone, item['id'])
+            if not milestone:
+                milestone = PersonalMilestone(id=item['id'], project_id=project_id)
+                db.session.add(milestone)
+            milestone.name = item['name']
+            milestone.category = item['category']
+            milestone.status = item['status']
+            milestone.health = item['health']
+            legacy_responsible = (item.get('responsible') or '').strip()
+            # "A definir" significa ausência de responsável próprio; nesse
+            # caso o marco herda automaticamente o responsável do projeto.
+            milestone.responsible_name = '' if legacy_responsible.casefold() == 'a definir' else legacy_responsible
+            milestone.next_step = item['next']
+            milestone.deadline = item['deadline']
+            milestone.notes = item['notes']
+            milestone.position = position
+            milestone.active = True
+        _history(project_id, 'Sistema', 'Restauração estrutural V8', marker)
 
 def _seed_personal_projects_once():
     owner = User.query.filter_by(username='rachid').first()
@@ -235,40 +351,76 @@ def _personal_access(user, project_id, milestone_id=None, task_id=None, permissi
     p=db.session.get(PersonalProject,project_id)
     if not p: return None
     if user.id==p.owner_user_id: return 'owner'
+    if p.responsible_user_id and user.id==p.responsible_user_id: return 'responsible'
+    if milestone_id:
+        milestone=db.session.get(PersonalMilestone,milestone_id)
+        if milestone and milestone.project_id==project_id and milestone.responsible_user_id==user.id:
+            return 'responsible'
     row=PersonalAccess.query.filter_by(user_id=user.id,project_id=project_id,milestone_id=milestone_id,task_id=task_id).first()
     if row: return row.permission
     if milestone_id:
         row=PersonalAccess.query.filter_by(user_id=user.id,project_id=project_id,milestone_id=milestone_id,task_id=None).first()
         if row: return row.permission
     row=PersonalAccess.query.filter_by(user_id=user.id,project_id=project_id,milestone_id=None,task_id=None).first()
-    return row.permission if row else None
+    if row: return row.permission
+    # A responsabilidade por um único marco dá acesso de consulta ao contêiner
+    # do projeto, sem abrir os demais marcos ou registros.
+    if not milestone_id and PersonalMilestone.query.filter_by(project_id=project_id,responsible_user_id=user.id,active=True).first():
+        return 'view'
+    return None
 
 def _personal_can_edit(user, project_id, milestone_id=None, task_id=None):
-    return _personal_access(user,project_id,milestone_id,task_id) in ('owner','edit')
+    return _personal_access(user,project_id,milestone_id,task_id) in ('owner','responsible','edit')
 
 def _personal_visible_projects(user):
     if not user: return []
     owned=PersonalProject.query.filter_by(owner_user_id=user.id).all()
+    responsible=PersonalProject.query.filter_by(responsible_user_id=user.id).all()
+    milestone_responsibility=PersonalMilestone.query.filter_by(responsible_user_id=user.id,active=True).all()
     access=PersonalAccess.query.filter_by(user_id=user.id).all()
-    ids={p.id for p in owned}|{a.project_id for a in access if a.project_id}
+    ids={p.id for p in owned}|{p.id for p in responsible}|{m.project_id for m in milestone_responsibility}|{a.project_id for a in access if a.project_id}
     return PersonalProject.query.filter(PersonalProject.id.in_(ids)).order_by(PersonalProject.created_at).all() if ids else []
 
 def _personal_serialized(user, project, include_restricted=True):
     accesses=PersonalAccess.query.filter_by(user_id=user.id,project_id=project.id).all()
     owner=user.id==project.owner_user_id
-    project_wide=owner or any(a.milestone_id is None and a.task_id is None for a in accesses)
+    project_responsible=user.id==project.responsible_user_id
+    project_wide=owner or project_responsible or any(a.milestone_id is None and a.task_id is None for a in accesses)
     delegated_milestone_ids={a.milestone_id for a in accesses if a.milestone_id and not a.task_id}
-    milestone_ids=set(delegated_milestone_ids)
+    responsible_milestone_ids={m.id for m in PersonalMilestone.query.filter_by(project_id=project.id,responsible_user_id=user.id,active=True).all()}
+    milestone_ids=set(delegated_milestone_ids)|responsible_milestone_ids
     task_ids={a.task_id for a in accesses if a.task_id}
-    milestones=PersonalMilestone.query.filter_by(project_id=project.id).order_by(PersonalMilestone.position).all()
+    milestones=PersonalMilestone.query.filter_by(project_id=project.id,active=True).order_by(PersonalMilestone.position).all()
     tasks=PersonalTask.query.filter_by(project_id=project.id).order_by(PersonalTask.created_at).all()
     if not project_wide:
         allowed_task_milestones={t.milestone_id for t in tasks if t.id in task_ids}
         milestone_ids|={m for m in allowed_task_milestones if m}
         milestones=[m for m in milestones if m.id in milestone_ids]
         # Um acesso a tarefa não abre as outras tarefas do mesmo marco.
-        tasks=[t for t in tasks if t.id in task_ids or t.milestone_id in delegated_milestone_ids]
-    return {'id':project.id,'name':project.name,'owner':project.owner_name,'visibility':project.visibility,'phase':project.phase,'health':project.health,'status':project.status,'objective':project.objective,'current':project.current_state,'lastAdvance':project.last_advance,'next':project.next_step,'priority':project.priority,'deadline':project.deadline,'restricted':not project_wide,'canEdit':_personal_can_edit(user,project.id),'milestones':[{'id':m.id,'name':m.name,'status':m.status,'owner':m.responsible_name,'next':m.next_step,'canEdit':_personal_can_edit(user,project.id,m.id)} for m in milestones],'tasks':[{'id':t.id,'milestoneId':t.milestone_id,'title':t.title,'owner':t.responsible_name,'status':t.status,'priority':t.priority,'due':t.due,'canEdit':_personal_can_edit(user,project.id,t.milestone_id,t.id)} for t in tasks], 'journal':([] if not project_wide else [{'id':j.id,'title':j.title,'body':j.body,'next':j.next_step,'author':j.author,'at':j.created_at.isoformat()} for j in PersonalJournal.query.filter_by(project_id=project.id).order_by(PersonalJournal.created_at.desc()).all()]), 'history':([] if not project_wide else [{'author':h.author,'action':h.action,'detail':h.detail,'at':h.created_at.isoformat()} for h in PersonalHistory.query.filter_by(project_id=project.id).order_by(PersonalHistory.created_at.desc()).all()])}
+        tasks=[t for t in tasks if t.id in task_ids or t.milestone_id in delegated_milestone_ids or t.milestone_id in responsible_milestone_ids]
+    project_responsible_name=project.responsible_name or ''
+    milestone_names={m.id:m.name for m in milestones}
+    return {
+        'id':project.id,'name':project.name,'owner':project_responsible_name,'managedBy':project.owner_name,
+        'responsibleUserId':project.responsible_user_id,'visibility':project.visibility,'phase':project.phase,
+        'health':project.health,'status':project.status,'objective':project.objective,'current':project.current_state,
+        'lastAdvance':project.last_advance,'next':project.next_step,'priority':project.priority,'deadline':project.deadline,
+        'restricted':not project_wide,'canEdit':_personal_can_edit(user,project.id),'canAssign':owner,
+        'milestones':[{
+            'id':m.id,'name':m.name,'category':m.category,'status':m.status,'health':m.health,
+            'owner':m.responsible_name,'effectiveOwner':m.responsible_name or project_responsible_name,
+            'inheritsProjectOwner':not bool(m.responsible_name),'responsibleUserId':m.responsible_user_id,
+            'next':m.next_step,'deadline':m.deadline,'notes':m.notes,
+            'canEdit':_personal_can_edit(user,project.id,m.id),'canAssign':owner,
+        } for m in milestones],
+        'tasks':[{
+            'id':t.id,'milestoneId':t.milestone_id,'milestoneName':milestone_names.get(t.milestone_id,''),
+            'title':t.title,'owner':t.responsible_name or project_responsible_name,'status':t.status,
+            'priority':t.priority,'due':t.due,'canEdit':_personal_can_edit(user,project.id,t.milestone_id,t.id),
+        } for t in tasks],
+        'journal':([] if not project_wide else [{'id':j.id,'title':j.title,'body':j.body,'next':j.next_step,'author':j.author,'at':j.created_at.isoformat()} for j in PersonalJournal.query.filter_by(project_id=project.id).order_by(PersonalJournal.created_at.desc()).all()]),
+        'history':([] if not project_wide else [{'author':h.author,'action':h.action,'detail':h.detail,'at':h.created_at.isoformat()} for h in PersonalHistory.query.filter_by(project_id=project.id).order_by(PersonalHistory.created_at.desc()).all()]),
+    }
 
 # Usuários de consulta: enxergam toda a transformação, mas não possuem projeto e não editam nada.
 _VIEWER_USERS = [
@@ -536,6 +688,15 @@ def _personal_project_or_404(project_id):
     if not _personal_access(current_user(),project_id): abort(403)
     return p
 
+def _active_personal_user(username):
+    username=(username or '').strip().lower()
+    if not username:
+        return None
+    user=User.query.filter_by(username=username,active=True).first()
+    if not user:
+        abort(Response(json.dumps({'error':'Usuário ativo não encontrado.'},ensure_ascii=False),status=400,mimetype='application/json'))
+    return user
+
 @app.route('/api/minha-gestao/projects/<project_id>', methods=['POST'])
 @login_required
 def personal_project_action(project_id):
@@ -548,6 +709,13 @@ def personal_project_action(project_id):
                 value=(body.get(key) or '').strip()
                 if field=='visibility' and value not in PERSONAL_VISIBILITIES: return jsonify({'error':'Visibilidade inválida.'}),400
                 setattr(p,field,value)
+        if 'responsibleUsername' in body:
+            if u.id!=p.owner_user_id: abort(403)
+            responsible=_active_personal_user(body.get('responsibleUsername'))
+            p.responsible_user_id=responsible.id if responsible else None
+            p.responsible_name=responsible.display_name if responsible else ''
+            if responsible and p.visibility=='Privado': p.visibility='Delegado'
+            _history(project_id,u.display_name,'Responsável do projeto atualizado',p.responsible_name or 'Sem responsável')
         _history(project_id,u.display_name,'Projeto atualizado','')
     elif action=='journal':
         title=(body.get('title') or '').strip(); note=(body.get('body') or '').strip()
@@ -562,9 +730,21 @@ def personal_milestone_action(milestone_id):
     require_csrf(); body=request.get_json(force=True); u=current_user(); m=db.session.get(PersonalMilestone,milestone_id)
     if not m: abort(404)
     if not _personal_can_edit(u,m.project_id,m.id): abort(403)
-    if 'status' in body: m.status=(body.get('status') or '').strip()
+    if 'status' in body:
+        status=(body.get('status') or '').strip()
+        if status not in ('Não iniciado','Em andamento','Em risco','Concluído'): return jsonify({'error':'Status inválido.'}),400
+        m.status=status
+    if 'category' in body: m.category=(body.get('category') or '').strip()
     if 'next' in body: m.next_step=(body.get('next') or '').strip()
-    if 'owner' in body: m.responsible_name=(body.get('owner') or '').strip()
+    if 'deadline' in body: m.deadline=(body.get('deadline') or '').strip()
+    if 'notes' in body: m.notes=(body.get('notes') or '').strip()
+    if 'responsibleUsername' in body:
+        project=db.session.get(PersonalProject,m.project_id)
+        if u.id!=project.owner_user_id: abort(403)
+        responsible=_active_personal_user(body.get('responsibleUsername'))
+        m.responsible_user_id=responsible.id if responsible else None
+        m.responsible_name=responsible.display_name if responsible else ''
+        _history(m.project_id,u.display_name,'Responsável do marco atualizado',f'{m.name}: {m.responsible_name or "herda o projeto"}')
     _history(m.project_id,u.display_name,'Marco atualizado',m.name); db.session.commit(); return jsonify({'ok':True})
 
 @app.route('/api/minha-gestao/tasks/<task_id>', methods=['POST'])
@@ -611,9 +791,12 @@ def _initialize_unified_central():
     with app.app_context():
         # Apenas CREATE TABLE; nenhuma tabela ou linha KAZ é alterada.
         db.create_all()
+        _ensure_personal_v8_schema()
         _create_logical_backup_once()
         _seed_personal_projects_once()
         _reconstruct_personal_content_v7_once()
+        _create_personal_v8_backup_once()
+        _restore_personal_milestones_v8_once()
         db.session.commit()
 
 _initialize_unified_central()
