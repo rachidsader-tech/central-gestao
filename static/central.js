@@ -4,6 +4,7 @@
 let personalState={projects:[],is_owner:false};
 let personalProjectId=null;
 let personalCurrentTab='overview';
+let personalOpenMilestoneId=null;
 let personalUsersCache=null;
 
 async function personalApi(url,method='GET',body=null){
@@ -21,6 +22,17 @@ function personalResponsible(p){return p.owner||'A definir'}
 function personalHealthBadge(health){
   const tone=health==='Crítico'?'s-risco':health==='Saudável'?'s-conc':health==='Oportunidade'?'s-analise':'s-nao';
   return `<span class="pill ${tone}">${esc(health||'Sem classificação')}</span>`;
+}
+function personalDeadlineInput(value){
+  const raw=String(value||'').trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(raw))return raw;
+  const br=raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  return br?`${br[3]}-${br[2]}-${br[1]}`:'';
+}
+function personalDeadlineDisplay(value){
+  const raw=String(value||'').trim();
+  const iso=raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return iso?`${iso[3]}/${iso[2]}/${iso[1]}`:(raw||'—');
 }
 function showPersonalView(name){
   $$('.view').forEach(v=>v.classList.add('hidden'));
@@ -75,23 +87,31 @@ function renderPersonalPanel(p){
   }
   if(personalCurrentTab==='milestones'){
     root.innerHTML=`<div class="section-title"><div><h2>Marcos do projeto</h2><div class="small muted">Estrutura completa recuperada das etapas originais.</div></div><span class="pill s-nao">${c.total} marcos</span></div>
-    <div class="personal-milestone-list">${(p.milestones||[]).map((m,i)=>personalMilestoneCard(m,i,p)).join('')||'<div class="card empty">Nenhum marco visível.</div>'}</div>`;
+    ${(p.milestones||[]).length?`<div class="card"><div class="pad">${p.milestones.map((m,i)=>personalMilestoneCard(m,i,p)).join('')}</div></div>`:'<div class="card empty">Nenhum marco visível.</div>'}`;
     return;
   }
   if(personalCurrentTab==='tasks'){
     root.innerHTML=`<div class="section-title"><div><h2>Pendências</h2><div class="small muted">Ações operacionais separadas dos marcos.</div></div></div><div class="card"><div class="pad">${(p.tasks||[]).map(t=>`<div class="message"><div class="flex"><strong>${esc(t.title)}</strong><span class="right">${personalBadge(t.status)}</span></div><div class="muted small">${t.milestoneName?`Marco: ${esc(t.milestoneName)} · `:''}Responsável: ${esc(t.owner||'A definir')} · Prazo: ${esc(t.due||'—')} · Prioridade: ${esc(t.priority||'—')}</div>${t.canEdit?`<div class="actions"><button class="btn light small" onclick="editPersonalTask('${t.id}')">Atualizar</button></div>`:''}</div>`).join('')||'<div class="empty">Nenhuma pendência.</div>'}</div></div>`;
     return;
   }
-  const journal=p.journal||[],history=p.history||[];
+  const journal=p.journal||[],history=p.history||[],milestoneRecords=p.milestoneRecords||[];
   root.innerHTML=`<div class="section-title"><div><h2>Registros do projeto</h2><div class="small muted">Atualizações, decisões e alterações de responsabilidade.</div></div>${p.canEdit?'<button class="btn blue small" onclick="addPersonalJournal()">＋ Novo registro</button>':''}</div>
+  <div class="card" style="margin-bottom:14px"><div class="card-h"><h3>Histórico dos marcos</h3></div><div class="pad">${milestoneRecords.map(r=>`<div class="message"><div class="small muted" style="font-weight:800;text-transform:uppercase;margin-bottom:4px">${esc(r.milestoneName||'Marco')}</div><strong>${esc(r.author)} · ${fmtDate(r.at)}</strong><p>${esc(r.body)}</p></div>`).join('')||'<div class="empty">Nenhum andamento de marco registrado ainda.</div>'}</div></div>
   <div class="two"><div class="card"><div class="card-h"><h3>Registros</h3></div><div class="pad">${journal.map(j=>`<div class="message"><strong>${esc(j.title)} · ${esc(j.author)}</strong><p>${esc(j.body)}</p>${j.next?`<p class="small"><b>Próximo:</b> ${esc(j.next)}</p>`:''}</div>`).join('')||'<div class="empty">Nenhum registro.</div>'}</div></div>
   <div class="card"><div class="card-h"><h3>Histórico</h3></div><div class="pad">${history.map(h=>`<div class="message"><strong>${esc(h.action)} · ${esc(h.author)}</strong>${h.detail?`<p>${esc(h.detail)}</p>`:''}</div>`).join('')||'<div class="empty">Nenhum histórico.</div>'}</div></div></div>`;
 }
 
 function personalMilestoneCard(m,index,p){
-  const responsible=m.effectiveOwner||'A definir',inherit=m.inheritsProjectOwner&&p.owner;
-  return `<details class="card personal-milestone"><summary><div><div class="small muted">${esc(m.category||'Geral')} · MARCO ${index+1}</div><div class="m-name">${esc(m.name)}</div><div class="small muted">Responsável: ${esc(responsible)}${inherit?' (herdado do projeto)':''} · Prazo: ${esc(m.deadline||'A definir')}</div></div><div class="flex wrap">${personalBadge(m.status)} ${personalHealthBadge(m.health)}</div></summary><div class="personal-milestone-body"><div><b>Próximo avanço</b><p>${esc(m.next||'—')}</p></div><div><b>Observações</b><p>${esc(m.notes||'—')}</p></div>${m.canEdit||m.canAssign?`<div class="actions">${m.canEdit?`<button class="btn light small" onclick="editPersonalMilestone('${m.id}')">Atualizar marco</button>`:''}${m.canAssign?`<button class="btn light small" onclick="assignPersonalResponsibility('milestone','${m.id}')">Definir responsável</button>`:''}</div>`:''}</div></details>`;
+  const records=m.records||[],last=records[0],opened=personalOpenMilestoneId===m.id;
+  const deadlineInput=personalDeadlineInput(m.deadline);
+  const nonDateDeadline=m.deadline&&!deadlineInput;
+  const legacy=[m.category?`<div><b>Categoria original</b><p>${esc(m.category)}</p></div>`:'',m.next?`<div><b>Próximo avanço anterior</b><p>${esc(m.next)}</p></div>`:'',m.notes?`<div><b>Observações anteriores</b><p>${esc(m.notes)}</p></div>`:''].filter(Boolean).join('');
+  const history=`<div class="personal-milestone-history"><div class="flex wrap"><div><b>Histórico do marco</b><div class="muted small">Evoluções, decisões e mudanças de contexto registradas ao longo do tempo.</div></div><span class="right pill s-nao">${records.length} ${records.length===1?'registro':'registros'}</span></div>${records.length?records.map(r=>`<div class="message"><strong>${esc(r.author)} · ${fmtDate(r.at)}</strong><p>${esc(r.body)}</p></div>`).join(''):'<div class="empty">Nenhum andamento registrado ainda.</div>'}</div>`;
+  return `<div class="milestone personal-standard-milestone"><div class="m-row"><div><div class="m-name">${index+1}. ${esc(m.name)}</div><div class="muted small" style="margin-top:3px">${m.deadline?`Prazo: ${esc(personalDeadlineDisplay(m.deadline))}`:'Sem prazo definido'}</div><div class="muted small" style="margin-top:4px">${records.length?`${records.length} ${records.length===1?'registro':'registros'} · último em ${fmtDate(last.at)}`:'Nenhum registro de andamento'}</div></div><div>${personalBadge(m.status)}</div><div class="small">${esc(personalDeadlineDisplay(m.deadline))}</div><button class="btn light small" onclick="togglePersonalMilestone('${m.id}')">${opened?'Fechar':'Abrir'}</button></div>
+  <div class="m-detail ${opened?'':'hidden'}">${m.canEdit?`<div class="form-grid"><div class="field full"><label>Marco — estrutura preservada</label><input value="${esc(m.name)}" disabled></div><div class="field"><label>Status</label><select id="pm-status-${m.id}">${['Não iniciado','Em andamento','Em risco','Concluído'].map(x=>`<option ${m.status===x?'selected':''}>${x}</option>`).join('')}</select></div><div class="field"><label>Prazo</label><input id="pm-deadline-${m.id}" type="date" value="${esc(deadlineInput)}">${nonDateDeadline?`<div class="muted small">Prazo anterior preservado: ${esc(m.deadline)}</div>`:''}</div><div class="field full"><label>Conclusão / resultado</label><textarea id="pm-conclusion-${m.id}">${esc(m.conclusion||'')}</textarea></div><div class="field full"><label>Registrar andamento</label><textarea id="pm-record-${m.id}" placeholder="Registre evolução, decisão, mudança de contexto ou informação relevante sobre este marco..."></textarea><div class="muted small" style="margin-top:5px">Este registro ficará salvo no histórico do marco e também aparecerá na aba Registros do projeto.</div></div></div><div class="actions">${m.canAssign?`<button class="btn light" onclick="assignPersonalResponsibility('milestone','${m.id}')">Definir responsável</button>`:''}<button class="btn" onclick="savePersonalMilestone('${m.id}')">Salvar andamento</button></div>`:`${m.conclusion?`<p><b>Conclusão / resultado:</b> ${esc(m.conclusion)}</p>`:''}${m.canAssign?`<div class="actions"><button class="btn light" onclick="assignPersonalResponsibility('milestone','${m.id}')">Definir responsável</button></div>`:''}`}${legacy?`<div class="personal-preserved-info"><div class="muted small">Informações anteriores preservadas</div><div class="personal-preserved-grid">${legacy}</div></div>`:''}${history}</div></div>`;
 }
+
+function togglePersonalMilestone(id){personalOpenMilestoneId=personalOpenMilestoneId===id?null:id;renderPersonalPanel(personalProject(personalProjectId))}
 
 function renderIntegrated(){
   const root=$('#integratedView'),all=state.projects||[];
@@ -104,11 +124,15 @@ function editPersonalProject(){
 }
 async function savePersonalProject(){try{await personalApi(`/api/minha-gestao/projects/${personalProjectId}`,'POST',{action:'update',status:$('#ppStatus').value,phase:$('#ppPhase').value,objective:$('#ppObjective').value,current:$('#ppCurrent').value,lastAdvance:$('#ppLast').value,next:$('#ppNext').value,visibility:$('#ppVisibility').value});closeModal();await refreshPersonal();renderMyManagement()}catch(e){alert(e.message)}}
 
-function editPersonalMilestone(id){
-  const p=personalProject(personalProjectId),m=p.milestones.find(x=>x.id===id);
-  modal(`<h2>Atualizar marco</h2><div class="form-grid"><div class="field"><label>Categoria</label><input id="pmCategory" value="${esc(m.category||'')}"></div><div class="field"><label>Status</label><select id="pmStatus">${['Não iniciado','Em andamento','Em risco','Concluído'].map(x=>`<option ${m.status===x?'selected':''}>${x}</option>`).join('')}</select></div><div class="field"><label>Prazo</label><input id="pmDeadline" value="${esc(m.deadline||'')}"></div><div class="field"><label>Responsável efetivo</label><input disabled value="${esc(m.effectiveOwner||'A definir')}"></div><div class="field full"><label>Próximo avanço</label><textarea id="pmNext">${esc(m.next||'')}</textarea></div><div class="field full"><label>Observações</label><textarea id="pmNotes">${esc(m.notes||'')}</textarea></div></div><div class="actions"><button class="btn light" onclick="closeModal()">Cancelar</button><button class="btn blue" onclick="savePersonalMilestone('${id}')">Salvar</button></div>`);
+async function savePersonalMilestone(id){
+  try{
+    const p=personalProject(personalProjectId),m=p.milestones.find(x=>x.id===id),deadline=$(`#pm-deadline-${id}`).value;
+    const body={status:$(`#pm-status-${id}`).value,conclusion:$(`#pm-conclusion-${id}`).value,record:$(`#pm-record-${id}`).value};
+    if(deadline!==personalDeadlineInput(m.deadline))body.deadline=deadline;
+    await personalApi(`/api/minha-gestao/milestones/${id}`,'POST',body);
+    await refreshPersonal();personalOpenMilestoneId=id;renderMyManagement();
+  }catch(e){alert(e.message)}
 }
-async function savePersonalMilestone(id){try{await personalApi(`/api/minha-gestao/milestones/${id}`,'POST',{status:$('#pmStatus').value,category:$('#pmCategory').value,deadline:$('#pmDeadline').value,next:$('#pmNext').value,notes:$('#pmNotes').value});closeModal();await refreshPersonal();renderMyManagement()}catch(e){alert(e.message)}}
 
 function editPersonalTask(id){const p=personalProject(personalProjectId),t=p.tasks.find(x=>x.id===id);modal(`<h2>Atualizar pendência</h2><div class="field"><label>Status</label><select id="ptStatus">${['Pendente','Em andamento','Concluída','Bloqueada'].map(x=>`<option ${t.status===x?'selected':''}>${x}</option>`).join('')}</select></div><div class="field"><label>Responsável</label><input id="ptOwner" value="${esc(t.owner||'')}"></div><div class="field"><label>Prazo</label><input id="ptDue" value="${esc(t.due||'')}"></div><div class="actions"><button class="btn light" onclick="closeModal()">Cancelar</button><button class="btn blue" onclick="savePersonalTask('${id}')">Salvar</button></div>`)}
 async function savePersonalTask(id){try{await personalApi(`/api/minha-gestao/tasks/${id}`,'POST',{status:$('#ptStatus').value,owner:$('#ptOwner').value,due:$('#ptDue').value});closeModal();await refreshPersonal();renderMyManagement()}catch(e){alert(e.message)}}

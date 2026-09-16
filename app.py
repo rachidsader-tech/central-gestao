@@ -52,6 +52,8 @@ class PersonalMilestone(db.Model):
     next_step = db.Column(db.Text, default='')
     deadline = db.Column(db.String(120), default='')
     notes = db.Column(db.Text, default='')
+    conclusion = db.Column(db.Text, default='')
+    concluded_at = db.Column(db.DateTime, nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=True, index=True)
     position = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -89,6 +91,15 @@ class PersonalJournal(db.Model):
     body = db.Column(db.Text, default='')
     next_step = db.Column(db.Text, default='')
     author = db.Column(db.String(160), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+class PersonalMilestoneRecord(db.Model):
+    __tablename__ = 'personal_milestone_records'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.String(100), db.ForeignKey('personal_projects.id', ondelete='CASCADE'), nullable=False, index=True)
+    milestone_id = db.Column(db.String(120), db.ForeignKey('personal_milestones.id', ondelete='CASCADE'), nullable=False, index=True)
+    author = db.Column(db.String(160), nullable=False)
+    body = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 class PersonalHistory(db.Model):
@@ -165,6 +176,8 @@ def _ensure_personal_v8_schema():
             'responsible_user_id': 'INTEGER',
             'deadline': "VARCHAR(120) DEFAULT ''",
             'notes': "TEXT DEFAULT ''",
+            'conclusion': "TEXT DEFAULT ''",
+            'concluded_at': 'TIMESTAMP',
             'active': 'BOOLEAN NOT NULL DEFAULT TRUE',
         },
     }
@@ -400,6 +413,17 @@ def _personal_serialized(user, project, include_restricted=True):
         tasks=[t for t in tasks if t.id in task_ids or t.milestone_id in delegated_milestone_ids or t.milestone_id in responsible_milestone_ids]
     project_responsible_name=project.responsible_name or ''
     milestone_names={m.id:m.name for m in milestones}
+    visible_milestone_ids=[m.id for m in milestones]
+    milestone_records=(PersonalMilestoneRecord.query
+        .filter(PersonalMilestoneRecord.milestone_id.in_(visible_milestone_ids))
+        .order_by(PersonalMilestoneRecord.created_at.desc(), PersonalMilestoneRecord.id.desc()).all()
+        if visible_milestone_ids else [])
+    records_by_milestone={mid:[] for mid in visible_milestone_ids}
+    for record in milestone_records:
+        records_by_milestone.setdefault(record.milestone_id,[]).append({
+            'id':record.id,'author':record.author,'body':record.body,
+            'at':record.created_at.isoformat(),
+        })
     return {
         'id':project.id,'name':project.name,'owner':project_responsible_name,'managedBy':project.owner_name,
         'responsibleUserId':project.responsible_user_id,'visibility':project.visibility,'phase':project.phase,
@@ -411,6 +435,9 @@ def _personal_serialized(user, project, include_restricted=True):
             'owner':m.responsible_name,'effectiveOwner':m.responsible_name or project_responsible_name,
             'inheritsProjectOwner':not bool(m.responsible_name),'responsibleUserId':m.responsible_user_id,
             'next':m.next_step,'deadline':m.deadline,'notes':m.notes,
+            'conclusion':m.conclusion or '',
+            'concludedAt':m.concluded_at.isoformat() if m.concluded_at else '',
+            'records':records_by_milestone.get(m.id,[]),
             'canEdit':_personal_can_edit(user,project.id,m.id),'canAssign':owner,
         } for m in milestones],
         'tasks':[{
@@ -419,6 +446,10 @@ def _personal_serialized(user, project, include_restricted=True):
             'priority':t.priority,'due':t.due,'canEdit':_personal_can_edit(user,project.id,t.milestone_id,t.id),
         } for t in tasks],
         'journal':([] if not project_wide else [{'id':j.id,'title':j.title,'body':j.body,'next':j.next_step,'author':j.author,'at':j.created_at.isoformat()} for j in PersonalJournal.query.filter_by(project_id=project.id).order_by(PersonalJournal.created_at.desc()).all()]),
+        'milestoneRecords':([{
+            'id':r.id,'milestoneId':r.milestone_id,'milestoneName':milestone_names.get(r.milestone_id,''),
+            'author':r.author,'body':r.body,'at':r.created_at.isoformat(),
+        } for r in milestone_records]),
         'history':([] if not project_wide else [{'author':h.author,'action':h.action,'detail':h.detail,'at':h.created_at.isoformat()} for h in PersonalHistory.query.filter_by(project_id=project.id).order_by(PersonalHistory.created_at.desc()).all()]),
     }
 
@@ -730,14 +761,30 @@ def personal_milestone_action(milestone_id):
     require_csrf(); body=request.get_json(force=True); u=current_user(); m=db.session.get(PersonalMilestone,milestone_id)
     if not m: abort(404)
     if not _personal_can_edit(u,m.project_id,m.id): abort(403)
+    changes=[]
     if 'status' in body:
         status=(body.get('status') or '').strip()
         if status not in ('Não iniciado','Em andamento','Em risco','Concluído'): return jsonify({'error':'Status inválido.'}),400
+        if status!=m.status: changes.append(f'Status: {m.status or "—"} → {status}')
         m.status=status
     if 'category' in body: m.category=(body.get('category') or '').strip()
     if 'next' in body: m.next_step=(body.get('next') or '').strip()
-    if 'deadline' in body: m.deadline=(body.get('deadline') or '').strip()
+    if 'deadline' in body:
+        deadline=(body.get('deadline') or '').strip()
+        if deadline!=m.deadline: changes.append(f'Prazo: {m.deadline or "—"} → {deadline or "—"}')
+        m.deadline=deadline
     if 'notes' in body: m.notes=(body.get('notes') or '').strip()
+    if 'conclusion' in body:
+        conclusion=(body.get('conclusion') or '').strip()
+        if conclusion!=m.conclusion: changes.append('Conclusão / resultado atualizado')
+        m.conclusion=conclusion
+    if m.status=='Concluído' and not m.concluded_at:
+        m.concluded_at=datetime.utcnow()
+    elif m.status!='Concluído':
+        m.concluded_at=None
+    record=(body.get('record') or '').strip()
+    if record:
+        db.session.add(PersonalMilestoneRecord(project_id=m.project_id,milestone_id=m.id,author=u.display_name,body=record))
     if 'responsibleUsername' in body:
         project=db.session.get(PersonalProject,m.project_id)
         if u.id!=project.owner_user_id: abort(403)
@@ -745,7 +792,9 @@ def personal_milestone_action(milestone_id):
         m.responsible_user_id=responsible.id if responsible else None
         m.responsible_name=responsible.display_name if responsible else ''
         _history(m.project_id,u.display_name,'Responsável do marco atualizado',f'{m.name}: {m.responsible_name or "herda o projeto"}')
-    _history(m.project_id,u.display_name,'Marco atualizado',m.name); db.session.commit(); return jsonify({'ok':True})
+    if changes:
+        _history(m.project_id,u.display_name,f'Marco atualizado · {m.name}',' · '.join(changes))
+    db.session.commit(); return jsonify({'ok':True})
 
 @app.route('/api/minha-gestao/tasks/<task_id>', methods=['POST'])
 @login_required

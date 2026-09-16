@@ -100,6 +100,14 @@ button{cursor:pointer}
 .personal-milestone-body b{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .personal-milestone-body p{font-size:12px;line-height:1.5;margin:5px 0 0}
 .personal-milestone-body .actions{grid-column:1/-1;margin-top:0}
+.personal-standard-milestone .m-detail{padding:16px}
+.personal-milestone-history{margin-top:18px;border-top:1px solid #e5eaf0;padding-top:14px}
+.personal-milestone-history>.flex{align-items:center;margin-bottom:9px}
+.personal-milestone-history b{font-size:13px}
+.personal-preserved-info{margin-top:16px;padding:12px;border:1px solid #e5eaf0;border-radius:10px;background:#fff}
+.personal-preserved-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px}
+.personal-preserved-grid b{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.personal-preserved-grid p{font-size:12px;line-height:1.5;margin:5px 0 0;white-space:pre-wrap}
 .message{padding:11px;border-radius:10px;background:#f6f8fb;margin:8px 0}
 .message.dir{background:#edf4ff}
 .message strong{font-size:11px}
@@ -153,6 +161,7 @@ button{cursor:pointer}
   .meeting-steps{position:static}.m-row{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}
   .personal-milestone summary{align-items:flex-start;flex-direction:column}.personal-milestone-body{grid-template-columns:1fr}
   .personal-milestone-body .actions{grid-column:auto}
+  .personal-preserved-grid{grid-template-columns:1fr}
   .project-table,.dep-table{display:block;overflow:auto}.hero{align-items:flex-start}.top{padding:0 14px}
   .summary-grid{grid-template-columns:1fr 1fr}.owner-project{align-items:flex-start;flex-direction:column}.owner-project .count{text-align:left}
 }
