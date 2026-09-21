@@ -254,7 +254,7 @@
 
   renderMeetingStep = function(){
     if(meetingStep!==3)return baseRenderMeetingStepRoadmap();
-    ensureMeetingAIStatus().then(()=>{if(meetingStep===3&&!listening)renderMeetingStep()});
+    if(meetingAIStatus===null)ensureMeetingAIStatus().then(()=>{if(meetingStep===3)renderMeetingStep()});
     const root=$('#meetingPanel');
     root.innerHTML=`<div class="card meeting-box"><h3>3. Gravação, conteúdo e decisões da reunião</h3><p>Grave a conversa completa. Ao encerrar, o sistema consolida a transcrição por blocos e, quando a IA estiver conectada, gera automaticamente o resumo executivo.</p>
       ${longMeetingRecorderHtml()}
