@@ -849,3 +849,8 @@ def _initialize_unified_central():
         db.session.commit()
 
 _initialize_unified_central()
+
+
+# Roadmap do Sucesso e gravação longa de reuniões
+import project_success
+project_success.register(__import__("app"))
