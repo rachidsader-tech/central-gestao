@@ -4,6 +4,8 @@
   const baseRenderHomeRoadmap = renderHome;
   const baseRenderProjectPanelRoadmap = renderProjectPanel;
   const baseRenderMeetingStepRoadmap = renderMeetingStep;
+  const baseRenderHelpRoadmap = renderHelp;
+  const baseShowTutorialStepRoadmap = showTutorialStep;
 
   const roadmapAttachmentCache = {};
   let meetingAIStatus = null;
@@ -253,7 +255,7 @@
   }
 
   renderMeetingStep = function(){
-    if(meetingStep!==3)return baseRenderMeetingStepRoadmap();
+    if(meetingStep!==3){baseRenderMeetingStepRoadmap();applyRoadmapTerms($('#meetingPanel'));return}
     if(meetingAIStatus===null)ensureMeetingAIStatus().then(()=>{if(meetingStep===3)renderMeetingStep()});
     const root=$('#meetingPanel');
     root.innerHTML=`<div class="card meeting-box"><h3>3. Gravação, conteúdo e decisões da reunião</h3><p>Grave a conversa completa. Ao encerrar, o sistema consolida a transcrição por blocos e, quando a IA estiver conectada, gera automaticamente o resumo executivo.</p>
@@ -428,6 +430,10 @@
   };
 
   window.addEventListener('beforeunload',e=>{if(listening){e.preventDefault();e.returnValue='A reunião ainda está sendo gravada.'}});
+
+
+  renderHelp = function(){baseRenderHelpRoadmap();applyRoadmapTerms($('#helpView'));};
+  showTutorialStep = function(){baseShowTutorialStepRoadmap();applyRoadmapTerms($('#modalRoot'));};
 
   applyRoadmapTerms($('#homeView'));
 })();
