@@ -165,3 +165,27 @@ button{cursor:pointer}
   .project-table,.dep-table{display:block;overflow:auto}.hero{align-items:flex-start}.top{padding:0 14px}
   .summary-grid{grid-template-columns:1fr 1fr}.owner-project{align-items:flex-start;flex-direction:column}.owner-project .count{text-align:left}
 }
+
+
+/* Roadmap do Sucesso + reuniões longas */
+.message p,.roadmap-record-text{white-space:pre-wrap}
+.roadmap-history,.roadmap-files{margin-top:18px;border-top:1px solid #e5eaf0;padding-top:14px}
+.roadmap-file-list{display:grid;gap:8px;margin-top:10px}
+.roadmap-file-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 11px;border:1px solid #e5eaf0;border-radius:9px;background:#fff}
+.roadmap-file-link{font-size:12px;font-weight:750;color:#245fce;text-decoration:none}
+.roadmap-file-link:hover{text-decoration:underline}
+.roadmap-file-input{max-width:420px;font-size:11px}
+.meeting-recorder-card{margin:14px 0;border-color:#dce3eb;box-shadow:none}
+.meeting-recorder-title{font-weight:850;font-size:16px}
+.meeting-level{height:9px;background:#eef1f4;border-radius:99px;overflow:hidden;margin-top:10px}
+.meeting-level>div{height:100%;background:#20364b;transition:width .08s linear}
+.meeting-ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.meeting-ai-grid .full{grid-column:1/-1}
+.meeting-recording-beacon{position:fixed;right:20px;top:78px;z-index:250;display:flex;align-items:center;gap:8px;background:#8f1d26;color:#fff;padding:10px 13px;border-radius:999px;box-shadow:0 10px 35px rgba(80,0,0,.28);font-size:11px;cursor:pointer}
+.meeting-recording-beacon .rec-dot{width:9px;height:9px;border-radius:50%;background:#fff;animation:kazRecPulse 1.1s infinite}
+.meeting-recording-beacon #meetingBeaconTimer{font-variant-numeric:tabular-nums;font-weight:900}
+@keyframes kazRecPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.78)}}
+.roadmap-audio-part{padding:12px 0;border-bottom:1px solid #edf0f3}
+.roadmap-audio-part b{display:block;font-size:12px;margin-bottom:6px}
+.roadmap-audio-part audio{width:100%}
+@media(max-width:960px){.meeting-ai-grid{grid-template-columns:1fr}.meeting-ai-grid .full{grid-column:auto}.meeting-recording-beacon{right:10px;left:10px;top:auto;bottom:12px;justify-content:center}}
