@@ -6,6 +6,7 @@
   const baseRenderMeetingStepRoadmap = renderMeetingStep;
   const baseRenderHelpRoadmap = renderHelp;
   const baseShowTutorialStepRoadmap = showTutorialStep;
+  const baseMeetingStepLabelRoadmap = meetingStepLabel;
 
   const roadmapAttachmentCache = {};
   let meetingAIStatus = null;
@@ -18,6 +19,12 @@
   let longMeetingFinalizing = false;
   let longMeetingAIProcessed = false;
   let longMeetingUploadedPositions = [];
+
+  meetingStepLabel = function(n,label){
+    if(n===3)label='Gravação da reunião';
+    if(n===4)label='Revisão e próximos passos';
+    return `<div class="meeting-step ${meetingStep===n?'active':''}">${n}. ${label}</div>`;
+  };
 
   function roadmapScopeDefined(p){ return Boolean(p?.scopeDefined ?? p?.milestonesLocked); }
   function canManageRoadmapScope(p){ return USER.username==='rachid' || USER.project_id===p.id; }
@@ -229,6 +236,42 @@
     if(meetingAIStatus===null)return '<span class="pill s-nao">Verificando IA…</span>';
     return meetingAIStatus.configured?'<span class="pill s-conc">IA conectada</span>':'<span class="pill s-risco">IA não conectada</span>';
   }
+
+  function fallbackSentences(text){
+    return String(text||'').replace(/\s+/g,' ').trim().split(/(?<=[.!?])\s+/).filter(Boolean);
+  }
+  function pickFallback(text,words,limit=5){
+    return fallbackSentences(text).filter(s=>words.some(w=>s.toLowerCase().includes(w))).slice(0,limit);
+  }
+  function asReviewLines(items){
+    return items.map(x=>'• '+x.trim()).join('\n');
+  }
+  function buildFallbackReview(text){
+    const clean=String(text||'').trim();if(!clean)return;
+    if(!window.currentMeetingSummary)window.currentMeetingSummary=summarizeText(clean);
+    if(!window.currentMeetingTopics){
+      const all=fallbackSentences(clean).slice(0,7);
+      window.currentMeetingTopics=asReviewLines(all);
+    }
+    if(!window.currentMeetingDecisions){
+      window.currentMeetingDecisions=asReviewLines(pickFallback(clean,['decid','defin','aprov','combin','ficou estabelecido','vamos fazer']));
+    }
+    if(!window.currentMeetingNextSteps){
+      window.currentMeetingNextSteps=asReviewLines(pickFallback(clean,['próxim','vai ','ficou de','precisa','entregar','até quarta','até a próxima','responsável']));
+    }
+    if(!window.currentMeetingDependencies){
+      window.currentMeetingDependencies=asReviewLines(pickFallback(clean,['diretoria','depende','aprova','aprovação','rachid','leo','márcio','marcinho','aguard']));
+    }
+    if(!window.currentMeetingNext){
+      const next=pickFallback(clean,['até quarta','até a próxima','ficou de','vai entregar','compromisso'],1);
+      if(next.length)window.currentMeetingNext=next[0];
+    }
+  }
+  function reviewSourceBanner(){
+    if(longMeetingAIProcessed)return '<div class="good"><b>Resumo gerado por IA.</b> Revise o conteúdo antes de registrar a reunião.</div>';
+    if(transcriptText)return '<div class="notice"><b>Revisão provisória.</b> A gravação foi preservada, mas a IA do servidor não concluiu o processamento. Os campos abaixo foram montados apenas a partir da transcrição auxiliar e devem ser revisados com atenção.</div>';
+    return '<div class="notice"><b>Gravação preservada, sem transcrição automática.</b> A IA não está conectada ao servidor neste momento. O áudio não foi perdido, mas o resumo não pode ser gerado a partir da gravação até a credencial da IA ser configurada.</div>';
+  }
   function showRecordingBeacon(){
     let el=document.getElementById('meetingRecordingBeacon');
     if(!el){el=document.createElement('div');el.id='meetingRecordingBeacon';el.className='meeting-recording-beacon';el.onclick=()=>showView('meeting');document.body.appendChild(el)}
@@ -255,21 +298,41 @@
   }
 
   renderMeetingStep = function(){
-    if(meetingStep!==3){baseRenderMeetingStepRoadmap();applyRoadmapTerms($('#meetingPanel'));return}
-    if(meetingAIStatus===null)ensureMeetingAIStatus().then(()=>{if(meetingStep===3)renderMeetingStep()});
+    if(meetingStep!==3 && meetingStep!==4){baseRenderMeetingStepRoadmap();applyRoadmapTerms($('#meetingPanel'));return}
+    if(meetingAIStatus===null)ensureMeetingAIStatus().then(()=>{if(meetingStep===3||meetingStep===4)renderMeetingStep()});
     const root=$('#meetingPanel');
-    root.innerHTML=`<div class="card meeting-box"><h3>3. Gravação, conteúdo e decisões da reunião</h3><p>Grave a conversa completa. Ao encerrar, o sistema consolida a transcrição por blocos e, quando a IA estiver conectada, gera automaticamente o resumo executivo.</p>
-      ${longMeetingRecorderHtml()}
-      <div class="field"><label>Transcrição consolidada — fonte para o resumo</label><textarea id="meetTranscript" class="transcript" oninput="transcriptText=this.value" placeholder="A transcrição consolidada aparecerá aqui após o processamento.">${esc(transcriptText)}</textarea></div>
-      <div class="meeting-ai-grid">
+
+    if(meetingStep===3){
+      root.innerHTML=`<div class="card meeting-box"><h3>3. Gravação da reunião</h3>
+        <p>Grave a conversa completa. Ao encerrar, o sistema preserva todos os blocos e tenta gerar automaticamente a transcrição e a revisão da reunião.</p>
+        ${meetingAIStatus&&meetingAIStatus.configured?'':'<div class="notice" style="margin-bottom:12px"><b>IA ainda não conectada ao servidor.</b> A gravação funciona normalmente, mas sem a credencial de IA o áudio não pode ser transcrito e resumido pelo servidor. O sistema preservará o áudio e usará somente a transcrição auxiliar do navegador quando houver.</div>'}
+        ${longMeetingRecorderHtml()}
+        <div class="field"><label>Transcrição auxiliar / consolidada</label><textarea id="meetTranscript" class="transcript" oninput="transcriptText=this.value" placeholder="Quando disponível, a transcrição aparecerá aqui.">${esc(transcriptText)}</textarea></div>
+        <div class="actions"><button class="btn light" onclick="goMeetingStep(2)">← Voltar</button>${longMeetingSessionId&&!listening&&!longMeetingFinalizing?'<button class="btn blue" onclick="captureMeetingStep3();goMeetingStep(4)">Revisar reunião →</button>':''}</div>
+      </div>`;
+      if(listening){showRecordingBeacon();updateMeetingTimer();runMeetingMeter()}
+      return;
+    }
+
+    buildFallbackReview(transcriptText);
+    root.innerHTML=`<div class="card meeting-box"><h3>4. Revisão da reunião e próximos passos</h3>
+      <p>Esta é a etapa de conferência antes do registro definitivo. Revise o que foi tratado, decisões e próximos passos.</p>
+      ${reviewSourceBanner()}
+      ${meetingProcessStatus?`<div class="info" style="margin-top:10px">${esc(meetingProcessStatus)}</div>`:''}
+      <div class="meeting-ai-grid" style="margin-top:14px">
         <div class="field full"><label>Resumo da reunião</label><textarea id="meetSummary">${esc(window.currentMeetingSummary||'')}</textarea></div>
         <div class="field"><label>O que foi tratado</label><textarea id="meetTopics">${esc(window.currentMeetingTopics||'')}</textarea></div>
-        <div class="field"><label>Próximos passos</label><textarea id="meetNextSteps">${esc(window.currentMeetingNextSteps||'')}</textarea></div>
         <div class="field"><label>Decisões tomadas</label><textarea id="meetDecisions">${esc(window.currentMeetingDecisions||'')}</textarea></div>
+        <div class="field"><label>Próximos passos</label><textarea id="meetNextSteps">${esc(window.currentMeetingNextSteps||'')}</textarea></div>
         <div class="field"><label>Pendências / dependências da Diretoria</label><textarea id="meetDependencies">${esc(window.currentMeetingDependencies||'')}</textarea></div>
+        <div class="field full"><label>Compromisso estratégico até a próxima reunião</label><textarea id="meetNext" placeholder="Qual resultado real precisa estar diferente até a próxima quarta-feira?">${esc(window.currentMeetingNext||'')}</textarea></div>
       </div>
-      <div class="actions"><button class="btn light" onclick="goMeetingStep(2)">← Voltar</button><button class="btn blue" onclick="captureMeetingStep3();goMeetingStep(4)" ${listening||longMeetingFinalizing?'disabled':''}>Definir próxima semana →</button></div></div>`;
-    if(listening){showRecordingBeacon();updateMeetingTimer();runMeetingMeter()}
+      <div class="actions">
+        <button class="btn light" onclick="goMeetingStep(3)">← Voltar à gravação</button>
+        ${longMeetingSessionId?'<button class="btn light" onclick="captureMeetingReview();processLongMeetingRecording()" '+(longMeetingFinalizing?'disabled':'')+'>↻ Processar novamente com IA</button>':''}
+        <button class="btn blue" onclick="saveMeeting()" ${longMeetingFinalizing?'disabled':''}>Fechar e registrar reunião</button>
+      </div>
+    </div>`;
   };
 
   async function createLongMeetingSession(){
@@ -365,47 +428,73 @@
     if(!longMeetingSessionId)return;
     longMeetingFinalizing=true;longMeetingAIProcessed=false;renderMeetingStep();
     try{
-      const manifestResp=await fetch(`/api/meeting/audio-sessions/${longMeetingSessionId}/segments`);const manifest=await manifestResp.json();if(!manifestResp.ok)throw new Error(manifest.error||'Falha ao listar os blocos.');
-      const segments=manifest.segments||[];if(!segments.length)throw new Error('Nenhum bloco de áudio foi salvo.');
+      const aiStatus=await ensureMeetingAIStatus();
+      if(!aiStatus.configured){
+        buildFallbackReview(transcriptText);
+        meetingProcessStatus='A gravação foi salva corretamente, mas a IA do servidor não está conectada. A revisão abaixo usa apenas a transcrição auxiliar disponível.';
+        return;
+      }
+
+      const manifestResp=await fetch(`/api/meeting/audio-sessions/${longMeetingSessionId}/segments`);
+      const manifest=await manifestResp.json();
+      if(!manifestResp.ok)throw new Error(manifest.error||'Falha ao listar os blocos.');
+      const segments=manifest.segments||[];
+      if(!segments.length)throw new Error('Nenhum bloco de áudio foi salvo.');
+
       const texts=[];
       for(let i=0;i<segments.length;i++){
-        const s=segments[i];meetingProcessStatus=`Transcrevendo bloco ${i+1} de ${segments.length}…`;renderMeetingStep();
+        const s=segments[i];
+        meetingProcessStatus=`Transcrevendo bloco ${i+1} de ${segments.length}…`;renderMeetingStep();
         if(s.transcript){texts.push(s.transcript);continue}
         const r=await api(`/api/meeting/audio-sessions/${longMeetingSessionId}/segments/${s.position}/transcribe`,'POST',{});
         if(r.transcript)texts.push(r.transcript);
       }
       transcriptText=texts.join('\n\n').trim()||transcriptText;
-      meetingProcessStatus='Transcrição concluída. A IA está estruturando o resumo da reunião…';renderMeetingStep();
+      meetingProcessStatus='Transcrição concluída. A IA está estruturando a revisão da reunião…';renderMeetingStep();
+
       const ai=await api('/api/meeting/summarize','POST',{projectId:meetingProjectId,transcript:transcriptText});
-      window.currentMeetingSummary=ai.summary||'';window.currentMeetingTopics=ai.topics||'';window.currentMeetingDecisions=ai.decisions||'';window.currentMeetingNextSteps=ai.nextSteps||'';window.currentMeetingDependencies=ai.dependencies||'';
+      window.currentMeetingSummary=ai.summary||'';
+      window.currentMeetingTopics=ai.topics||'';
+      window.currentMeetingDecisions=ai.decisions||'';
+      window.currentMeetingNextSteps=ai.nextSteps||'';
+      window.currentMeetingDependencies=ai.dependencies||'';
       if(ai.commitment)window.currentMeetingNext=ai.commitment;
-      longMeetingAIProcessed=true;meetingProcessStatus='Resumo de IA concluído. Revise o conteúdo abaixo antes de avançar.';
+      longMeetingAIProcessed=true;
+      meetingProcessStatus='Resumo de IA concluído. Confira e ajuste antes de registrar.';
     }catch(e){
-      if(transcriptText&&!window.currentMeetingSummary)window.currentMeetingSummary=summarizeText(transcriptText);
+      buildFallbackReview(transcriptText);
       meetingProcessStatus=`A gravação está preservada, mas o processamento automático não foi concluído: ${e.message}`;
-    }finally{longMeetingFinalizing=false;renderMeetingStep()}
+    }finally{
+      longMeetingFinalizing=false;
+      meetingStep=4;
+      renderMeetingStep();
+    }
   };
 
   captureMeetingStep3 = function(){
+    transcriptText=$('#meetTranscript')?.value||transcriptText;
+  };
+  window.captureMeetingReview = function(){
     window.currentMeetingSummary=$('#meetSummary')?.value||window.currentMeetingSummary||'';
     window.currentMeetingTopics=$('#meetTopics')?.value||window.currentMeetingTopics||'';
-    window.currentMeetingNextSteps=$('#meetNextSteps')?.value||window.currentMeetingNextSteps||'';
     window.currentMeetingDecisions=$('#meetDecisions')?.value||window.currentMeetingDecisions||'';
+    window.currentMeetingNextSteps=$('#meetNextSteps')?.value||window.currentMeetingNextSteps||'';
     window.currentMeetingDependencies=$('#meetDependencies')?.value||window.currentMeetingDependencies||'';
-    transcriptText=$('#meetTranscript')?.value||transcriptText;
+    window.currentMeetingNext=$('#meetNext')?.value||window.currentMeetingNext||'';
   };
 
   saveMeeting = async function(){
     if(listening){alert('Encerre a gravação antes de salvar a reunião.');return}
     if(longMeetingFinalizing){alert('Aguarde o salvamento/processamento da gravação terminar.');return}
-    captureMeetingStep3();window.currentMeetingNext=$('#meetNext')?.value||window.currentMeetingNext||'';
+    captureMeetingReview();
     try{
       await api('/api/meetings','POST',{
         projectId:meetingProjectId,
         notes:window.currentMeetingTopics||'',topics:window.currentMeetingTopics||'',
         decisions:window.currentMeetingDecisions||'',nextSteps:window.currentMeetingNextSteps||'',
         nextWeek:window.currentMeetingNext||'',transcript:transcriptText,summary:window.currentMeetingSummary||'',
-        dependencies:window.currentMeetingDependencies||'',audioSessionId:longMeetingSessionId||'',audioSegments:longMeetingUploadedPositions.length,aiProcessed:longMeetingAIProcessed
+        dependencies:window.currentMeetingDependencies||'',audioSessionId:longMeetingSessionId||'',
+        audioSegments:longMeetingUploadedPositions.length,aiProcessed:longMeetingAIProcessed
       });
       alert('Reunião registrada com sucesso.');
       transcriptText='';window.currentMeetingSummary='';window.currentMeetingTopics='';window.currentMeetingNextSteps='';window.currentMeetingDecisions='';window.currentMeetingDependencies='';window.currentMeetingNext='';
