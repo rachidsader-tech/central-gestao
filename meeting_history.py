@@ -58,7 +58,7 @@ def register(app_module):
             SELECT s.id, s.project_id, s.created_by, s.status, s.started_at, s.ended_at,
                    COUNT(g.id) AS segment_count
               FROM kaz_meeting_audio_sessions s
-              JOIN kaz_meeting_audio_segments g ON g.session_id = s.id
+              LEFT JOIN kaz_meeting_audio_segments g ON g.session_id = s.id
              WHERE s.project_id = ANY(:project_ids)
              GROUP BY s.id, s.project_id, s.created_by, s.status, s.started_at, s.ended_at
              ORDER BY s.started_at DESC
@@ -73,7 +73,8 @@ def register(app_module):
                 'projectId': row['project_id'],
                 'projectName': names.get(row['project_id'], row['project_id']),
                 'createdBy': row['created_by'],
-                'durationSeconds': _duration_seconds(row['started_at'], row['ended_at']),
+                'durationSeconds': _duration_seconds(row['started_at'], row['ended_at']) if row['segment_count'] else None,
+                'hasAudio': bool(row['segment_count']),
                 'registered': bool(saved),
                 'aiProcessed': bool(saved and saved.get('aiProcessed')),
             })
@@ -137,6 +138,7 @@ def register(app_module):
             'previousReview': previous_review,
             'transcript': transcript,
             'review': review,
+            'aiTestPreview': (saved or {}).get('migrationAiPreview'),
             'segments': [{
                 'position': s['position'],
                 'size': s['size'],
