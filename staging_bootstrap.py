@@ -10,6 +10,10 @@ def apply(app_module):
     if os.environ.get('STAGING_MODE') != '1':
         return
 
+    marker = Path('/tmp/kaz_staging_seeded.marker')
+    if marker.exists():
+        return
+
     path = Path(__file__).with_name('staging_seed.json')
     if not path.exists():
         app_module.app.logger.warning('Staging seed not found.')
@@ -50,7 +54,8 @@ def apply(app_module):
             user.password_hash = generate_password_hash('123456')
 
         db.session.commit()
-        app_module.app.logger.info(
+        marker.write_text(seed.get('capturedAt') or 'seeded', encoding='utf-8')
+        app_module.app.logger.warning(
             'HOMOLOGACAO READY: %s projetos, %s usuarios, snapshot %s',
             len((seed.get('payload') or {}).get('projects') or []),
             len(seed.get('users') or []),
