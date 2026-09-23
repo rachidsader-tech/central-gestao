@@ -859,6 +859,6 @@ project_success.register(__import__("app"))
 import meeting_history
 meeting_history.register(__import__("app"))
 
-# Migração das reuniões históricas de 16/09 e validação controlada da IA
-import legacy_meeting_migration
-legacy_meeting_migration.register(__import__("app"))
+# Validação não bloqueante da IA em uma reunião histórica migrada
+import legacy_ai_validation
+legacy_ai_validation.start()
