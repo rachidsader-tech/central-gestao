@@ -192,7 +192,11 @@
     return `<div class="roadmap-files">
       <div class="flex wrap" style="align-items:center"><div><b>Arquivos anexados</b><div class="muted small">Documentos, planilhas, apresentações e evidências relacionadas a esta etapa.</div></div></div>
       <div id="roadmap-files-${m.id}" class="roadmap-file-list"><div class="muted small">Carregando arquivos…</div></div>
-      ${editable?`<div class="flex wrap" style="margin-top:10px"><input type="file" id="roadmap-file-input-${m.id}" class="roadmap-file-input"><button class="btn light small" onclick="uploadRoadmapAttachment('${m.id}')">＋ Anexar arquivo</button></div>`:''}
+      ${editable?`<div class="flex wrap" style="margin-top:10px">
+        <input type="file" id="roadmap-file-input-${m.id}" class="roadmap-file-input-hidden" onchange="uploadRoadmapAttachment('${m.id}')">
+        <button type="button" class="btn light small" onclick="chooseRoadmapAttachment('${m.id}')">＋ Anexar arquivo</button>
+        <span id="roadmap-file-status-${m.id}" class="muted small">Clique para escolher um arquivo.</span>
+      </div>`:''}
     </div>`;
   }
 
@@ -300,14 +304,33 @@
       box.innerHTML=roadmapAttachmentCache[id].length?roadmapAttachmentCache[id].map(a=>`<div class="roadmap-file-row"><div><a href="${a.url}" class="roadmap-file-link">${esc(a.name)}</a><div class="muted small">${humanFileSize(a.size)} · ${esc(a.uploadedBy||'')} · ${fmtDate(a.createdAt)}</div>${a.note?`<div class="small roadmap-record-text">${esc(a.note)}</div>`:''}</div><a class="btn light small" href="${a.url}">Baixar</a></div>`).join(''):'<div class="muted small">Nenhum arquivo anexado.</div>';
     }catch(e){box.innerHTML=`<div class="small" style="color:#a9343e">${esc(e.message)}</div>`}
   };
+  window.chooseRoadmapAttachment = function(id){
+    const input=document.getElementById('roadmap-file-input-'+id);
+    if(!input){alert('Não foi possível abrir o seletor de arquivos. Atualize a página e tente novamente.');return}
+    input.click();
+  };
   window.uploadRoadmapAttachment = async function(id){
-    const input=document.getElementById('roadmap-file-input-'+id),file=input?.files?.[0];if(!file){alert('Selecione um arquivo.');return}
+    const input=document.getElementById('roadmap-file-input-'+id),file=input?.files?.[0];
+    if(!file)return;
+    const status=document.getElementById('roadmap-file-status-'+id);
+    if(file.size>20*1024*1024){
+      input.value='';
+      alert('O arquivo excede o limite de 20 MB.');
+      return;
+    }
+    if(status)status.textContent='Enviando '+file.name+'…';
     const fd=new FormData();fd.append('file',file);
     try{
       const r=await fetch(`/api/projects/${encodeURIComponent(currentProjectId)}/milestones/${encodeURIComponent(id)}/attachments`,{method:'POST',headers:{'X-CSRF-Token':CSRF},body:fd});
       const j=await r.json();if(!r.ok)throw new Error(j.error||'Falha ao anexar arquivo.');
-      input.value='';await loadRoadmapAttachments(id);
-    }catch(e){alert(e.message)}
+      input.value='';
+      if(status)status.textContent='Arquivo anexado com sucesso.';
+      await loadRoadmapAttachments(id);
+    }catch(e){
+      input.value='';
+      if(status)status.textContent='Falha ao anexar arquivo.';
+      alert(e.message);
+    }
   };
 
   async function ensureMeetingAIStatus(){
