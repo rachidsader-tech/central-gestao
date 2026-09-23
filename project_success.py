@@ -577,12 +577,30 @@ TRANSCRIÇÃO:
             session = db.session.get(MeetingAudioSession, session_id)
             if not session or session.project_id != project_id:
                 return jsonify({'error': 'Gravação não encontrada neste projeto.'}), 400
+        previous_review = body.get('previousReview')
+        if not isinstance(previous_review, dict):
+            previous_review = {
+                'commitments': [{
+                    'text': c.get('text') or '',
+                    'status': c.get('status') or 'Aberto',
+                    'author': c.get('author') or '',
+                    'createdAt': c.get('createdAt') or '',
+                } for c in (project.get('weeklyCommitments') or []) if c.get('status') in ('Aberto','Parcial','Realizado','Não realizado')],
+                'dependencies': [{
+                    'subject': d.get('subject') or d.get('title') or '',
+                    'status': d.get('status') or '',
+                    'director': d.get('director') or d.get('assignedDirector') or '',
+                    'deadline': d.get('deadline') or '',
+                } for d in (payload.get('dependencies') or []) if d.get('projectId') == project_id and d.get('status') != 'Resolvida'],
+                'capturedAt': app_module.now_iso(),
+            }
         existing = next((m for m in payload.get('meetings', []) if session_id and m.get('audioSessionId') == session_id and m.get('projectId') == project_id), None)
         if existing:
             for key in ('notes', 'topics', 'decisions', 'nextSteps', 'nextWeek', 'transcript', 'summary', 'dependencies'):
                 existing[key] = (body.get(key) or '').strip()
             existing['audioSegments'] = MeetingAudioSegment.query.filter_by(session_id=session_id).count()
             existing['aiProcessed'] = bool(body.get('aiProcessed'))
+            existing['previousReview'] = previous_review
             _touch(state, user, payload)
             return jsonify({'ok': True, 'meeting': existing, 'revision': state.revision})
         meeting = {
@@ -601,6 +619,7 @@ TRANSCRIÇÃO:
             'audioSessionId': session_id,
             'audioSegments': MeetingAudioSegment.query.filter_by(session_id=session_id).count() if session_id else 0,
             'aiProcessed': bool(body.get('aiProcessed')),
+            'previousReview': previous_review,
         }
         payload.setdefault('meetings', []).append(meeting)
         project['lastUpdate'] = app_module.now_iso()
