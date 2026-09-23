@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python reset_viewer_passwords.py && gunicorn app:app
+    startCommand: python reset_viewer_passwords.py && python legacy_meeting_migration.py && gunicorn app:app
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
