@@ -1,0 +1,1282 @@
+{
+  "capturedAt": "2026-09-23T14:54:58.189Z",
+  "payload": {
+    "commercialValidationReset": true,
+    "dependencies": [
+      {
+        "comments": [],
+        "createdAt": "2026-09-15T21:06:45Z",
+        "createdBy": "ana",
+        "deadline": "2026-09-30",
+        "description": "Definir e implementar valor de comissão para os consultores/ Gerente e coordenadores",
+        "director": "Rachid",
+        "history": [
+          {
+            "action": "Pendência aberta",
+            "actor": "Ana Silvia",
+            "at": "2026-09-15T21:06:45Z",
+            "detail": "Diretor responsável: Rachid"
+          }
+        ],
+        "id": "320f7da0feaeccff",
+        "messages": [],
+        "projectId": "comercial",
+        "requester": "Ana Silvia",
+        "resolution": "",
+        "responses": [],
+        "status": "Aberta",
+        "subject": "Comissionamento do comercial para as proximas turmas",
+        "updatedAt": "2026-09-15T21:06:45Z"
+      },
+      {
+        "comments": [
+          {
+            "actor": "Raquel",
+            "at": "2026-09-23T00:48:35Z",
+            "text": "Definido em reunião o salário de 3k",
+            "type": "comment"
+          }
+        ],
+        "createdAt": "2026-09-15T21:07:52Z",
+        "createdBy": "raquel",
+        "deadline": "2026-09-17",
+        "description": "Aprovação na proposta do salário de R$3.500 no modelo PJ para o pós venda.\n\nApós pesquisar no mercado, entender as cobranças que serão feitas e pensando que não teremos mais comissionamento e nem grandes chances de ganho nos eventos, uma vez que já teremos duas equipes dedicadas pra isso, produção e assessores, cheguei nessa base de salário.",
+        "director": "Rachid",
+        "history": [
+          {
+            "action": "Pendência aberta",
+            "actor": "Raquel",
+            "at": "2026-09-15T21:07:52Z",
+            "detail": "Diretor responsável: Rachid"
+          },
+          {
+            "action": "Informação adicionada",
+            "actor": "Raquel",
+            "at": "2026-09-23T00:48:35Z",
+            "detail": "Definido em reunião o salário de 3k"
+          },
+          {
+            "action": "Pendência resolvida",
+            "actor": "Raquel",
+            "at": "2026-09-23T00:48:48Z",
+            "detail": "Salário definido em 3k"
+          }
+        ],
+        "id": "1cbbfb589a5d4597",
+        "messages": [
+          {
+            "actor": "Raquel",
+            "at": "2026-09-23T00:48:35Z",
+            "text": "Definido em reunião o salário de 3k",
+            "type": "comment"
+          }
+        ],
+        "projectId": "posvenda",
+        "requester": "Raquel",
+        "resolution": "Salário definido em 3k",
+        "responses": [],
+        "status": "Resolvida",
+        "subject": "Salário Pós Venda",
+        "updatedAt": "2026-09-23T00:48:48Z"
+      }
+    ],
+    "direction": [
+      "Rachid",
+      "Leo",
+      "Márcio",
+      "Marcinho"
+    ],
+    "meetings": [
+      {
+        "at": "2026-09-16T18:18:48Z",
+        "audioAttachmentId": 1,
+        "audioSegments": 1,
+        "audioSessionId": "legacy_9d199bca081bc3",
+        "audioUrl": "/attachments/1",
+        "createdBy": "Rachid",
+        "decisions": "- Finalizou o modelo da reunião\n- Finalizamos as funções\n- Finalizamos os portfolio",
+        "id": "9d199bca081bc3",
+        "legacyAudioAvailable": true,
+        "legacyMigrated": true,
+        "nextWeek": "Trazer o roda map de relaciomanento detalhado, um material que depois da reunião já sera distribuído para os vendedores\n\nquais sao suas obrigacoes relacionadas com relacionamento da turma",
+        "notes": "EVOLUÇÃO\n• ou não vamos descobrir o tempo bom Ana primeira coisa fala um pouquinho sobre os teus Marcos aí tá o que que você falou que você não consegue anexar documentos na carteira nos Marcos então eu vou liberar vai liberar o arquivo coloca né para eles ontem eu tô conversando devido cada um repassando todas ruim aquele documento que você fez sabe o que eu fiz melhor aquele texto que eu fiz aquele barbante o cara chegou aqui o que que ele tem que fazer entendeu o seguinte coisa no pdf coloca a cara manual do vendedor mas quebrado já tá ótimo enfim mas eu acho que eu queria colocar como concluída porque eu acho que tá concluída só sobre os arquivos ela consegue Tá bom então marca aí atrasa no sistema o usuário poderia mudar o status você deve ter feito alguma algum movimento Eu também confia porque eu sou mas eu vi que tem um ponto que eu consigo o que eu preciso reiniciar o projeto talvez a hora que eu iniciar os mapas aí para ele que eu acordo concluído em andamento é um segundo para resolver me manda pelo menos uma hora tá aí na hora que você mandou isso ele faz automaticamente a parte de sistema acho que tem algumas coisas mas eu já tô fazendo eu já coloquei também uma criação quando volta aqui na área de eventos na tela do comercial que começa que a tela da comissão que vai cantar projeto da turma é que ele é que ele não fez aquilo errado qual é o número da coisa\n\nPONTOS DE ATENÇÃO\n• ou não vamos descobrir o tempo bom Ana primeira coisa fala um pouquinho sobre os teus Marcos aí tá o que que você falou que você não consegue anexar documentos na carteira nos Marcos então eu vou liberar vai liberar o arquivo coloca né para eles ontem eu tô conversando devido cada um repassando todas ruim aquele documento que você fez sabe o que eu fiz melhor aquele texto que eu fiz aquele barbante o cara chegou aqui o que que ele tem que fazer entendeu o seguinte coisa no pdf coloca a cara manual do vendedor mas quebrado já tá ótimo enfim mas eu acho que eu queria colocar como concluída porque eu acho que tá concluída só sobre os arquivos ela consegue Tá bom então marca aí atrasa no sistema o usuário poderia mudar o status você deve ter feito alguma algum movimento Eu também confia porque eu sou mas eu vi que tem um ponto que eu consigo o que eu preciso reiniciar o projeto talvez a hora que eu iniciar os mapas aí para ele que eu acordo concluído em andamento é um segundo para resolver me manda pelo menos uma hora tá aí na hora que você mandou isso ele faz automaticamente a parte de sistema acho que tem algumas coisas mas eu já tô fazendo eu já coloquei também uma criação quando volta aqui na área de eventos na tela do comercial que começa que a tela da comissão que vai cantar projeto da turma é que ele é que ele não fez aquilo errado qual é o número da coisa",
+        "projectId": "comercial",
+        "summary": "EVOLUÇÃO\n• ou não vamos descobrir o tempo bom Ana primeira coisa fala um pouquinho sobre os teus Marcos aí tá o que que você falou que você não consegue anexar documentos na carteira nos Marcos então eu vou liberar vai liberar o arquivo coloca né para eles ontem eu tô conversando devido cada um repassando todas ruim aquele documento que você fez sabe o que eu fiz melhor aquele texto que eu fiz aquele barbante o cara chegou aqui o que que ele tem que fazer entendeu o seguinte coisa no pdf coloca a cara manual do vendedor mas quebrado já tá ótimo enfim mas eu acho que eu queria colocar como concluída porque eu acho que tá concluída só sobre os arquivos ela consegue Tá bom então marca aí atrasa no sistema o usuário poderia mudar o status você deve ter feito alguma algum movimento Eu também confia porque eu sou mas eu vi que tem um ponto que eu consigo o que eu preciso reiniciar o projeto talvez a hora que eu iniciar os mapas aí para ele que eu acordo concluído em andamento é um segundo para resolver me manda pelo menos uma hora tá aí na hora que você mandou isso ele faz automaticamente a parte de sistema acho que tem algumas coisas mas eu já tô fazendo eu já coloquei também uma criação quando volta aqui na área de eventos na tela do comercial que começa que a tela da comissão que vai cantar projeto da turma é que ele é que ele não fez aquilo errado qual é o número da coisa\n\nPONTOS DE ATENÇÃO\n• ou não vamos descobrir o tempo bom Ana primeira coisa fala um pouquinho sobre os teus Marcos aí tá o que que você falou que você não consegue anexar documentos na carteira nos Marcos então eu vou liberar vai liberar o arquivo coloca né para eles ontem eu tô conversando devido cada um repassando todas ruim aquele documento que você fez sabe o que eu fiz melhor aquele texto que eu fiz aquele barbante o cara chegou aqui o que que ele tem que fazer entendeu o seguinte coisa no pdf coloca a cara manual do vendedor mas quebrado já tá ótimo enfim mas eu acho que eu queria colocar como concluída porque eu acho que tá concluída só sobre os arquivos ela consegue Tá bom então marca aí atrasa no sistema o usuário poderia mudar o status você deve ter feito alguma algum movimento Eu também confia porque eu sou mas eu vi que tem um ponto que eu consigo o que eu preciso reiniciar o projeto talvez a hora que eu iniciar os mapas aí para ele que eu acordo concluído em andamento é um segundo para resolver me manda pelo menos uma hora tá aí na hora que você mandou isso ele faz automaticamente a parte de sistema acho que tem algumas coisas mas eu já tô fazendo eu já coloquei também uma criação quando volta aqui na área de eventos na tela do comercial que começa que a tela da comissão que vai cantar projeto da turma é que ele é que ele não fez aquilo errado qual é o número da coisa",
+        "transcript": "ou não vamos descobrir o tempo bom Ana primeira coisa fala um pouquinho sobre os teus Marcos aí  tá o que que você falou que você não consegue anexar documentos na carteira nos Marcos  então eu vou liberar vai liberar o arquivo coloca né  para eles ontem eu tô conversando devido cada um repassando todas ruim aquele documento que você fez sabe o que eu fiz melhor aquele texto que eu fiz aquele barbante  o cara chegou aqui o que que ele tem que fazer entendeu  o seguinte  coisa no pdf coloca a cara manual do vendedor mas quebrado já tá ótimo  enfim mas eu acho que eu queria colocar como concluída porque eu acho que tá concluída só sobre os arquivos  ela consegue Tá bom então marca aí atrasa no sistema o usuário poderia mudar o status  você deve ter feito alguma algum movimento Eu também confia porque eu sou mas eu vi que tem um ponto que eu consigo o que eu preciso reiniciar o projeto talvez a hora que eu iniciar os mapas aí para  ele que eu acordo concluído em andamento  é um segundo para resolver me manda pelo menos uma hora tá  aí na hora que você mandou isso ele faz automaticamente a parte de sistema acho que tem algumas coisas  mas eu já tô fazendo eu já coloquei também  uma criação  quando volta aqui na área de eventos  na tela do comercial que começa que a tela da comissão que vai cantar  projeto da turma é que ele é que ele não fez aquilo errado  qual é o número da  coisa"
+      },
+      {
+        "at": "2026-09-16T18:29:02Z",
+        "audioAttachmentId": 34,
+        "audioSegments": 1,
+        "audioSessionId": "legacy_4c560303757c14",
+        "audioUrl": "/attachments/34",
+        "createdBy": "Rachid",
+        "decisions": "",
+        "id": "4c560303757c14",
+        "legacyAudioAvailable": true,
+        "legacyMigrated": true,
+        "nextWeek": "Trazer para apresentacao organograma da equipe, manual de funcoes e timming de contratacao",
+        "notes": "gravando vamos lá vamos jogar o teu projeto aqui  fala aí Raquel  a melhor coisa que a gente fazer no próprio sistema marcar com o Cauê falou porque a gente vai depois revisava lá entendeu  já conversei com a Gi a Gi topou fazer parte do atendimento então ela vai assumir as turmas de baile de gala que atacar cuidava porque a cava ia subir essa parte só de foto ali junto com a Laís A Kaká já tá se integrando totalmente ali com Ana Isa entendeu uma coisa na reunião aqui tem de ter anotação  Para eu anotar com farofa falando entendeu  Fala aí  fala aí o que que eu acho que eu estava esquecendo pelo menos que o Fernando ele vai virar um assessor e hoje ele tá atendendo alguma coisa de medicina o que Ele atende ator  que evento  mas que tipo o atendimento todo eu acho que ele assumiu Não só da turma de medicina mas ele assumiu muito pós-venda então eu sempre falo para você  eu quero um sonho de responsabilidade  o atendimento basicamente vai ficar com falha conosco o WhatsApp negociação cancelamento em contato com inadimplente e o atendimento e eu  posso vender Igual eu falei aqui pode marcar aqui vamos marcar como eu vou querer esse aqui tá  precisa de um documento detalha para mim isso entendeu o negócio no sistema que eu falei o que ela tem que fazer tá  bom mas eu não sei porque para mim não é nada não faz nada  mas eu tô paciente pai como atendimento não faz nada também mas enfim não importa  tá bom  aí as pessoas responsabilidades eu coloquei esse macro vou detalhar melhor para semana que vem  é porque três  é tudo aquilo né",
+        "projectId": "posvenda",
+        "summary": "",
+        "transcript": "gravando vamos lá vamos jogar o teu projeto aqui  fala aí Raquel  a melhor coisa que a gente fazer no próprio sistema marcar com o Cauê falou porque a gente vai depois revisava lá entendeu  já conversei com a Gi a Gi topou fazer parte do atendimento então ela vai assumir as turmas de baile de gala que atacar cuidava porque a cava ia subir essa parte só de foto ali junto com a Laís A Kaká já tá se integrando totalmente ali com Ana Isa entendeu uma coisa na reunião aqui tem de ter anotação  Para eu anotar com farofa falando entendeu  Fala aí  fala aí o que que eu acho que eu estava esquecendo pelo menos que o Fernando ele vai virar um assessor e hoje ele tá atendendo alguma coisa de medicina o que Ele atende ator  que evento  mas que tipo o atendimento todo eu acho que ele assumiu Não só da turma de medicina mas ele assumiu muito pós-venda então eu sempre falo para você  eu quero um sonho de responsabilidade  o atendimento basicamente vai ficar com falha conosco o WhatsApp negociação cancelamento em contato com inadimplente e o atendimento e eu  posso vender Igual eu falei aqui pode marcar aqui vamos marcar como eu vou querer esse aqui tá  precisa de um documento detalha para mim isso entendeu o negócio no sistema que eu falei o que ela tem que fazer tá  bom mas eu não sei porque para mim não é nada não faz nada  mas eu tô paciente pai como atendimento não faz nada também mas enfim não importa  tá bom  aí as pessoas responsabilidades eu coloquei esse macro vou detalhar melhor para semana que vem  é porque três  é tudo aquilo né"
+      },
+      {
+        "at": "2026-09-16T19:19:35Z",
+        "audioAttachmentId": 35,
+        "audioSegments": 1,
+        "audioSessionId": "legacy_4154a21c6cbd1e",
+        "audioUrl": "/attachments/35",
+        "createdBy": "Rachid",
+        "decisions": "Pensar num planejamento de 12 meses - janeiro a dezembro parcelado em 12 meses",
+        "id": "4154a21c6cbd1e",
+        "legacyAudioAvailable": true,
+        "legacyMigrated": true,
+        "nextWeek": "Trazer a apresentacao do setor na proxima reuniao",
+        "notes": "eu imaginei que fosse mesmo uma só de feedback para ver se a gente tava fazendo e eu coloquei o tempo de entrega E aí eu fiz uma apresentação para apresentar para a diretoria para vocês para você entender se for para reunião inteiro não tem problema porque até para ficar mais pragmático a reunião Então por quê nós entendemos um modelo de Budget para poder fazer as compras e também uma um modelo de negociação em duas etapas tá você separando as agendas porque o fornecedor ele tende a misturar o presente e futuro com o passado e isso não é sadio nem para para o passivo e nem para negociação então eu fiz essas apresentações ia trazer para vocês até já tá bom  porque o que que eu entendo e a gente conversando eu vou focar na temporada e no futuro então quando conversando com 90 dias ele é uma reunião com ele ele falou eu vou comer o diretor aí e a parte do da dívida que tem eu falei Eu não trato isso Quem trata financeira entendeu eu vou sentar para falar com você e agenda então tô fazendo elaborando uma apresentação para os fornecedores deixando isso bem claro e fala assim você tá confortável com isso de negociar comigo a temporada e negociar com o Eric o passivo Ah cara não estou Então tá bom vou ter que contratar o fornecedor Ah eu estou Então tá bom a partir de agora você não me cobra Eu não falo de dívida e fala sobre entrega que você vai fazer Então esse é o modelo de contratação então eu vou fazer esse alinhamento com fornecedores e também eu trouxe fiz uma apresentação para vocês conversar com o financeiro para o Eric e o Léo eles fazer esse trabalho do planejamento financeiro eles também negociar essa temporada  o passivo porque acho que as coisas tem que andar em paralelo porque se eu negociar e de repente ele não pagarem um passivo ou não pagaram o meu e pagaram passivo a gente não tem uma credibilidade para próxima temporada mas já tá  muito estranho eu acho que 80% já foi também pera aí tá ótimo Então Bobo por exemplo eu vou comprar com eles bebe 500 pau Eu sei que não é esse valor não deve ter uns pau da última temporada eu tô falando meu negociação para bebes para eu pegar ou parcelamento ou um valor um curso melhor o cara vai sempre pô mas você tem que ter para trás então é muito interessante o financeiro que se tiver algum fornecedor compassivo eu tô falando que tem todos você entra numa negociação expandida porque eu vou negociar temporada  Então vou negociar todos os eventos até maio uma flexibilidade de pagamento até Julho Julho ano que vem ela não parou a noite inteira Então qual que a igreja mais inteligente ela como sempre no primeiro semestre tem poucas Neto eu vou negociar o ano e vai até o fim do ano porque que vai acontecer a gente vai estar falando mas é o seguinte aí eu coloquei um vídeo para ajudar ele tá levantando ele voltou até já mesmo então ele tá muito tranquilo lembrando daquele jeito começa aí machuco doido viu abrir mais depois de mais você não veio hoje aí volta tem gente que começa logo Ou você tem orgulho e  agosto tá ligado a ideia é a gente programar até agosto de 2018",
+        "projectId": "compras",
+        "summary": "",
+        "transcript": "eu imaginei que fosse mesmo uma só de feedback para ver se a gente tava fazendo e eu coloquei o tempo de entrega E aí eu fiz uma apresentação para apresentar para a diretoria para vocês para você entender se for para reunião inteiro não tem problema porque até para ficar mais pragmático a reunião Então por quê nós entendemos um modelo de Budget para poder fazer as compras e também uma um modelo de negociação em duas etapas tá você separando as agendas porque o fornecedor ele tende a misturar o presente e futuro com o passado e isso não é sadio nem para para o passivo e nem para negociação então eu fiz essas apresentações ia trazer para vocês até já tá bom  porque o que que eu entendo e a gente conversando eu vou focar na temporada e no futuro então quando conversando com 90 dias ele é uma reunião com ele ele falou eu vou comer o diretor aí e a parte do da dívida que tem eu falei Eu não trato isso Quem trata financeira entendeu eu vou sentar para falar com você e agenda então tô fazendo elaborando uma apresentação para os fornecedores deixando isso bem claro e fala assim você tá confortável com isso de negociar comigo a temporada e negociar com o Eric o passivo Ah cara não estou Então tá bom vou ter que contratar o fornecedor Ah eu estou Então tá bom a partir de agora você não me cobra Eu não falo de dívida e fala sobre entrega que você vai fazer Então esse é o modelo de contratação então eu vou fazer esse alinhamento com fornecedores e também eu trouxe fiz uma apresentação para vocês conversar com o financeiro para o Eric e o Léo eles fazer esse trabalho do planejamento financeiro eles também negociar essa temporada  o passivo porque acho que as coisas tem que andar em paralelo porque se eu negociar e de repente ele não pagarem um passivo ou não pagaram o meu e pagaram passivo a gente não tem uma credibilidade para próxima temporada mas já tá  muito estranho eu acho que 80% já foi também pera aí tá ótimo Então Bobo por exemplo eu vou comprar com eles bebe 500 pau Eu sei que não é esse valor não deve ter uns pau da última temporada eu tô falando meu negociação para bebes para eu pegar ou parcelamento ou um valor um curso melhor o cara vai sempre pô mas você tem que ter para trás então é muito interessante o financeiro que se tiver algum fornecedor compassivo eu tô falando que tem todos você entra numa negociação expandida porque eu vou negociar temporada  Então vou negociar todos os eventos até maio uma flexibilidade de pagamento até Julho Julho ano que vem ela não parou a noite inteira Então qual que a igreja mais inteligente ela como sempre no primeiro semestre tem poucas Neto eu vou negociar o ano e vai até o fim do ano porque que vai acontecer a gente vai estar falando mas é o seguinte aí eu coloquei um vídeo para ajudar ele tá levantando ele voltou até já mesmo então ele tá muito tranquilo lembrando daquele jeito começa aí machuco doido viu abrir mais depois de mais você não veio hoje aí volta tem gente que começa logo Ou você tem orgulho e  agosto tá ligado a ideia é a gente programar até agosto de 2018"
+      },
+      {
+        "at": "2026-09-16T19:27:49Z",
+        "audioAttachmentId": null,
+        "audioSegments": 0,
+        "audioSessionId": "legacy_805a1612789949",
+        "audioUrl": "",
+        "createdBy": "Rachid",
+        "decisions": "",
+        "id": "805a1612789949",
+        "legacyAudioAvailable": false,
+        "legacyMigrated": true,
+        "nextWeek": "Trazer uma projecao para a proxima temporada",
+        "notes": "",
+        "projectId": "planejamento",
+        "summary": "",
+        "transcript": ""
+      },
+      {
+        "at": "2026-09-16T19:30:03Z",
+        "audioAttachmentId": 36,
+        "audioSegments": 1,
+        "audioSessionId": "legacy_b7988848569918",
+        "audioUrl": "/attachments/36",
+        "createdBy": "Rachid",
+        "decisions": "",
+        "id": "b7988848569918",
+        "legacyAudioAvailable": true,
+        "legacyMigrated": true,
+        "migrationAiPreview": {
+          "commitment": "",
+          "decisions": "",
+          "dependencies": "",
+          "nextSteps": "",
+          "status": "success",
+          "summary": "A reunião abordou superficialmente a organização dos marcos do projeto Financeiro e a visibilidade das informações, sem registrar decisões ou encaminhamentos claros.",
+          "testedAt": "2026-09-23T03:04:08Z",
+          "topics": "Organização dos marcos do Financeiro\nVisibilidade das informações\nFuncionamento da reunião online\nPreocupações sobre a execução das atividades"
+        },
+        "nextWeek": "coisa que todo mundo fez menos vc. colcoar no sistema os marcos que vc precisa para organziar o financeiro e apresenta para todos, igual todo mundo fez menos voce. e vc vai ser o primeiro",
+        "notes": "Eric William  funciona mesmo  para organizar teus Marcos como é que organizar o financeiro aqui qualquer ordem Quais são os pontos para você chegar em algum lugar",
+        "projectId": "financeiro",
+        "summary": "",
+        "transcript": "Eric William  funciona mesmo  para organizar teus Marcos como é que organizar o financeiro aqui qualquer ordem Quais são os pontos para você chegar em algum lugar"
+      },
+      {
+        "at": "2026-09-16T19:31:11Z",
+        "audioAttachmentId": null,
+        "audioSegments": 0,
+        "audioSessionId": "legacy_a138510ca18088",
+        "audioUrl": "",
+        "createdBy": "Rachid",
+        "decisions": "",
+        "id": "a138510ca18088",
+        "legacyAudioAvailable": false,
+        "legacyMigrated": true,
+        "nextWeek": "Apresenta o fluxo, da hora que vende o evento, redimensiona, cai uma lista de solicitacoes para a producao, que viram uma lista de compras e depois uma lista de execucao",
+        "notes": "",
+        "projectId": "producao",
+        "summary": "",
+        "transcript": ""
+      }
+    ],
+    "projects": [
+      {
+        "files": [],
+        "generalMemos": [],
+        "history": [
+          {
+            "at": "2026-09-12T22:54:22Z",
+            "author": "Ana Silvia",
+            "text": "Estrutura inicial dos marcos finalizada e bloqueada para o responsável."
+          },
+          {
+            "at": "2026-09-21T16:09:19Z",
+            "author": "Rachid",
+            "text": "Diretoria reabriu excepcionalmente a edição estrutural dos marcos."
+          }
+        ],
+        "id": "comercial",
+        "lastUpdate": "2026-09-22T19:25:09Z",
+        "milestones": [
+          {
+            "concludedAt": "2026-09-12T22:23:31Z",
+            "conclusion": "O Portfólio foi analisado, separado junto a diretoria e definido. No dia 02/09 foi apresentado e formalizado para o comercial.",
+            "deadline": "2026-09-02",
+            "files": [],
+            "id": "comercial-m1",
+            "memos": [
+              {
+                "at": "2026-09-12T22:23:31Z",
+                "author": "Ana Silvia",
+                "text": "A partir da semana que vem, iniciar as reuniões individuais e começar com uma leitura analítica de cada portfolio junto ao comercial responsável."
+              }
+            ],
+            "name": "Carteiras / portfólio definidos",
+            "status": "Concluído"
+          },
+          {
+            "concludedAt": "2026-09-12T22:48:00Z",
+            "conclusion": "O time ja esta definido. A partir de agora é analisar o trabalho de cada e meritocracia da vaga.",
+            "deadline": "2026-09-10",
+            "files": [],
+            "id": "comercial-m2",
+            "memos": [],
+            "name": "Estrutura e dimensionamento do time definidos",
+            "status": "Concluído"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-09-30",
+            "files": [],
+            "id": "comercial-m3",
+            "memos": [
+              {
+                "at": "2026-09-12T22:48:50Z",
+                "author": "Ana Silvia",
+                "text": "Resolver com a diretoria como ficarão os valores de cada um do time"
+              },
+              {
+                "at": "2026-09-22T19:24:12Z",
+                "author": "Ana Silvia",
+                "text": "Dependendo da definição com a diretoria"
+              }
+            ],
+            "name": "Política de comissionamento estabelecida",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "2026-09-21T16:05:29Z",
+            "conclusion": "Ja podemos finalizar dia 15/10 apresentado ao comercial suas funções definidas e enviado material no grupo",
+            "deadline": "2026-09-16",
+            "files": [],
+            "id": "comercial-m4",
+            "memos": [
+              {
+                "at": "2026-09-12T22:43:44Z",
+                "author": "Ana Silvia",
+                "text": "Ja fizemos uma reunião sobre isso com os consultores e coordenadores. Criar uma apresentação e material para consulta."
+              }
+            ],
+            "name": "Funções e atividades muito bem estabelecidas",
+            "status": "Concluído"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "PRAZO A SER AVALIADO PELO RACHID",
+            "deadline": "",
+            "files": [],
+            "id": "comercial-m5",
+            "memos": [
+              {
+                "at": "2026-09-12T22:37:00Z",
+                "author": "Ana Silvia",
+                "text": "O Sistema esta em andamento, mas o comercial ja esta utilizando todas as funções que estão disponíveis. Falta: liberação para a comissão visualizar/ aparecer todos que irão participar da reuniao na agenda/ verificar como poderá ser liberado os documentos para visualização da comissão"
+              }
+            ],
+            "name": "Comercial operando 100% no sistema",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "2026-09-16T18:12:58Z",
+            "conclusion": "Ficou definido o seguinte modelo:\n\nReuniao toda 3a depois da geral com o seguinte direcionamento:\n\n1. Dificuldades Equipe traz somente dificuldades que exigem ajuda, decisão, correção ou orientação. Problemas claros e encaminhados. \n2. Projetos dos líderes Cole, Felipe, Laís e Ana mostram evolução, problema e próximo passo. Visibilidade objetiva dos quatro projetos. \n3. Discussão comercial Casos relevantes: oportunidades, concorrências, turmas, estratégias e decisões. Decisões comerciais e responsáveis. \n4. Mini treinamento 20-30 min, tema único, prático. Cole organiza a frente. Aprendizado aplicável na semana seguinte.",
+            "deadline": "2026-09-22",
+            "files": [],
+            "id": "comercial-m6",
+            "memos": [
+              {
+                "at": "2026-09-12T22:53:41Z",
+                "author": "Ana Silvia",
+                "text": "Temos definido que as reuniões e treinamentos acontecerão todas as terças feira onde o comercial deverá estar 100% disponível nesses dias. A ideia também é ter um lanche comunitário nesses dias para integração da empresa.\nDefinir a pauta do primeiro treinamento e verba para comida."
+              },
+              {
+                "at": "2026-09-15T20:59:51Z",
+                "author": "Ana Silvia",
+                "text": "conversamos na reuniao comercial que o Cole vai ficar a frente disso para alinhar com Rachid quais materiais para começar a trabalhar as reunioes e treinamentos nas terças feiras"
+              }
+            ],
+            "name": "Modelos de reunião e treinamento implementados",
+            "status": "Concluído"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-10-31",
+            "files": [],
+            "id": "comercial-m7",
+            "memos": [
+              {
+                "at": "2026-09-12T22:45:19Z",
+                "author": "Ana Silvia",
+                "text": "Juntar materiais e criar um para que todos possam consultar. Pensamos em fazer junto aos coordenadores essa parte pois eles estão mais próximos ao nosso cliente final e saberão atualizar e como utilizar melhor cada ferramenta"
+              },
+              {
+                "at": "2026-09-16T18:14:47Z",
+                "author": "Rachid",
+                "text": "Tem de focar em mapear e explicar as obrigacoes realcionadas com relacionamento. Galleria, Faculdade, KAZ, etc..."
+              },
+              {
+                "at": "2026-09-22T19:24:44Z",
+                "author": "Ana Silvia",
+                "text": "Verificar se o documento feito esta dentro do esperado"
+              }
+            ],
+            "name": "Roadmap do relacionamento criado — onde e como se relacionar",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-09-30",
+            "files": [],
+            "id": "comercial-m8",
+            "memos": [
+              {
+                "at": "2026-09-12T22:41:34Z",
+                "author": "Ana Silvia",
+                "text": "Ja em andamento. Processos internos ja atualizados de acordo com as novas funções. Ex: Abertura de turma nova no sistema, Aprovação e liberação de parcelamentos, Contratos e aprovação de valores que podem ser gastos com turmas (Ana e Diretoria). \nPensar em como facilitar esse processo (ex: ter um valor disponível para pequenos gastos de urgência)"
+              }
+            ],
+            "name": "Nova rotina comercial implantada",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "comercial-m9",
+            "memos": [],
+            "name": "Modelo estabilizado e acompanhado por indicadores",
+            "status": "Não iniciado"
+          }
+        ],
+        "milestonesLocked": false,
+        "milestonesLockedAt": "",
+        "milestonesLockedBy": "",
+        "name": "Comercial",
+        "objective": "Implantar um Comercial focado em captação, relacionamento, negociação e crescimento, com carteiras claras, equipe corretamente dimensionada, funções bem definidas, política de comissionamento estabelecida e operação integralmente registrada e acompanhada.",
+        "owner": "Ana Silvia",
+        "scopeDefined": false,
+        "status": "Em andamento",
+        "validated": false,
+        "weeklyCommitments": [
+          {
+            "author": "Rachid",
+            "createdAt": "2026-09-16T18:18:48Z",
+            "id": "087b1f47ce00",
+            "source": "meeting",
+            "status": "Aberto",
+            "text": "Trazer o roda map de relaciomanento detalhado, um material que depois da reunião já sera distribuído para os vendedores\n\nquais sao suas obrigacoes relacionadas com relacionamento da turma"
+          }
+        ]
+      },
+      {
+        "files": [],
+        "generalMemos": [
+          {
+            "at": "2026-09-16T21:37:39Z",
+            "author": "Oscar",
+            "text": "Os andamentos estão registrados nos marcos."
+          }
+        ],
+        "history": [],
+        "id": "projetos",
+        "lastUpdate": "2026-09-16T21:37:39Z",
+        "milestones": [
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-09-30",
+            "files": [],
+            "id": "projetos-m1",
+            "memos": [
+              {
+                "at": "2026-09-16T21:18:20Z",
+                "author": "Oscar",
+                "text": "- Mapear o processo dos eventos, desde o fechamento do contrato da turma até o Baile de Formatura (fase final);\n- Mapear o processo da escolha dos espaços dos eventos (pré-eventos e eventos oficiais);"
+              }
+            ],
+            "name": "Papel e escopo de Projetos definidos",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-09-30",
+            "files": [],
+            "id": "projetos-m2",
+            "memos": [
+              {
+                "at": "2026-09-16T21:21:21Z",
+                "author": "Oscar",
+                "text": "- Foram abertas duas vagas para formatação do time de Projetos e Assessoria de Eventos pelo Recrutei, candidatos têm até o dia 20/09 para se candidatarem. Até o momento já foram inscritos na vaga 122 profissionais, dos quais já iniciei a validação dos currículos e triagem para entrevistas presenciais na próxima semana."
+              }
+            ],
+            "name": "Contratação e formatação da equipe",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-10-07",
+            "files": [],
+            "id": "projetos-m3",
+            "memos": [
+              {
+                "at": "2026-09-16T21:25:01Z",
+                "author": "Oscar",
+                "text": "- Estruturar o formato ideal para criar a \"OS\" (Ordem de Serviço), para a equipe de Produção;\n- Entender prazos ideais e como tratar inconsistências e possíveis retornos por falta de entendimento ou capacidade técnica;"
+              }
+            ],
+            "name": "Processo definido da aprovação do projeto até a solicitação de execução para Produção",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-10-07",
+            "files": [],
+            "id": "projetos-m4",
+            "memos": [
+              {
+                "at": "2026-09-16T21:26:17Z",
+                "author": "Oscar",
+                "text": "- Com a equipe montada e em treinamento, será possível estabelecer papéis e responsabilidades claros, bem como estabelecer métricas qualitativas para mensurar produtividade e resultados."
+              }
+            ],
+            "name": "Funções e atividades muito bem estabelecidas",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "projetos-m5",
+            "memos": [],
+            "name": "Fluxo implantado no sistema",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "projetos-m6",
+            "memos": [],
+            "name": "Projeto real executado ponta a ponta",
+            "status": "Não iniciado"
+          }
+        ],
+        "milestonesLocked": false,
+        "milestonesLockedAt": "",
+        "milestonesLockedBy": "",
+        "name": "Projetos / Assessor",
+        "objective": "Estruturar a área responsável por transformar o briefing e a necessidade comercial em um projeto completo, claro e executável, garantindo uma passagem organizada do projeto aprovado para sua execução pela Produção.",
+        "owner": "Oscar",
+        "scopeDefined": false,
+        "status": "Em andamento",
+        "validated": false,
+        "weeklyCommitments": []
+      },
+      {
+        "files": [],
+        "generalMemos": [],
+        "history": [],
+        "id": "posvenda",
+        "lastUpdate": "2026-09-23T00:48:18Z",
+        "milestones": [
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-09-16",
+            "files": [],
+            "id": "posvenda-m1",
+            "memos": [
+              {
+                "at": "2026-09-15T20:29:34Z",
+                "author": "Raquel",
+                "text": "Em conversa entendemos que no atendimento ao formando com a automatização da IA, vamos ficar apenas com 1 pessoa, provavelmente a Liana, e a Giovanna viria para atender as turmas de Baile de Gala!\nPela importância da foto, foi definido ter uma pessoa dedicada para esse pós atendimento, e já foi definido junto com Lais e Rachid que a Caca vai ficar nessa posição.\nNesse momento entendo que preciso de 3 novas pessoas para assumirem as turmas que hoje estão com Pietra, Maria e Fernando"
+              }
+            ],
+            "name": "Estrutura da Equipe",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-10-10",
+            "files": [],
+            "id": "posvenda-m2",
+            "memos": [
+              {
+                "at": "2026-09-15T22:35:27Z",
+                "author": "Raquel",
+                "text": "Após definição do salário, vou conversar com a Giovana e fazer a proposta e iniciar as entrevistas, a ideia é que a até o final do mês eu tenha já a nova equipe!"
+              },
+              {
+                "at": "2026-09-16T17:41:59Z",
+                "author": "Raquel",
+                "text": "Conversei com a Giovana e ela topou a proposta de trabalhar na equipe de pós!"
+              },
+              {
+                "at": "2026-09-23T00:48:18Z",
+                "author": "Raquel",
+                "text": "Já pedi para o Rh entrar em contato com a Gi para formalizar as alterações dela e ela poder vir trabalhar aqui dentro!"
+              }
+            ],
+            "name": "Contratações",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-09-30",
+            "files": [],
+            "id": "posvenda-m3",
+            "memos": [
+              {
+                "at": "2026-09-16T15:32:03Z",
+                "author": "Raquel",
+                "text": "Atendimento - Fale conosco, Whatsapp, Renegociação, Cancelamento, Contato com inadimplentes (Tudo com ajuda da automação da IA)\nPós Venda - Atendimento e relacionamento com o cliente, definir e acompanhar cronograma do projeto, contato com hipossuficientes, brindes de lançamento, plano de MKT, abertura de Vendas"
+              },
+              {
+                "at": "2026-09-16T15:32:03Z",
+                "author": "Raquel",
+                "text": "Atendimento - Fale conosco, Whatsapp, Renegociação, Cancelamento, Contato com inadimplentes (Tudo com ajuda da automação da IA)\nPós Venda - Atendimento e relacionamento com o cliente, definir e acompanhar cronograma do projeto, contato com hipossuficientes, brindes de lançamento, plano de MKT, abertura de Vendas"
+              },
+              {
+                "at": "2026-09-16T15:32:03Z",
+                "author": "Raquel",
+                "text": "Atendimento - Fale conosco, Whatsapp, Renegociação, Cancelamento, Contato com inadimplentes (Tudo com ajuda da automação da IA)\nPós Venda - Atendimento e relacionamento com o cliente, definir e acompanhar cronograma do projeto, contato com hipossuficientes, brindes de lançamento, plano de MKT, abertura de Vendas"
+              },
+              {
+                "at": "2026-09-16T15:32:03Z",
+                "author": "Raquel",
+                "text": "Atendimento - Fale conosco, Whatsapp, Renegociação, Cancelamento, Contato com inadimplentes (Tudo com ajuda da automação da IA)\nPós Venda - Atendimento e relacionamento com o cliente, definir e acompanhar cronograma do projeto, contato com hipossuficientes, brindes de lançamento, plano de MKT, abertura de Vendas"
+              },
+              {
+                "at": "2026-09-16T15:32:03Z",
+                "author": "Raquel",
+                "text": "Atendimento - Fale conosco, Whatsapp, Renegociação, Cancelamento, Contato com inadimplentes (Tudo com ajuda da automação da IA)\nPós Venda - Atendimento e relacionamento com o cliente, definir e acompanhar cronograma do projeto, contato com hipossuficientes, brindes de lançamento, plano de MKT, abertura de Vendas"
+              },
+              {
+                "at": "2026-09-16T15:32:03Z",
+                "author": "Raquel",
+                "text": "Atendimento - Fale conosco, Whatsapp, Renegociação, Cancelamento, Contato com inadimplentes (Tudo com ajuda da automação da IA)\nPós Venda - Atendimento e relacionamento com o cliente, definir e acompanhar cronograma do projeto, contato com hipossuficientes, brindes de lançamento, plano de MKT, abertura de Vendas"
+              },
+              {
+                "at": "2026-09-16T18:24:28Z",
+                "author": "Rachid",
+                "text": "Precisa de um documento detalhado com as funcoes do pos venda"
+              }
+            ],
+            "name": "Funções e responsabilidades definidas",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-10-30",
+            "files": [],
+            "id": "posvenda-m4",
+            "memos": [
+              {
+                "at": "2026-09-16T15:47:30Z",
+                "author": "Raquel",
+                "text": "Entender se o cronograma e prazos pensado faz sentido para todos para começar a implementar as passagens de trabalho da melhor forma!\nFesta de Formatura e Jantar de Gala - Assessor entra 4 meses antes do baile e fica responsável pela definição de bar, decoração e ativações.\nColação -  Assessor entra 4 meses antes da data e fica responsável pelas placas de homenagem, DJ/Coral, cerimonial e decoração\nPré-evento - Assessor entra 5 meses antes da data desejada do evento da turma e começa a definir os moldes do evento junto da turma de acordo com a verba definida!"
+              }
+            ],
+            "name": "Passagens entre áreas definidas",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "posvenda-m5",
+            "memos": [],
+            "name": "Processo implantado no sistema",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "posvenda-m6",
+            "memos": [],
+            "name": "Pós-venda operando no novo modelo",
+            "status": "Não iniciado"
+          }
+        ],
+        "milestonesLocked": false,
+        "milestonesLockedAt": "",
+        "milestonesLockedBy": "",
+        "name": "Pós-venda",
+        "objective": "Implantar um Pós-venda estruturado, dimensionado e com responsabilidades claras, garantindo relacionamento, acompanhamento e passagens organizadas entre as demais áreas e o cliente.",
+        "owner": "Raquel",
+        "scopeDefined": false,
+        "status": "Em andamento",
+        "validated": false,
+        "weeklyCommitments": [
+          {
+            "author": "Rachid",
+            "createdAt": "2026-09-16T18:29:02Z",
+            "id": "3b676aff7c86",
+            "source": "meeting",
+            "status": "Aberto",
+            "text": "Trazer para apresentacao organograma da equipe, manual de funcoes e timming de contratacao"
+          }
+        ]
+      },
+      {
+        "files": [],
+        "generalMemos": [],
+        "history": [],
+        "id": "producao",
+        "lastUpdate": "2026-09-16T19:31:11Z",
+        "milestones": [
+          {
+            "concludedAt": "2026-09-15T20:59:02Z",
+            "conclusion": "Maysa - responsável por alguns projetos e contratação dos itens relacionados \nLisliê - responsável pela produção de todos os evento\nIgor - responsável pela parte de impressão de material para eventos, controle do estoque, separação de material para os eventos\nHá um desequilíbrio entre as responsabilidades\n",
+            "deadline": "2026-09-15",
+            "files": [],
+            "id": "producao-m1",
+            "memos": [],
+            "name": "Estrutura atual diagnosticada",
+            "status": "Concluído"
+          },
+          {
+            "concludedAt": "2026-09-15T22:45:05Z",
+            "conclusion": "Todas as informações dos eventos constam no redimensionamento e no projeto e as contratações são feitas baseadas na planilha",
+            "deadline": "2026-09-15",
+            "files": [],
+            "id": "producao-m2",
+            "memos": [],
+            "name": "Processos atuais",
+            "status": "Concluído"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "Entender o formato mais eficiente para a divisão das responsabilidades: cada produtor fica responsável por um evento ou cada produtor fica responsável por alinhar uma gama de fornecedores\nPrós e Contras:\n- por evento, o produtor tem o domínio do todo, mas quando temos um acúmulo de eventos em mesma data ou datas próximas, podemos ter uma sobrecarga sobre um ou outro\n- por fornecedor, o produtor não tem o domínio do todo, mas consegue alinhar os fornecedores já para todos os eventos previstos, não sobrecarregando tanto\n\nEntender o papel da Maysa - uma vez que os projetos virão prontos, ela realmente ficará vinculada ao galpão, linha de frente junto ao Rogerinho\n",
+            "deadline": "2026-09-25",
+            "files": [],
+            "id": "producao-m3",
+            "memos": [],
+            "name": "Papéis e responsabilidades definidos",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "producao-m4",
+            "memos": [
+              {
+                "at": "2026-09-16T18:14:54Z",
+                "author": "Ju Hirota",
+                "text": "Informações precisam chegar da forma mais detalhada possível para que a entrega seja exatamente de acordo com o que foi acordado com a turma\nInformações precisam vir com antecedência\nO sistema já trará para compras as informações necessárias, como quantidade a ser contratada? Haverá alguma definição da produção para compras poder contratar?\nPrazo, depende das informações começarem a chegar na produção e do sistema"
+              },
+              {
+                "at": "2026-09-16T18:14:54Z",
+                "author": "Ju Hirota",
+                "text": "Informações precisam chegar da forma mais detalhada possível para que a entrega seja exatamente de acordo com o que foi acordado com a turma\nInformações precisam vir com antecedência\nO sistema já trará para compras as informações necessárias, como quantidade a ser contratada? Haverá alguma definição da produção para compras poder contratar?\nPrazo, depende das informações começarem a chegar na produção e do sistema"
+              },
+              {
+                "at": "2026-09-16T18:19:32Z",
+                "author": "Ju Hirota",
+                "text": "Informações precisam chegar da forma mais detalhada possivel para que a produção consiga implementar tudo que foi acordado/definido com comissão \nInformações precisam chegar com antecedência\nO sistema vai gerar para compras as informações necessárias, como quantidades (seguranças, recepcionistas, etc..)? Produção vai  validar alguma informação?\nProdução precisa ter informação de quais fornecedores foram contratados para o evento"
+              }
+            ],
+            "name": "Fluxo com Projetos para recebimento e detalhamento do projeto definido",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "producao-m5",
+            "memos": [],
+            "name": "Fluxo implantado no sistema",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "producao-m6",
+            "memos": [],
+            "name": "Novo processo testado em operação real",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "producao-m7",
+            "memos": [],
+            "name": "Produção operando no novo modelo",
+            "status": "Não iniciado"
+          }
+        ],
+        "milestonesLocked": false,
+        "milestonesLockedAt": "",
+        "milestonesLockedBy": "",
+        "name": "Produção",
+        "objective": "Implantar uma Produção organizada, previsível e capaz de receber um projeto detalhado, transformá-lo em execução e conduzir a operação com responsabilidades e processos claros.",
+        "owner": "Ju Hirota",
+        "scopeDefined": false,
+        "status": "Não iniciado",
+        "validated": false,
+        "weeklyCommitments": [
+          {
+            "author": "Rachid",
+            "createdAt": "2026-09-16T19:31:11Z",
+            "id": "9bb63b372d41",
+            "source": "meeting",
+            "status": "Aberto",
+            "text": "Apresenta o fluxo, da hora que vende o evento, redimensiona, cai uma lista de solicitacoes para a producao, que viram uma lista de compras e depois uma lista de execucao"
+          }
+        ]
+      },
+      {
+        "files": [],
+        "generalMemos": [
+          {
+            "at": "2026-09-16T14:09:52Z",
+            "author": "Wancler",
+            "text": "Levantamento da temporada a ser negociada para uma aprovação de budget mensal fixo com a Diretori"
+          }
+        ],
+        "history": [],
+        "id": "compras",
+        "lastUpdate": "2026-09-16T19:19:35Z",
+        "milestones": [
+          {
+            "concludedAt": "",
+            "conclusion": "A Kaz Formaturas opera hoje sem um processo formal de compras. As aquisições acontecem de forma reativa, impulsionadas por urgências do dia a dia, sem critérios definidos, sem comparação adequada de fornecedores e sem rastreabilidade das decisões tomadas.\n",
+            "deadline": "2026-09-28",
+            "files": [],
+            "id": "compras-m1",
+            "memos": [
+              {
+                "at": "2026-09-14T14:17:37Z",
+                "author": "Wancler",
+                "text": "Transformar Compras de uma atividade operacional e reativa em uma função estratégica de controle, eficiência e geração de resultado.\nUma área de Compras estruturada protege a margem, reduz desperdícios e contribui diretamente para o resultado financeiro da empresa."
+              }
+            ],
+            "name": "Processo atual diagnosticado",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-10-09",
+            "files": [],
+            "id": "compras-m2",
+            "memos": [
+              {
+                "at": "2026-09-16T14:05:42Z",
+                "author": "Wancler",
+                "text": "Negociar toda a temporada 26.2 e 27.1"
+              }
+            ],
+            "name": "Modelo de licitação / escolha definido",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-09-25",
+            "files": [],
+            "id": "compras-m3",
+            "memos": [
+              {
+                "at": "2026-09-16T14:03:08Z",
+                "author": "Wancler",
+                "text": "Apresentar e Aprovar com a Diretoria novo critério de negociações"
+              },
+              {
+                "at": "2026-09-16T14:07:20Z",
+                "author": "Wancler",
+                "text": "Fornecedores já homologados"
+              }
+            ],
+            "name": "Critérios e base de fornecedores definidos",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "compras-m4",
+            "memos": [],
+            "name": "Fluxo Compras → Financeiro → Produção criado",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "compras-m5",
+            "memos": [],
+            "name": "Fluxo implementado no sistema",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "compras-m6",
+            "memos": [],
+            "name": "Ciclo real de compra testado",
+            "status": "Não iniciado"
+          }
+        ],
+        "milestonesLocked": false,
+        "milestonesLockedAt": "",
+        "milestonesLockedBy": "",
+        "name": "Compras",
+        "objective": "Implantar uma área de Compras estruturada, com processo claro de contratação, cotação/licitação, fornecedores, integração financeira e passagem organizada para a operação.",
+        "owner": "Wancler",
+        "scopeDefined": false,
+        "status": "Em andamento",
+        "validated": false,
+        "weeklyCommitments": [
+          {
+            "author": "Rachid",
+            "createdAt": "2026-09-16T19:19:35Z",
+            "id": "ddfa0917ab5d",
+            "source": "meeting",
+            "status": "Aberto",
+            "text": "Trazer a apresentacao do setor na proxima reuniao"
+          }
+        ]
+      },
+      {
+        "files": [],
+        "generalMemos": [],
+        "history": [],
+        "id": "planejamento",
+        "lastUpdate": "2026-09-16T19:27:49Z",
+        "milestones": [
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "planejamento-m1",
+            "memos": [
+              {
+                "at": "2026-09-15T17:50:21Z",
+                "author": "Vini",
+                "text": "Estimativa de percentual minimo para temporada 2026.2 como estudo para entender nova margem futura"
+              },
+              {
+                "at": "2026-09-15T22:36:56Z",
+                "author": "Vini",
+                "text": "20% a 30% de rentalibidade de acordo com o Fee"
+              }
+            ],
+            "name": "Definir Target \"minimo\" de rentabilidade",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "planejamento-m2",
+            "memos": [
+              {
+                "at": "2026-09-15T17:53:58Z",
+                "author": "Vini",
+                "text": "Queria discutir uma nova metodologia de calculo de percentual, sem ser fixo por turma, mas sim fixo por eventos, sendo:\nFee: 6% a 16%\nPre-eventos, multas e IGPM: 4%\nFesta de Formatura: 10%\n\nPensei nessa distribuição para começar um norte e ir entendendo onde podemos chegar, lembrando que esses percentuais seriam para festa \"isoladas\", dobradinha precisamos entender quais margens aumentam. Lembrando que essa temporada temos 50% de dobradinhas, então é o melhor cenário para começarmos estudos mais a fundo e criar padronizações e premissas a serem seguidas"
+              },
+              {
+                "at": "2026-09-15T22:45:15Z",
+                "author": "Vini",
+                "text": "Composição dividida entre:\n- Investimento Enjoy**\n- Fee\n- Multas + IGPM\n- Pre-eventos\n- Eventos Oficiais*\n\n*Eventos Oficiais pensando em:\nLocais: Baixa rentabilidade (preço tabelado) - exceção dobradinhas (precisamos buscar mais isso)\n\nBuffet: baixa rentabilidade quando temos buffet próprio / externo buscar rentabilidade\n\nBar: dividido em duas frentes: \n1 - operação: tentar negociação macro da temporada\nbebidas: pensar em 2 momentos: atualmente negociação macro da temporada\n2 momento: internalização de compras e distribuição de bebidas\n\nProdução: necogiação por temporada\n\nDecoração: Sprit final de rentabilidade"
+              }
+            ],
+            "name": "Metodologia de cálculo de rentabilidade",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "planejamento-m3",
+            "memos": [
+              {
+                "at": "2026-09-15T17:56:50Z",
+                "author": "Vini",
+                "text": "Separado em 3 etapas:\n1 - analise antecipada para melhor escolha de espaço pensando em rentabilidade\n2 - após fechado a temporada fechar pacotes de itens de produção para otimizar ao máximo buscando a nossa \"base\" de rentabilidade\n3 - decoração: foco final da rentabilidade, entendendendo quais turmas precisamos buscar margens extras e quais queremos investir por conta de temporada"
+              }
+            ],
+            "name": "Plano padrão por turma criado",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "planejamento-m4",
+            "memos": [
+              {
+                "at": "2026-09-15T22:47:48Z",
+                "author": "Vini",
+                "text": "Após o plano por turma estar definido, gerar indicadores para que o setor de compra tenha metricas onde buscar as melhores margens de rentabilidade"
+              }
+            ],
+            "name": "Indicadores gerenciais definidos",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "planejamento-m5",
+            "memos": [
+              {
+                "at": "2026-09-15T22:48:53Z",
+                "author": "Vini",
+                "text": "Finalizando todos os eventos, precisamos ter um relátorio que mostre o planejado X realizado para analisarmos se o planejamento está certo e fazermos possiveis ajustes quando necessário"
+              }
+            ],
+            "name": "Planejado × realizado estruturado",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "planejamento-m6",
+            "memos": [
+              {
+                "at": "2026-09-15T22:49:57Z",
+                "author": "Vini",
+                "text": "Todos os passos acima precisamos implementar nos sistema de forma que nos traga as informações mais detalhada possivel para que tenhamos mais tempo para analises e ajustes"
+              }
+            ],
+            "name": "Desenho e implementação no sistema",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "planejamento-m7",
+            "memos": [
+              {
+                "at": "2026-09-15T22:51:52Z",
+                "author": "Vini",
+                "text": "Todo ajuste, analise e atualização deve ter impacto imediato no orçamento online, uma vez que nossas vendas são feitas de forma futura e qualquer alteração no orçamento online passa a ter um impacto no \"mínimo\" na temporada seguinte"
+              }
+            ],
+            "name": "Orçamento Online",
+            "status": "Não iniciado"
+          }
+        ],
+        "milestonesLocked": false,
+        "milestonesLockedAt": "",
+        "milestonesLockedBy": "",
+        "name": "Planejamento Financeiro",
+        "objective": "Implantar um modelo de planejamento financeiro capaz de definir a rentabilidade esperada, planejar economicamente cada turma, comparar planejado e realizado e gerar informação gerencial para tomada de decisão.",
+        "owner": "Vini",
+        "scopeDefined": false,
+        "status": "Não iniciado",
+        "validated": false,
+        "weeklyCommitments": [
+          {
+            "author": "Rachid",
+            "createdAt": "2026-09-16T19:27:49Z",
+            "id": "ffbec24adf65",
+            "source": "meeting",
+            "status": "Aberto",
+            "text": "Trazer uma projecao para a proxima temporada"
+          }
+        ]
+      },
+      {
+        "files": [],
+        "generalMemos": [],
+        "history": [],
+        "id": "financeiro",
+        "lastUpdate": "2026-09-22T22:52:09Z",
+        "milestones": [
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-09-22",
+            "files": [],
+            "id": "financeiro-m1",
+            "memos": [
+              {
+                "at": "2026-09-22T22:47:48Z",
+                "author": "Erik",
+                "text": "Validação de DRE e Modelo Fluxo de caixa com informações da planilha MASTER validada e 22/09."
+              }
+            ],
+            "name": "Fluxo financeiro atual diagnosticado",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "financeiro-m2",
+            "memos": [],
+            "name": "Fronteira Financeiro × Planejamento Financeiro definida",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-10-31",
+            "files": [],
+            "id": "financeiro-m3",
+            "memos": [
+              {
+                "at": "2026-09-22T22:51:07Z",
+                "author": "Erik",
+                "text": "aguardando fluxo de informações vindos da seguinte maneira:\nPlanejamento -> projeto eventos(acessores) -> produção/mesa de compras -> lançamentos de ID`s -> comparativos Orçados vs Realizados"
+              }
+            ],
+            "name": "Modelo de previsibilidade financeira criado",
+            "status": "Em andamento"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "financeiro-m4",
+            "memos": [],
+            "name": "Interfaces com Compras e Produção definidas",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "",
+            "files": [],
+            "id": "financeiro-m5",
+            "memos": [],
+            "name": "Rotina e informações implantadas no sistema",
+            "status": "Não iniciado"
+          },
+          {
+            "concludedAt": "",
+            "conclusion": "",
+            "deadline": "2026-12-31",
+            "files": [],
+            "id": "financeiro-m6",
+            "memos": [
+              {
+                "at": "2026-09-22T22:52:09Z",
+                "author": "Erik",
+                "text": "validação mensal com Rachid junto às planillhas de fechamento e fluxo de caixa."
+              }
+            ],
+            "name": "Modelo validado com dados reais",
+            "status": "Em andamento"
+          }
+        ],
+        "milestonesLocked": false,
+        "milestonesLockedAt": "",
+        "milestonesLockedBy": "",
+        "name": "Financeiro",
+        "objective": "Implantar uma operação financeira estruturada e previsível, integrada às demais áreas e capaz de fornecer informação confiável para a operação e para o Planejamento Financeiro.",
+        "owner": "Erik",
+        "scopeDefined": false,
+        "status": "Em andamento",
+        "validated": false,
+        "weeklyCommitments": [
+          {
+            "author": "Rachid",
+            "createdAt": "2026-09-16T19:30:03Z",
+            "id": "567f3240a093",
+            "source": "meeting",
+            "status": "Aberto",
+            "text": "coisa que todo mundo fez menos vc. colcoar no sistema os marcos que vc precisa para organziar o financeiro e apresenta para todos, igual todo mundo fez menos voce. e vc vai ser o primeiro"
+          }
+        ]
+      }
+    ],
+    "schemaVersion": 3,
+    "version": 1
+  },
+  "users": [
+    {
+      "active": true,
+      "display_name": "Rachid",
+      "project_id": null,
+      "role": "admin",
+      "username": "rachid"
+    },
+    {
+      "active": true,
+      "display_name": "Ana Silvia",
+      "project_id": "comercial",
+      "role": "owner",
+      "username": "ana"
+    },
+    {
+      "active": true,
+      "display_name": "Oscar",
+      "project_id": "projetos",
+      "role": "owner",
+      "username": "oscar"
+    },
+    {
+      "active": true,
+      "display_name": "Raquel",
+      "project_id": "posvenda",
+      "role": "owner",
+      "username": "raquel"
+    },
+    {
+      "active": true,
+      "display_name": "Ju Hirota",
+      "project_id": "producao",
+      "role": "owner",
+      "username": "ju"
+    },
+    {
+      "active": true,
+      "display_name": "Wancler",
+      "project_id": "compras",
+      "role": "owner",
+      "username": "wancler"
+    },
+    {
+      "active": true,
+      "display_name": "Erik",
+      "project_id": "financeiro",
+      "role": "owner",
+      "username": "erik"
+    },
+    {
+      "active": true,
+      "display_name": "Vini",
+      "project_id": "planejamento",
+      "role": "owner",
+      "username": "vini"
+    },
+    {
+      "active": true,
+      "display_name": "Márcio",
+      "project_id": null,
+      "role": "direction",
+      "username": "marcio"
+    },
+    {
+      "active": true,
+      "display_name": "Marcinho",
+      "project_id": null,
+      "role": "direction",
+      "username": "marcinho"
+    },
+    {
+      "active": true,
+      "display_name": "Leo",
+      "project_id": null,
+      "role": "direction",
+      "username": "leo"
+    },
+    {
+      "active": true,
+      "display_name": "Julia",
+      "project_id": null,
+      "role": "viewer",
+      "username": "julia"
+    },
+    {
+      "active": true,
+      "display_name": "Michele",
+      "project_id": null,
+      "role": "viewer",
+      "username": "michele"
+    },
+    {
+      "active": true,
+      "display_name": "Kawe",
+      "project_id": null,
+      "role": "viewer",
+      "username": "kawe"
+    },
+    {
+      "active": true,
+      "display_name": "Cole",
+      "project_id": null,
+      "role": "viewer",
+      "username": "cole"
+    },
+    {
+      "active": true,
+      "display_name": "Lucas",
+      "project_id": null,
+      "role": "viewer",
+      "username": "lucas"
+    },
+    {
+      "active": true,
+      "display_name": "Julio",
+      "project_id": null,
+      "role": "viewer",
+      "username": "julio"
+    },
+    {
+      "active": true,
+      "display_name": "Felipe",
+      "project_id": null,
+      "role": "viewer",
+      "username": "felipe"
+    },
+    {
+      "active": true,
+      "display_name": "Lais",
+      "project_id": null,
+      "role": "viewer",
+      "username": "lais"
+    }
+  ]
+}
