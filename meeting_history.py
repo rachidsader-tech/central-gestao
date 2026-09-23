@@ -59,10 +59,10 @@ def register(app_module):
                    COUNT(g.id) AS segment_count
               FROM kaz_meeting_audio_sessions s
               LEFT JOIN kaz_meeting_audio_segments g ON g.session_id = s.id
-             WHERE s.project_id = ANY(:project_ids)
              GROUP BY s.id, s.project_id, s.created_by, s.status, s.started_at, s.ended_at
              ORDER BY s.started_at DESC
-        """), {'project_ids': list(visible_ids)}).mappings().all()
+        """)).mappings().all()
+        rows = [row for row in rows if row['project_id'] in visible_ids]
 
         meetings = []
         for row in rows:
