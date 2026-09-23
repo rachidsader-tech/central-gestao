@@ -117,6 +117,16 @@ def register(app_module):
         if not isinstance(previous_review, dict):
             previous_review = None
 
+        try:
+            attachments = db.session.execute(text("""
+                SELECT id, name, mime_type, size, uploaded_by, created_at
+                  FROM kaz_meeting_attachments
+                 WHERE session_id = :session_id
+                 ORDER BY created_at ASC, id ASC
+            """), {'session_id': session_id}).mappings().all()
+        except Exception:
+            attachments = []
+
         review = {
             'summary': (saved or {}).get('summary') or '',
             'topics': (saved or {}).get('topics') or (saved or {}).get('notes') or '',
@@ -135,9 +145,19 @@ def register(app_module):
             'createdBy': row['created_by'],
             'durationSeconds': _duration_seconds(row['started_at'], row['ended_at']),
             'registered': bool(saved),
+            'canEdit': bool(app_module.can_edit_project(user, row['project_id'])),
             'previousReview': previous_review,
             'transcript': transcript,
             'review': review,
+            'attachments': [{
+                'id': a['id'],
+                'name': a['name'],
+                'mimeType': a['mime_type'],
+                'size': a['size'],
+                'uploadedBy': a['uploaded_by'],
+                'createdAt': a['created_at'].isoformat() if a['created_at'] else '',
+                'url': f"/api/meeting/attachments/{a['id']}/download",
+            } for a in attachments],
             'aiTestPreview': (saved or {}).get('migrationAiPreview'),
             'segments': [{
                 'position': s['position'],
