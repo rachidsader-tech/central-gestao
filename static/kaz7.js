@@ -105,7 +105,7 @@
 
   meetingStepLabel = function(n,label){
     if(n===3)label='Gravação da reunião';
-    if(n===4)label='Revisão e próximos passos';
+    if(n===4)return '';
     return `<div class="meeting-step ${meetingStep===n?'active':''}">${n}. ${label}</div>`;
   };
 
@@ -222,6 +222,17 @@
       </div>`).join('')}</div></div>`;
   };
 
+  async function loadProjectMeetingAttachments(projectId){
+    const box=document.getElementById('project-meeting-files');
+    if(!box)return;
+    try{
+      const r=await fetch(`/api/projects/${encodeURIComponent(projectId)}/meeting-attachments`,{headers:{'X-CSRF-Token':CSRF}});
+      const j=await r.json();if(!r.ok)throw new Error(j.error||'Falha ao carregar arquivos de reunião.');
+      const files=j.attachments||[];
+      box.innerHTML=files.length?files.map(a=>`<div class="roadmap-file-row"><div><a href="${a.url}" class="roadmap-file-link">${esc(a.name)}</a><div class="muted small">Reunião de ${fmtDate(a.meetingDate)} · ${esc(a.uploadedBy||'')} · ${humanFileSize(a.size)}</div></div><a class="btn light small" href="${a.url}">Baixar</a></div>`).join(''):'<div class="muted small">Nenhum arquivo apresentado em reunião até o momento.</div>';
+    }catch(e){box.innerHTML=`<div class="small" style="color:#a9343e">${esc(e.message)}</div>`}
+  }
+
   renderProjectPanel = function(){
     const p=project(currentProjectId),editable=canEdit(p.id),root=$('#projectPanel'),defined=roadmapScopeDefined(p);
     if(currentTab!=='milestones'){
@@ -238,10 +249,16 @@
           const card=root.querySelector('.card .pad');
           if(card){
             const section=document.createElement('div');
-            section.innerHTML=`<h4 style="margin-top:22px">Gravações das reuniões</h4>${recorded.map(m=>`<div class="message"><strong>${fmtDate(m.at)} · ${esc(m.createdBy)}</strong><p>${m.aiProcessed?'Resumo processado por IA e revisado antes do registro.':'Gravação preservada no sistema.'}</p><button class="btn light small" onclick="openMeetingAudioSession('${m.audioSessionId}')">▶ Ouvir gravação (${m.audioSegments||0} partes)</button></div>`).join('')}`;
+            section.innerHTML=`<h4 style="margin-top:22px">Gravações das reuniões</h4>${recorded.map(m=>`<div class="message"><strong>${fmtDate(m.at)} · ${esc(m.createdBy)}</strong><p>${m.aiProcessed?'Documento da reunião gerado por IA.':'Gravação preservada no sistema.'}</p><button class="btn light small" onclick="openMeetingAudioSession('${m.audioSessionId}')">▶ Ouvir gravação (${m.audioSegments||0} partes)</button></div>`).join('')}`;
             card.appendChild(section);
           }
         }
+        const filesCard=document.createElement('div');
+        filesCard.className='card';
+        filesCard.style.marginTop='14px';
+        filesCard.innerHTML='<div class="card-h"><h3>Arquivos apresentados nas reuniões</h3></div><div class="pad" id="project-meeting-files"><div class="muted small">Carregando arquivos…</div></div>';
+        root.appendChild(filesCard);
+        loadProjectMeetingAttachments(p.id);
       }
       return;
     }
@@ -371,10 +388,6 @@
     if(!window.currentMeetingDependencies){
       window.currentMeetingDependencies=asReviewLines(pickFallback(clean,['diretoria','depende','aprova','aprovação','rachid','leo','márcio','marcinho','aguard']));
     }
-    if(!window.currentMeetingNext){
-      const next=pickFallback(clean,['até quarta','até a próxima','ficou de','vai entregar','compromisso'],1);
-      if(next.length)window.currentMeetingNext=next[0];
-    }
   }
   function reviewSourceBanner(){
     if(longMeetingAIProcessed)return '<div class="good"><b>Resumo gerado por IA.</b> Revise o conteúdo antes de registrar a reunião.</div>';
@@ -397,51 +410,33 @@
     const uploaded=longMeetingUploadedPositions.length;
     const recorded=Math.max(longMeetingSegmentCount,uploaded);
     return `<div class="card meeting-recorder-card">
-      <div class="pad"><div class="flex wrap"><div><div class="meeting-recorder-title">Gravação integral da reunião</div><div class="muted small">A gravação é dividida automaticamente em blocos curtos. Isso elimina o antigo limite prático de reuniões longas.</div></div><div class="right">${listening?'<span class="pill s-risco">● GRAVANDO</span>':longMeetingFinalizing?'<span class="pill s-analise">Processando…</span>':longMeetingSessionId?'<span class="pill s-conc">Gravação preservada</span>':'<span class="pill s-nao">Aguardando</span>'} ${meetingAIStatusBadge()}</div></div>
+      <div class="pad"><div class="flex wrap"><div><div class="meeting-recorder-title">Gravação integral da reunião</div><div class="muted small">A gravação é dividida automaticamente em blocos curtos. Isso elimina o antigo limite prático de reuniões longas.</div></div><div class="right">${listening?'<span class="pill s-risco">● GRAVANDO</span>':longMeetingFinalizing?'<span class="pill s-analise">Processando…</span>':longMeetingSessionId?'<span class="pill s-conc">Gravação preservada</span>':'<span class="pill s-nao">Aguardando</span>'}</div></div>
       <div class="micbar" style="margin-top:14px">${listening?'<button class="btn recording" onclick="stopLongMeetingRecording()">■ Encerrar gravação</button>':longMeetingSessionId?'':'<button class="btn blue" onclick="startLongMeetingRecording()">🎙 Iniciar gravação</button>'}<strong id="meetingTimer">${listening?meetingElapsed():'00:00'}</strong><span class="muted small">${listening?'Captação contínua · salvamento em blocos':longMeetingSessionId?'Gravação anterior preservada':'O áudio completo será preservado por blocos'}</span></div>
       <div class="meeting-level"><div id="meetingLevelBar" style="width:${listening?'6':'0'}%"></div></div>
       <div class="flex wrap small" style="margin-top:10px"><span><b>${recorded}</b> bloco(s) gravado(s)</span><span>·</span><span><b>${uploaded}</b> bloco(s) salvo(s) no servidor</span></div>
       ${meetingProcessStatus?`<div class="info" style="margin-top:11px">${esc(meetingProcessStatus)}</div>`:''}
-      ${longMeetingSessionId&&!listening?`<div class="actions" style="justify-content:flex-start"><button class="btn light small" onclick="processLongMeetingRecording()" ${longMeetingFinalizing?'disabled':''}>↻ Processar / reprocessar com IA</button><button class="btn light small" onclick="openMeetingAudioSession('${longMeetingSessionId}')">▶ Ouvir blocos gravados</button></div>`:''}
+      ${longMeetingSessionId&&!listening?`<div class="actions" style="justify-content:flex-start"><button class="btn light small" onclick="openMeetingAudioSession('${longMeetingSessionId}')">▶ Ouvir gravação</button></div>`:''}
       </div></div>`;
   }
 
   renderMeetingStep = function(){
-    if(meetingStep!==3 && meetingStep!==4){baseRenderMeetingStepRoadmap();applyRoadmapTerms($('#meetingPanel'));return}
-    if(meetingAIStatus===null)ensureMeetingAIStatus().then(()=>{if(meetingStep===3||meetingStep===4)renderMeetingStep()});
-    const root=$('#meetingPanel');
-
-    if(meetingStep===3){
-      root.innerHTML=`<div class="card meeting-box"><h3>3. Gravação da reunião</h3>
-        <p>Grave a conversa completa. Ao encerrar, o sistema preserva todos os blocos e tenta gerar automaticamente a transcrição e a revisão da reunião.</p>
-        ${meetingAIStatus&&meetingAIStatus.configured?'':'<div class="notice" style="margin-bottom:12px"><b>IA ainda não conectada ao servidor.</b> A gravação funciona normalmente, mas sem a credencial de IA o áudio não pode ser transcrito e resumido pelo servidor. O sistema preservará o áudio e usará somente a transcrição auxiliar do navegador quando houver.</div>'}
-        ${longMeetingRecorderHtml()}
-        <div class="field"><label>Transcrição auxiliar / consolidada</label><textarea id="meetTranscript" class="transcript" oninput="transcriptText=this.value" placeholder="Quando disponível, a transcrição aparecerá aqui.">${esc(transcriptText)}</textarea></div>
-        <div class="actions"><button class="btn light" onclick="goMeetingStep(2)">← Voltar</button>${longMeetingSessionId&&!listening&&!longMeetingFinalizing?'<button class="btn blue" onclick="captureMeetingStep3();goMeetingStep(4)">Revisar reunião →</button>':''}</div>
-      </div>`;
-      if(listening){showRecordingBeacon();updateMeetingTimer();runMeetingMeter()}
+    if(meetingStep===4)meetingStep=3;
+    if(meetingStep!==3){
+      baseRenderMeetingStepRoadmap();
+      applyRoadmapTerms($('#meetingPanel'));
       return;
     }
-
-    buildFallbackReview(transcriptText);
-    root.innerHTML=`<div class="card meeting-box"><h3>4. Revisão da reunião e próximos passos</h3>
-      <p>Esta é a etapa de conferência antes do registro definitivo. Revise o que foi tratado, decisões e próximos passos.</p>
-      ${reviewSourceBanner()}
-      ${meetingProcessStatus?`<div class="info" style="margin-top:10px">${esc(meetingProcessStatus)}</div>`:''}
-      <div class="meeting-ai-grid" style="margin-top:14px">
-        <div class="field full"><label>Resumo da reunião</label><textarea id="meetSummary">${esc(window.currentMeetingSummary||'')}</textarea></div>
-        <div class="field"><label>O que foi tratado</label><textarea id="meetTopics">${esc(window.currentMeetingTopics||'')}</textarea></div>
-        <div class="field"><label>Decisões tomadas</label><textarea id="meetDecisions">${esc(window.currentMeetingDecisions||'')}</textarea></div>
-        <div class="field"><label>Próximos passos</label><textarea id="meetNextSteps">${esc(window.currentMeetingNextSteps||'')}</textarea></div>
-        <div class="field"><label>Pendências / dependências da Diretoria</label><textarea id="meetDependencies">${esc(window.currentMeetingDependencies||'')}</textarea></div>
-        <div class="field full"><label>Compromisso estratégico até a próxima reunião</label><textarea id="meetNext" placeholder="Qual resultado real precisa estar diferente até a próxima quarta-feira?">${esc(window.currentMeetingNext||'')}</textarea></div>
-      </div>
+    const root=$('#meetingPanel');
+    root.innerHTML=`<div class="card meeting-box"><h3>3. Gravação da reunião</h3>
+      <p>Grave a reunião completa. Ao encerrar a gravação, salve a reunião e informe o compromisso da próxima semana. A análise por IA será feita depois, já com a possibilidade de considerar os arquivos apresentados.</p>
+      ${longMeetingRecorderHtml()}
+      ${longMeetingSessionId&&!listening&&!longMeetingFinalizing?'<div class="good" style="margin-top:12px"><b>Gravação encerrada.</b> A reunião já pode ser salva. O compromisso pode ser informado agora e continua editável depois do encerramento.</div>':''}
       <div class="actions">
-        <button class="btn light" onclick="goMeetingStep(3)">← Voltar à gravação</button>
-        ${longMeetingSessionId?'<button class="btn light" onclick="captureMeetingReview();processLongMeetingRecording()" '+(longMeetingFinalizing?'disabled':'')+'>↻ Processar novamente com IA</button>':''}
-        <button class="btn blue" onclick="saveMeeting()" ${longMeetingFinalizing?'disabled':''}>Fechar e registrar reunião</button>
+        <button class="btn light" onclick="goMeetingStep(2)">← Voltar</button>
+        ${longMeetingSessionId&&!listening&&!longMeetingFinalizing?'<button class="btn blue" onclick="saveMeeting()">Salvar reunião →</button>':''}
       </div>
     </div>`;
+    if(listening){showRecordingBeacon();updateMeetingTimer();runMeetingMeter()}
   };
 
   async function createLongMeetingSession(){
@@ -488,7 +483,6 @@
   window.startLongMeetingRecording = async function(){
     if(listening)return;
     try{
-      await ensureMeetingAIStatus();
       mediaStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:{ideal:1},sampleRate:{ideal:48000}}});
       longMeetingSessionId=await createLongMeetingSession();
       longMeetingSegmentIndex=0;longMeetingSegmentCount=0;longMeetingUploadPromises=[];longMeetingUploadedPositions=[];longMeetingAIProcessed=false;
@@ -527,9 +521,9 @@
       await api(`/api/meeting/audio-sessions/${longMeetingSessionId}/finish`,'POST',{});
       mediaStream?.getTracks().forEach(t=>t.stop());try{await meetingAudioContext?.close()}catch{}
       meetingAudioContext=null;meetingAnalyser=null;longMeetingProcessedStream=null;
-      meetingProcessStatus=`Gravação concluída e preservada em ${longMeetingUploadedPositions.length} bloco(s). Iniciando transcrição e resumo…`;
+      meetingProcessStatus=`Gravação concluída e preservada em ${longMeetingUploadedPositions.length} bloco(s). Salve a reunião para registrar o compromisso e liberar anexos e análise por IA.`;
+      longMeetingFinalizing=false;
       renderMeetingStep();
-      await processLongMeetingRecording();
     }catch(e){meetingProcessStatus='A gravação foi encerrada, mas houve falha ao confirmar todos os blocos. '+e.message;longMeetingFinalizing=false;renderMeetingStep()}
   }
 
@@ -561,15 +555,10 @@
       transcriptText=texts.join('\n\n').trim()||transcriptText;
       meetingProcessStatus='Transcrição concluída. A IA está estruturando a revisão da reunião…';renderMeetingStep();
 
-      const ai=await api('/api/meeting/summarize','POST',{projectId:meetingProjectId,transcript:transcriptText});
+      const ai=await api('/api/meeting/summarize','POST',{projectId:meetingProjectId,sessionId:longMeetingSessionId,transcript:transcriptText});
       window.currentMeetingSummary=ai.summary||'';
-      window.currentMeetingTopics=ai.topics||'';
-      window.currentMeetingDecisions=ai.decisions||'';
-      window.currentMeetingNextSteps=ai.nextSteps||'';
-      window.currentMeetingDependencies=ai.dependencies||'';
-      if(ai.commitment)window.currentMeetingNext=ai.commitment;
       longMeetingAIProcessed=true;
-      meetingProcessStatus='Resumo de IA concluído. Confira e ajuste antes de registrar.';
+      meetingProcessStatus='Documento da reunião gerado por IA.';
     }catch(e){
       buildFallbackReview(transcriptText);
       meetingProcessStatus=`A gravação está preservada, mas o processamento automático não foi concluído: ${e.message}`;
@@ -592,23 +581,38 @@
     window.currentMeetingNext=$('#meetNext')?.value||window.currentMeetingNext||'';
   };
 
-  saveMeeting = async function(){
+  saveMeeting = function(){
     if(listening){alert('Encerre a gravação antes de salvar a reunião.');return}
-    if(longMeetingFinalizing){alert('Aguarde o salvamento/processamento da gravação terminar.');return}
-    captureMeetingReview();
+    if(longMeetingFinalizing){alert('A gravação ainda está sendo finalizada.');return}
+    if(!longMeetingSessionId){alert('Esta reunião ainda não possui uma gravação salva.');return}
+    modal(`<h2>Salvar reunião</h2>
+      <p class="muted small">Informe o compromisso para a próxima reunião. Esse compromisso aparecerá automaticamente no início da próxima reunião deste projeto e poderá ser editado depois.</p>
+      <div class="field"><label>Compromisso para a próxima reunião</label><textarea id="meetingCommitmentInput" style="min-height:120px" placeholder="Ex.: apresentar a proposta final para validação.">${esc(window.currentMeetingNext||'')}</textarea></div>
+      <div class="info" style="margin-top:12px">A reunião será salva independentemente da IA. Depois de salvar, você poderá anexar os arquivos apresentados e gerar o documento da reunião por IA.</div>
+      <div class="actions"><button class="btn light" onclick="closeModal()">Cancelar</button><button class="btn blue" onclick="confirmMeetingSave()">Salvar reunião</button></div>`);
+  };
+
+  window.confirmMeetingSave = async function(){
+    if(longMeetingFinalizing)return;
+    const commitment=$('#meetingCommitmentInput')?.value.trim()||'';
+    const sessionId=longMeetingSessionId;
     try{
       await api('/api/meetings','POST',{
         projectId:meetingProjectId,
-        notes:window.currentMeetingTopics||'',topics:window.currentMeetingTopics||'',
-        decisions:window.currentMeetingDecisions||'',nextSteps:window.currentMeetingNextSteps||'',
-        nextWeek:window.currentMeetingNext||'',transcript:transcriptText,summary:window.currentMeetingSummary||'',
-        dependencies:window.currentMeetingDependencies||'',audioSessionId:longMeetingSessionId||'',
-        audioSegments:longMeetingUploadedPositions.length,aiProcessed:longMeetingAIProcessed
+        nextWeek:commitment,
+        transcript:transcriptText||'',
+        summary:'',
+        audioSessionId:sessionId,
+        audioSegments:longMeetingUploadedPositions.length,
+        aiProcessed:false
       });
-      alert('Reunião registrada com sucesso.');
+      closeModal();
+      await refresh();
       transcriptText='';window.currentMeetingSummary='';window.currentMeetingTopics='';window.currentMeetingNextSteps='';window.currentMeetingDecisions='';window.currentMeetingDependencies='';window.currentMeetingNext='';
       longMeetingSessionId=null;longMeetingSegmentCount=0;longMeetingUploadedPositions=[];longMeetingUploadPromises=[];longMeetingAIProcessed=false;meetingProcessStatus='';meetingStep=1;meetingPage='home';
-      await refresh();renderMeeting();
+      alert('Reunião salva. Agora você pode anexar os arquivos apresentados e gerar o documento da reunião.');
+      if(typeof window.openMeetingArchive==='function')await window.openMeetingArchive(sessionId);
+      else renderMeeting();
     }catch(e){alert(e.message)}
   };
 
