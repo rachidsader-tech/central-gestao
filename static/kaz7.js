@@ -322,7 +322,10 @@
     const fd=new FormData();fd.append('file',file);
     try{
       const r=await fetch(`/api/projects/${encodeURIComponent(currentProjectId)}/milestones/${encodeURIComponent(id)}/attachments`,{method:'POST',headers:{'X-CSRF-Token':CSRF},body:fd});
-      const j=await r.json();if(!r.ok)throw new Error(j.error||'Falha ao anexar arquivo.');
+      const rawResponse=await r.text();
+      let j={};
+      try{j=rawResponse?JSON.parse(rawResponse):{}}catch{}
+      if(!r.ok)throw new Error(j.error||`Falha ao anexar arquivo (erro ${r.status}).`);
       input.value='';
       if(status)status.textContent='Arquivo anexado com sucesso.';
       await loadRoadmapAttachments(id);
