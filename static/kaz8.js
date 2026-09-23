@@ -1,77 +1,68 @@
-// Transformação KAZ — arquivo executivo de reuniões (somente leitura) + teste controlado de IA.
+// Transformação KAZ — pós-reunião: compromisso, anexos e documento único por IA.
 (function(){
   const previousShowView = showView;
   const previousRenderMeeting = renderMeeting;
   const previousStartNewMeeting = window.startNewMeeting;
 
-  let archiveMode = 'list';
-  let archiveDetail = null;
-  let archiveLoading = false;
-  let aiPreview = null;
-  let aiPreviewStatus = '';
-  let archiveAudioIndex = 0;
+  let archiveMode='list';
+  let archiveDetail=null;
+  let archiveLoading=false;
+  let archiveAudioIndex=0;
+  let archiveStatus='';
 
   function fmtDuration(total){
     if(total===null||total===undefined)return 'Sem áudio';
-    const s=Math.max(0,Number(total)||0);
-    const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=Math.floor(s%60);
-    if(h)return `${h}h ${String(m).padStart(2,'0')}min`;
-    return `${m}min ${String(sec).padStart(2,'0')}s`;
+    const sec=Math.max(0,Number(total)||0);
+    const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=Math.floor(sec%60);
+    return h?`${h}h ${String(m).padStart(2,'0')}min`:`${m}min ${String(s).padStart(2,'0')}s`;
   }
   function fmtMeetingDate(value){
     if(!value)return '—';
     try{return new Date(value).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}catch{return value}
   }
-  function roValue(value,empty='Não registrado nesta reunião.'){
-    const text=String(value||'').trim();
-    return `<div class="readonly-value ${text?'':'empty-value'}">${text?esc(text).replace(/\n/g,'<br>'):esc(empty)}</div>`;
+  function humanMeetingFileSize(n){
+    if(!n)return '0 B';
+    const u=['B','KB','MB','GB'];let i=0,v=n;
+    while(v>=1024&&i<u.length-1){v/=1024;i++}
+    return `${v.toFixed(i?1:0)} ${u[i]}`;
   }
-  function canTestAI(projectId){
-    return isDirection || USER.project_id===projectId;
+  function meetingDocumentHtml(text){
+    const value=String(text||'').trim();
+    if(!value)return '<div class="empty">O documento da reunião ainda não foi gerado.</div>';
+    return `<div class="readonly-value meeting-document-text">${esc(value).replace(/\n/g,'<br>')}</div>`;
   }
 
-  showView = function(name){
+  showView=function(name){
     if(name==='meeting'&&!listening){
-      archiveMode='list';archiveDetail=null;aiPreview=null;aiPreviewStatus='';
+      archiveMode='list';archiveDetail=null;archiveStatus='';
     }
     previousShowView(name);
   };
 
-  renderMeeting = function(){
-    if(archiveMode==='editor'){
-      previousRenderMeeting();
-      return;
-    }
-    if(archiveMode==='detail'){
-      renderMeetingArchiveDetail();
-      return;
-    }
+  renderMeeting=function(){
+    if(archiveMode==='editor'){previousRenderMeeting();return}
+    if(archiveMode==='detail'){renderMeetingArchiveDetail();return}
     renderMeetingArchiveList();
   };
 
-  window.startNewMeeting = function(){
+  window.startNewMeeting=function(){
     if(listening)return;
-    archiveMode='editor';
+    archiveMode='editor';archiveDetail=null;archiveStatus='';
     previousStartNewMeeting();
   };
-
-  window.openMeetingHome = function(){
+  window.openMeetingHome=function(){
     if(listening){alert('Encerre a reunião em andamento antes de voltar.');return}
-    archiveMode='list';archiveDetail=null;aiPreview=null;aiPreviewStatus='';renderMeeting();
+    archiveMode='list';archiveDetail=null;archiveStatus='';renderMeeting();
   };
-
-  window.showRecordedMeetings = function(){
-    archiveMode='list';archiveDetail=null;aiPreview=null;aiPreviewStatus='';renderMeeting();
-  };
+  window.showRecordedMeetings=function(){window.openMeetingHome()};
 
   function renderMeetingArchiveList(){
     const root=$('#meetingView');
     root.innerHTML=`<div class="hero">
-      <div><h1>Reuniões</h1><p>Histórico das reuniões gravadas. As reuniões anteriores são somente leitura.</p></div>
+      <div><h1>Reuniões</h1><p>Gravação, compromisso, arquivos apresentados e documento da reunião.</p></div>
       <button class="btn blue" onclick="startNewMeeting()">🎙 Nova reunião</button>
     </div>
-    <div class="card">
-      <div class="card-h"><h3>Reuniões anteriores</h3></div>
+    <div class="card"><div class="card-h"><h3>Reuniões anteriores</h3></div>
       <div class="pad" id="meetingArchiveList"><div class="empty">Carregando reuniões…</div></div>
     </div>`;
     loadMeetingArchiveList();
@@ -84,94 +75,79 @@
       const rows=j.meetings||[];
       if(!rows.length){root.innerHTML='<div class="empty">Nenhuma reunião gravada encontrada.</div>';return}
       root.innerHTML=`<div class="meeting-archive-table-wrap"><table class="project-table meeting-archive-table">
-        <thead><tr><th>Data</th><th>Projeto</th><th>Tempo de gravação</th><th></th></tr></thead>
+        <thead><tr><th>Data</th><th>Projeto</th><th>Gravação</th><th>Situação</th><th></th></tr></thead>
         <tbody>${rows.map(m=>`<tr class="clickable" onclick="openMeetingArchive('${m.id}')">
           <td><b>${fmtMeetingDate(m.date)}</b></td>
           <td>${esc(m.projectName||m.projectId)}</td>
           <td>${fmtDuration(m.durationSeconds)}</td>
-          <td style="text-align:right"><button class="btn light small" onclick="event.stopPropagation();openMeetingArchive('${m.id}')">Ver reunião →</button></td>
+          <td>${m.registered?(m.aiProcessed?'<span class="pill s-conc">Documento gerado</span>':'<span class="pill s-analise">Pós-reunião aberto</span>'):'<span class="pill s-risco">Não salva</span>'}</td>
+          <td style="text-align:right"><button class="btn light small" onclick="event.stopPropagation();openMeetingArchive('${m.id}')">Abrir →</button></td>
         </tr>`).join('')}</tbody>
       </table></div>`;
     }catch(e){root.innerHTML=`<div class="empty">Falha ao carregar reuniões: ${esc(e.message)}</div>`}
   }
 
-  window.openMeetingArchive = async function(sessionId){
+  window.openMeetingArchive=async function(sessionId){
     if(archiveLoading)return;
-    archiveMode='detail';archiveDetail=null;aiPreview=null;aiPreviewStatus='';archiveLoading=true;renderMeetingArchiveDetail();
-    try{
-      archiveDetail=await api(`/api/meeting/history/${encodeURIComponent(sessionId)}`);
-      if(archiveDetail.aiTestPreview?.status==='success'){
-        aiPreview={
-          summary:archiveDetail.aiTestPreview.summary||'',
-          topics:archiveDetail.aiTestPreview.topics||'',
-          decisions:archiveDetail.aiTestPreview.decisions||'',
-          nextSteps:archiveDetail.aiTestPreview.nextSteps||'',
-          dependencies:archiveDetail.aiTestPreview.dependencies||'',
-          commitment:archiveDetail.aiTestPreview.commitment||''
-        };
-        aiPreviewStatus='Teste de IA já concluído nesta reunião histórica. A prévia abaixo não altera o registro oficial.';
-      }else if(archiveDetail.aiTestPreview?.status==='failed'){
-        aiPreviewStatus='O teste automático de IA desta gravação falhou anteriormente. Você pode tentar novamente.';
-      }
-    }catch(e){
-      archiveDetail={error:e.message};
-    }finally{
-      archiveLoading=false;renderMeetingArchiveDetail();
-    }
+    archiveMode='detail';archiveDetail=null;archiveStatus='';archiveLoading=true;renderMeetingArchiveDetail();
+    try{archiveDetail=await api(`/api/meeting/history/${encodeURIComponent(sessionId)}`)}
+    catch(e){archiveDetail={error:e.message}}
+    finally{archiveLoading=false;renderMeetingArchiveDetail()}
   };
 
-  function renderPreviousReview(detail){
-    const review=detail.previousReview;
-    if(!review){
-      return '<div class="notice">Esta reunião é anterior ao registro do snapshot da etapa 2. Por isso, não é possível reconstruir com segurança quais compromissos e pendências estavam abertos naquele momento.</div>';
+  function commitmentBox(d){
+    const value=d.review?.commitment||'';
+    if(!d.registered){
+      return '<div class="notice"><b>Reunião ainda não salva.</b> O compromisso será solicitado quando a reunião for registrada.</div>';
     }
-    const commitments=review.commitments||[],deps=review.dependencies||[];
-    return `<div class="meeting-read-grid">
-      <div>
-        <div class="small muted archive-label">COMPROMISSOS DA SEMANA ANTERIOR</div>
-        ${commitments.length?commitments.map(c=>`<div class="message"><div class="flex wrap"><strong>${esc(c.text||'')}</strong><span class="right">${badgeCommit(c.status||'Aberto')}</span></div></div>`).join(''):'<div class="empty compact-empty">Nenhum compromisso registrado.</div>'}
-      </div>
-      <div>
-        <div class="small muted archive-label">PENDÊNCIAS EXTERNAS</div>
-        ${deps.length?deps.map(d=>`<div class="message"><strong>${esc(d.subject||'Pendência')}</strong><div class="small muted" style="margin-top:5px">${esc(d.status||'')} ${d.director?'· '+esc(d.director):''} ${d.deadline?'· '+esc(d.deadline):''}</div></div>`).join(''):'<div class="empty compact-empty">Nenhuma pendência aberta registrada.</div>'}
-      </div>
-    </div>`;
+    if(!d.canEdit){
+      return `<div class="field"><label>Compromisso para a próxima reunião</label><div class="readonly-value">${value?esc(value):'Não informado.'}</div></div>`;
+    }
+    return `<div class="field"><label>Compromisso para a próxima reunião</label>
+      <textarea id="archiveCommitment" style="min-height:110px" placeholder="Informe o resultado esperado até a próxima reunião.">${esc(value)}</textarea>
+      <div class="muted small" style="margin-top:6px">Este é o compromisso que aparecerá no início da próxima reunião deste projeto. Pode ser alterado mesmo com a reunião encerrada.</div>
+    </div>
+    <div class="actions"><button class="btn blue" onclick="saveArchivedMeetingCommitment()">Salvar compromisso</button></div>`;
   }
 
-  function renderOfficialReview(detail){
-    const r=detail.review||{};
-    const none=!detail.registered;
-    return `<div class="meeting-read-grid">
-      <div class="field full"><label>Resumo da reunião</label>${roValue(r.summary,none?'A gravação existe, mas esta reunião não foi fechada/registrada no sistema.':'Não registrado nesta reunião.')}</div>
-      <div class="field"><label>O que foi tratado</label>${roValue(r.topics)}</div>
-      <div class="field"><label>Decisões tomadas</label>${roValue(r.decisions)}</div>
-      <div class="field"><label>Próximos passos</label>${roValue(r.nextSteps)}</div>
-      <div class="field"><label>Pendências / dependências da Diretoria</label>${roValue(r.dependencies)}</div>
-      <div class="field full"><label>Compromisso estratégico da próxima reunião</label>${roValue(r.commitment)}</div>
-    </div>`;
-  }
-
-  function renderAiPreview(detail){
-    if(!canTestAI(detail.projectId))return '';
-    if(!aiPreview){
-      return `<div class="card ai-preview-card"><div class="pad">
-        <div class="flex wrap"><div><b>Teste da IA nesta gravação</b><div class="muted small">Gera uma prévia sem alterar nem salvar a reunião histórica.</div></div>
-        <button class="btn blue right" onclick="runMeetingAiPreview()" ${archiveLoading?'disabled':''}>Testar IA nesta gravação</button></div>
-        ${aiPreviewStatus?`<div class="info" style="margin-top:12px">${esc(aiPreviewStatus)}</div>`:''}
-      </div></div>`;
-    }
-    return `<div class="card ai-preview-card"><div class="card-h"><h3>Prévia da IA — teste, não salva a reunião</h3></div><div class="pad">
-      ${aiPreviewStatus?`<div class="good" style="margin-bottom:12px">${esc(aiPreviewStatus)}</div>`:''}
-      <div class="meeting-read-grid">
-        <div class="field full"><label>Resumo da reunião</label>${roValue(aiPreview.summary)}</div>
-        <div class="field"><label>O que foi tratado</label>${roValue(aiPreview.topics)}</div>
-        <div class="field"><label>Decisões tomadas</label>${roValue(aiPreview.decisions)}</div>
-        <div class="field"><label>Próximos passos</label>${roValue(aiPreview.nextSteps)}</div>
-        <div class="field"><label>Pendências / dependências da Diretoria</label>${roValue(aiPreview.dependencies)}</div>
-        <div class="field full"><label>Possível compromisso estratégico da próxima reunião</label>${roValue(aiPreview.commitment)}</div>
-      </div>
-      <div class="actions"><button class="btn light" onclick="runMeetingAiPreview()">↻ Reprocessar teste</button></div>
+  function attachmentsBox(d){
+    const files=d.attachments||[];
+    const rows=files.length?files.map(a=>`<div class="roadmap-file-row">
+      <div><a href="${a.url}" class="roadmap-file-link">${esc(a.name)}</a>
+        <div class="muted small">${humanMeetingFileSize(a.size)} · ${esc(a.uploadedBy||'')} · ${fmtDate(a.createdAt)}</div>
+      </div><a href="${a.url}" class="btn light small">Baixar</a>
+    </div>`).join(''):'<div class="muted small">Nenhum arquivo apresentado foi anexado.</div>';
+    return `<div class="card"><div class="card-h"><h3>Arquivos apresentados na reunião</h3></div><div class="pad">
+      <p class="muted small" style="margin-top:0">Depois que a reunião é salva, os documentos apresentados podem ser anexados aqui. Eles também aparecem dentro do projeto e podem ser considerados pela IA.</p>
+      <div id="archiveMeetingFiles">${rows}</div>
+      ${d.canEdit&&d.registered?`<div class="flex wrap" style="margin-top:12px">
+        <input id="archiveMeetingFileInput" type="file" class="roadmap-file-input-hidden" onchange="uploadArchivedMeetingFile()">
+        <button class="btn light small" onclick="chooseArchivedMeetingFile()">＋ Anexar arquivo</button>
+        <span id="archiveMeetingFileStatus" class="muted small">Limite de 20 MB por arquivo.</span>
+      </div>`:''}
     </div></div>`;
+  }
+
+  function aiDocumentBox(d){
+    if(!d.registered)return '';
+    const summary=d.review?.summary||'';
+    const button=d.canEdit?`<button class="btn blue" onclick="generateArchivedMeetingDocument()" ${archiveLoading?'disabled':''}>${summary?'↻ Reprocessar documento da reunião':'Gerar documento da reunião com IA'}</button>`:'';
+    return `<div class="card"><div class="card-h"><h3>Documento da reunião</h3>${button}</div><div class="pad">
+      <p class="muted small" style="margin-top:0">Síntese única da reunião. A IA usa a gravação/transcrição, o compromisso informado pela pessoa e, quando legíveis, os arquivos anexados.</p>
+      ${archiveStatus?`<div class="info" style="margin-bottom:12px">${esc(archiveStatus)}</div>`:''}
+      ${meetingDocumentHtml(summary)}
+    </div></div>`;
+  }
+
+  function audioBox(d){
+    const first=d.segments?.[0]?.url||'';
+    return `<details class="ux-meeting-secondary" style="margin-top:14px"><summary>Gravação e transcrição</summary>
+      <div class="card" style="margin-top:10px"><div class="pad">
+        <div class="flex wrap"><div><b>Áudio da reunião</b><div class="muted small">A gravação técnica pode estar dividida em blocos, mas é reproduzida em sequência.</div></div><span class="right pill s-nao">${fmtDuration(d.durationSeconds)}</span></div>
+        ${first?'<audio id="meetingArchiveAudio" controls preload="metadata" style="width:100%;margin-top:12px"></audio>':'<div class="empty">Áudio não disponível.</div>'}
+        ${d.transcript?`<details class="archive-transcript"><summary>Ver transcrição</summary><div class="readonly-value transcript-readonly">${esc(d.transcript).replace(/\n/g,'<br>')}</div></details>`:''}
+      </div></div>
+    </details>`;
   }
 
   function renderMeetingArchiveDetail(){
@@ -182,96 +158,89 @@
     if(archiveDetail?.error){
       root.innerHTML=`<button class="btn light small" onclick="openMeetingHome()">← Reuniões</button><div class="card empty" style="margin-top:14px">${esc(archiveDetail.error)}</div>`;return;
     }
-    const d=archiveDetail;
-    if(!d){renderMeetingArchiveList();return}
-    const firstAudio=d.segments?.[0]?.url||'';
+    const d=archiveDetail;if(!d){renderMeetingArchiveList();return}
     root.innerHTML=`<button class="btn light small" onclick="openMeetingHome()">← Reuniões</button>
       <div class="detail-head meeting-archive-head" style="margin-top:15px">
-        <div><div class="muted small" style="text-transform:uppercase">Reunião registrada</div><h1>${esc(d.projectName)}</h1><div class="muted small">${fmtMeetingDate(d.date)} · ${fmtDuration(d.durationSeconds)} · ${esc(d.createdBy||'')}</div></div>
-        <span class="pill s-nao">Somente leitura</span>
+        <div><div class="muted small" style="text-transform:uppercase">Reunião</div><h1>${esc(d.projectName)}</h1><div class="muted small">${fmtMeetingDate(d.date)} · ${fmtDuration(d.durationSeconds)} · ${esc(d.createdBy||'')}</div></div>
+        <span class="pill ${d.registered?'s-conc':'s-risco'}">${d.registered?'Reunião salva':'Não salva'}</span>
       </div>
 
-      <div class="meeting-archive-section">
-        <div class="archive-step-number">2</div>
-        <div class="archive-step-body"><h2>Semana anterior</h2><p class="muted small">Retrato dos compromissos e pendências registrados no fechamento daquela reunião.</p>${renderPreviousReview(d)}</div>
-      </div>
-
-      <div class="meeting-archive-section">
-        <div class="archive-step-number">3</div>
-        <div class="archive-step-body"><h2>Gravação da reunião</h2>
-          <div class="card"><div class="pad">
-            <div class="flex wrap"><div><b>Áudio da reunião</b><div class="muted small">Uma única reunião para o usuário; os blocos técnicos ficam ocultos.</div></div><span class="right pill s-conc">${fmtDuration(d.durationSeconds)}</span></div>
-            ${firstAudio?`<audio id="meetingArchiveAudio" controls preload="metadata" style="width:100%;margin-top:12px"></audio>`:'<div class="empty compact-empty">Áudio não disponível.</div>'}
-            ${d.transcript?`<details class="archive-transcript"><summary>Ver transcrição</summary><div class="readonly-value transcript-readonly">${esc(d.transcript).replace(/\n/g,'<br>')}</div></details>`:''}
-          </div></div>
-        </div>
-      </div>
-
-      <div class="meeting-archive-section">
-        <div class="archive-step-number">4</div>
-        <div class="archive-step-body"><h2>Revisão e próximos passos</h2><p class="muted small">Conteúdo oficial salvo no fechamento da reunião. Não pode ser alterado nesta tela.</p>
-          <div class="card"><div class="pad">${renderOfficialReview(d)}</div></div>
-        </div>
-      </div>
-
-      ${renderAiPreview(d)}
+      <div class="card" style="margin-bottom:14px"><div class="card-h"><h3>Compromisso da próxima reunião</h3></div><div class="pad">${commitmentBox(d)}</div></div>
+      ${attachmentsBox(d)}
+      <div style="margin-top:14px">${aiDocumentBox(d)}</div>
+      ${audioBox(d)}
     `;
     setupArchiveAudio();
   }
 
-  function setupArchiveAudio(){
-    const audio=document.getElementById('meetingArchiveAudio');
-    const segments=archiveDetail?.segments||[];
-    if(!audio||!segments.length)return;
-    archiveAudioIndex=0;
-    audio.src=segments[0].url;
-    audio.onended=()=>{
-      if(archiveAudioIndex<segments.length-1){
-        archiveAudioIndex++;
-        audio.src=segments[archiveAudioIndex].url;
-        audio.play().catch(()=>{});
-      }
-    };
-  }
+  window.saveArchivedMeetingCommitment=async function(){
+    const d=archiveDetail;if(!d||!d.canEdit)return;
+    const value=$('#archiveCommitment')?.value.trim()||'';
+    try{
+      await api(`/api/meeting/audio-sessions/${encodeURIComponent(d.id)}/commitment`,'POST',{commitment:value});
+      d.review=d.review||{};d.review.commitment=value;
+      await refresh();
+      archiveStatus='Compromisso atualizado. Ele aparecerá na próxima reunião deste projeto.';
+      renderMeetingArchiveDetail();
+    }catch(e){alert(e.message)}
+  };
 
-  window.runMeetingAiPreview = async function(){
-    const d=archiveDetail;if(!d||archiveLoading)return;
-    if(!canTestAI(d.projectId)){alert('Sem permissão para processar esta gravação.');return}
-    archiveLoading=true;aiPreview=null;aiPreviewStatus='Preparando transcrição do áudio…';renderMeetingArchiveDetail();
+  window.chooseArchivedMeetingFile=function(){
+    document.getElementById('archiveMeetingFileInput')?.click();
+  };
+  window.uploadArchivedMeetingFile=async function(){
+    const d=archiveDetail,input=$('#archiveMeetingFileInput'),file=input?.files?.[0];
+    if(!d||!file)return;
+    if(file.size>20*1024*1024){input.value='';alert('O arquivo excede o limite de 20 MB.');return}
+    const status=$('#archiveMeetingFileStatus');if(status)status.textContent='Enviando '+file.name+'…';
+    const fd=new FormData();fd.append('file',file);
+    try{
+      const r=await fetch(`/api/meeting/audio-sessions/${encodeURIComponent(d.id)}/attachments`,{method:'POST',headers:{'X-CSRF-Token':CSRF},body:fd});
+      const raw=await r.text();let j={};try{j=raw?JSON.parse(raw):{}}catch{}
+      if(!r.ok)throw new Error(j.error||'Falha ao anexar arquivo.');
+      input.value='';archiveDetail=await api(`/api/meeting/history/${encodeURIComponent(d.id)}`);
+      archiveStatus='Arquivo anexado. Ele já está disponível na reunião e no projeto.';
+      renderMeetingArchiveDetail();
+    }catch(e){if(status)status.textContent='Falha ao anexar.';alert(e.message)}
+  };
+
+  window.generateArchivedMeetingDocument=async function(){
+    const d=archiveDetail;if(!d||!d.canEdit||archiveLoading)return;
+    archiveLoading=true;archiveStatus='Preparando a transcrição da gravação…';renderMeetingArchiveDetail();
     try{
       const manifest=await api(`/api/meeting/audio-sessions/${encodeURIComponent(d.id)}/segments`);
       const pieces=[];
       for(let i=0;i<(manifest.segments||[]).length;i++){
-        const s=manifest.segments[i];
-        aiPreviewStatus=`Transcrevendo áudio: parte ${i+1} de ${manifest.segments.length}…`;renderMeetingArchiveDetail();
-        if(s.transcript){pieces.push(s.transcript);continue}
+        const seg=manifest.segments[i];
+        archiveStatus=`Transcrevendo a gravação: parte ${i+1} de ${manifest.segments.length}…`;renderMeetingArchiveDetail();
+        if(seg.transcript){pieces.push(seg.transcript);continue}
         try{
-          const tr=await api(`/api/meeting/audio-sessions/${encodeURIComponent(d.id)}/segments/${s.position}/transcribe`,'POST',{});
+          const tr=await api(`/api/meeting/audio-sessions/${encodeURIComponent(d.id)}/segments/${seg.position}/transcribe`,'POST',{});
           if(tr.transcript)pieces.push(tr.transcript);
         }catch(e){
-          // Trechos muito curtos ou silenciosos podem retornar sem fala; seguimos com os demais.
           if(!String(e.message||'').toLowerCase().includes('não produziu transcrição'))throw e;
         }
       }
-      const transcript=pieces.join('\n\n').trim();
-      if(!transcript)throw new Error('A gravação não produziu transcrição suficiente para o teste.');
-      aiPreviewStatus='Transcrição concluída. A IA está estruturando a reunião…';renderMeetingArchiveDetail();
-      const result=await api('/api/meeting/summarize','POST',{projectId:d.projectId,transcript});
-      aiPreview={
-        summary:result.summary||'',
-        topics:result.topics||'',
-        decisions:result.decisions||'',
-        nextSteps:result.nextSteps||'',
-        dependencies:result.dependencies||'',
-        commitment:result.commitment||'',
-        transcript
-      };
-      aiPreviewStatus='Teste concluído. Esta prévia não foi salva nem alterou a reunião histórica.';
-    }catch(e){
-      aiPreviewStatus='Teste não concluído: '+e.message;
-      alert(aiPreviewStatus);
-    }finally{
-      archiveLoading=false;renderMeetingArchiveDetail();
-    }
+      const transcript=pieces.join('\n\n').trim()||d.transcript||'';
+      if(!transcript)throw new Error('A gravação não produziu transcrição suficiente para gerar o documento.');
+      archiveStatus='Transcrição concluída. Gerando o documento da reunião com a gravação e os anexos…';renderMeetingArchiveDetail();
+      const result=await api('/api/meeting/summarize','POST',{projectId:d.projectId,sessionId:d.id,transcript});
+      archiveDetail=await api(`/api/meeting/history/${encodeURIComponent(d.id)}`);
+      archiveDetail.review=archiveDetail.review||{};archiveDetail.review.summary=result.summary||archiveDetail.review.summary||'';
+      archiveStatus='Documento da reunião gerado e salvo.';
+      await refresh();
+    }catch(e){archiveStatus='Não foi possível gerar o documento: '+e.message;alert(archiveStatus)}
+    finally{archiveLoading=false;renderMeetingArchiveDetail()}
   };
+
+  function setupArchiveAudio(){
+    const audio=document.getElementById('meetingArchiveAudio'),segments=archiveDetail?.segments||[];
+    if(!audio||!segments.length)return;
+    archiveAudioIndex=0;audio.src=segments[0].url;
+    audio.onended=()=>{
+      if(archiveAudioIndex<segments.length-1){
+        archiveAudioIndex++;audio.src=segments[archiveAudioIndex].url;audio.play().catch(()=>{});
+      }
+    };
+  }
 })();
