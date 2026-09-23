@@ -316,6 +316,29 @@ def register(app_module):
         db.session.commit()
         return jsonify({'id': row.id, 'projectId': row.project_id, 'startedAt': row.started_at.isoformat()})
 
+    @app.route('/api/meeting/audio-sessions', methods=['GET'])
+    @app_module.login_required
+    def list_meeting_audio_sessions():
+        user = app_module.current_user()
+        sessions = MeetingAudioSession.query.order_by(MeetingAudioSession.started_at.desc()).all()
+        visible = [s for s in sessions if _can_view_project(user, s.project_id)]
+        ids = [s.id for s in visible]
+        segments = MeetingAudioSegment.query.filter(MeetingAudioSegment.session_id.in_(ids)).order_by(MeetingAudioSegment.position).all() if ids else []
+        counts = {}
+        for segment in segments:
+            info = counts.setdefault(segment.session_id, {'segments': 0, 'transcribed': 0})
+            info['segments'] += 1
+            info['transcribed'] += bool(segment.transcript)
+        return jsonify({'sessions': [{
+            'id': s.id,
+            'projectId': s.project_id,
+            'createdBy': s.created_by,
+            'status': s.status,
+            'startedAt': s.started_at.isoformat() if s.started_at else '',
+            'endedAt': s.ended_at.isoformat() if s.ended_at else '',
+            **counts.get(s.id, {'segments': 0, 'transcribed': 0}),
+        } for s in visible if counts.get(s.id, {}).get('segments', 0)]})
+
     def _session_or_404(session_id):
         row = db.session.get(MeetingAudioSession, session_id)
         if not row:
@@ -362,7 +385,7 @@ def register(app_module):
             db.session.commit()
 
         rows = MeetingAudioSegment.query.filter_by(session_id=session_id).order_by(MeetingAudioSegment.position).all()
-        return jsonify({'sessionId': session_id, 'segments': [{
+        return jsonify({'sessionId': session_id, 'projectId': session.project_id, 'segments': [{
             'position': r.position,
             'size': r.size,
             'mimeType': r.mime_type,
@@ -549,6 +572,19 @@ TRANSCRIÇÃO:
         project = app_module.find_project(payload, project_id)
         if not project:
             abort(404)
+        session_id = (body.get('audioSessionId') or '').strip()
+        if session_id:
+            session = db.session.get(MeetingAudioSession, session_id)
+            if not session or session.project_id != project_id:
+                return jsonify({'error': 'Gravação não encontrada neste projeto.'}), 400
+        existing = next((m for m in payload.get('meetings', []) if session_id and m.get('audioSessionId') == session_id and m.get('projectId') == project_id), None)
+        if existing:
+            for key in ('notes', 'topics', 'decisions', 'nextSteps', 'nextWeek', 'transcript', 'summary', 'dependencies'):
+                existing[key] = (body.get(key) or '').strip()
+            existing['audioSegments'] = MeetingAudioSegment.query.filter_by(session_id=session_id).count()
+            existing['aiProcessed'] = bool(body.get('aiProcessed'))
+            _touch(state, user, payload)
+            return jsonify({'ok': True, 'meeting': existing, 'revision': state.revision})
         meeting = {
             'id': secrets.token_hex(7),
             'projectId': project_id,
@@ -562,8 +598,8 @@ TRANSCRIÇÃO:
             'transcript': (body.get('transcript') or '').strip(),
             'summary': (body.get('summary') or '').strip(),
             'dependencies': (body.get('dependencies') or '').strip(),
-            'audioSessionId': (body.get('audioSessionId') or '').strip(),
-            'audioSegments': int(body.get('audioSegments') or 0),
+            'audioSessionId': session_id,
+            'audioSegments': MeetingAudioSegment.query.filter_by(session_id=session_id).count() if session_id else 0,
             'aiProcessed': bool(body.get('aiProcessed')),
         }
         payload.setdefault('meetings', []).append(meeting)
