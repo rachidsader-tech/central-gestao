@@ -216,3 +216,7 @@ button{cursor:pointer}
 }
 
 .roadmap-file-input-hidden{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important;}
+
+.staging-banner{position:sticky;top:0;z-index:400;background:#fff3cd;color:#6d5200;border-bottom:1px solid #ead48a;text-align:center;padding:7px 12px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+.staging-banner+.app .side{top:29px;height:calc(100vh - 29px)}
+.staging-banner+.app .top{top:29px}
