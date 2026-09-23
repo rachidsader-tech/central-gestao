@@ -249,16 +249,16 @@
           const card=root.querySelector('.card .pad');
           if(card){
             const section=document.createElement('div');
-            section.innerHTML=`<h4 style="margin-top:22px">Gravações das reuniões</h4>${recorded.map(m=>`<div class="message"><strong>${fmtDate(m.at)} · ${esc(m.createdBy)}</strong><p>${m.aiProcessed?'Resumo processado por IA e revisado antes do registro.':'Gravação preservada no sistema.'}</p><button class="btn light small" onclick="openMeetingAudioSession('${m.audioSessionId}')">▶ Ouvir gravação (${m.audioSegments||0} partes)</button></div>`).join('')}`;
+            section.innerHTML=`<h4 style="margin-top:22px">Gravações das reuniões</h4>${recorded.map(m=>`<div class="message"><strong>${fmtDate(m.at)} · ${esc(m.createdBy)}</strong><p>${m.aiProcessed?'Documento da reunião gerado por IA.':'Gravação preservada no sistema.'}</p><button class="btn light small" onclick="openMeetingAudioSession('${m.audioSessionId}')">▶ Ouvir gravação (${m.audioSegments||0} partes)</button></div>`).join('')}`;
             card.appendChild(section);
           }
+        }
         const filesCard=document.createElement('div');
         filesCard.className='card';
         filesCard.style.marginTop='14px';
         filesCard.innerHTML='<div class="card-h"><h3>Arquivos apresentados nas reuniões</h3></div><div class="pad" id="project-meeting-files"><div class="muted small">Carregando arquivos…</div></div>';
         root.appendChild(filesCard);
         loadProjectMeetingAttachments(p.id);
-        }
       }
       return;
     }
@@ -388,10 +388,6 @@
     if(!window.currentMeetingDependencies){
       window.currentMeetingDependencies=asReviewLines(pickFallback(clean,['diretoria','depende','aprova','aprovação','rachid','leo','márcio','marcinho','aguard']));
     }
-    if(!window.currentMeetingNext){
-      const next=pickFallback(clean,['até quarta','até a próxima','ficou de','vai entregar','compromisso'],1);
-      if(next.length)window.currentMeetingNext=next[0];
-    }
   }
   function reviewSourceBanner(){
     if(longMeetingAIProcessed)return '<div class="good"><b>Resumo gerado por IA.</b> Revise o conteúdo antes de registrar a reunião.</div>';
@@ -414,7 +410,7 @@
     const uploaded=longMeetingUploadedPositions.length;
     const recorded=Math.max(longMeetingSegmentCount,uploaded);
     return `<div class="card meeting-recorder-card">
-      <div class="pad"><div class="flex wrap"><div><div class="meeting-recorder-title">Gravação integral da reunião</div><div class="muted small">A gravação é dividida automaticamente em blocos curtos. Isso elimina o antigo limite prático de reuniões longas.</div></div><div class="right">${listening?'<span class="pill s-risco">● GRAVANDO</span>':longMeetingFinalizing?'<span class="pill s-analise">Processando…</span>':longMeetingSessionId?'<span class="pill s-conc">Gravação preservada</span>':'<span class="pill s-nao">Aguardando</span>'} ${meetingAIStatusBadge()}</div></div>
+      <div class="pad"><div class="flex wrap"><div><div class="meeting-recorder-title">Gravação integral da reunião</div><div class="muted small">A gravação é dividida automaticamente em blocos curtos. Isso elimina o antigo limite prático de reuniões longas.</div></div><div class="right">${listening?'<span class="pill s-risco">● GRAVANDO</span>':longMeetingFinalizing?'<span class="pill s-analise">Processando…</span>':longMeetingSessionId?'<span class="pill s-conc">Gravação preservada</span>':'<span class="pill s-nao">Aguardando</span>'}</div></div>
       <div class="micbar" style="margin-top:14px">${listening?'<button class="btn recording" onclick="stopLongMeetingRecording()">■ Encerrar gravação</button>':longMeetingSessionId?'':'<button class="btn blue" onclick="startLongMeetingRecording()">🎙 Iniciar gravação</button>'}<strong id="meetingTimer">${listening?meetingElapsed():'00:00'}</strong><span class="muted small">${listening?'Captação contínua · salvamento em blocos':longMeetingSessionId?'Gravação anterior preservada':'O áudio completo será preservado por blocos'}</span></div>
       <div class="meeting-level"><div id="meetingLevelBar" style="width:${listening?'6':'0'}%"></div></div>
       <div class="flex wrap small" style="margin-top:10px"><span><b>${recorded}</b> bloco(s) gravado(s)</span><span>·</span><span><b>${uploaded}</b> bloco(s) salvo(s) no servidor</span></div>
@@ -487,7 +483,6 @@
   window.startLongMeetingRecording = async function(){
     if(listening)return;
     try{
-      await ensureMeetingAIStatus();
       mediaStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:{ideal:1},sampleRate:{ideal:48000}}});
       longMeetingSessionId=await createLongMeetingSession();
       longMeetingSegmentIndex=0;longMeetingSegmentCount=0;longMeetingUploadPromises=[];longMeetingUploadedPositions=[];longMeetingAIProcessed=false;
@@ -560,15 +555,10 @@
       transcriptText=texts.join('\n\n').trim()||transcriptText;
       meetingProcessStatus='Transcrição concluída. A IA está estruturando a revisão da reunião…';renderMeetingStep();
 
-      const ai=await api('/api/meeting/summarize','POST',{projectId:meetingProjectId,transcript:transcriptText});
+      const ai=await api('/api/meeting/summarize','POST',{projectId:meetingProjectId,sessionId:longMeetingSessionId,transcript:transcriptText});
       window.currentMeetingSummary=ai.summary||'';
-      window.currentMeetingTopics=ai.topics||'';
-      window.currentMeetingDecisions=ai.decisions||'';
-      window.currentMeetingNextSteps=ai.nextSteps||'';
-      window.currentMeetingDependencies=ai.dependencies||'';
-      if(ai.commitment)window.currentMeetingNext=ai.commitment;
       longMeetingAIProcessed=true;
-      meetingProcessStatus='Resumo de IA concluído. Confira e ajuste antes de registrar.';
+      meetingProcessStatus='Documento da reunião gerado por IA.';
     }catch(e){
       buildFallbackReview(transcriptText);
       meetingProcessStatus=`A gravação está preservada, mas o processamento automático não foi concluído: ${e.message}`;
