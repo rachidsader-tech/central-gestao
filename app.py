@@ -858,3 +858,7 @@ project_success.register(__import__("app"))
 # Histórico somente leitura de reuniões
 import meeting_history
 meeting_history.register(__import__("app"))
+
+# Migração das reuniões históricas de 16/09 e validação controlada da IA
+import legacy_meeting_migration
+legacy_meeting_migration.register(__import__("app"))
