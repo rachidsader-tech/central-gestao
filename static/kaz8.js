@@ -30,7 +30,7 @@
   }
 
   showView = function(name){
-    if(name==='meeting'&&!listening&&!longMeetingFinalizing){
+    if(name==='meeting'&&!listening){
       archiveMode='list';archiveDetail=null;aiPreview=null;aiPreviewStatus='';
     }
     previousShowView(name);
@@ -49,13 +49,13 @@
   };
 
   window.startNewMeeting = function(){
-    if(listening||longMeetingFinalizing)return;
+    if(listening)return;
     archiveMode='editor';
     previousStartNewMeeting();
   };
 
   window.openMeetingHome = function(){
-    if(listening||longMeetingFinalizing){alert('Encerre a reunião em andamento antes de voltar.');return}
+    if(listening){alert('Encerre a reunião em andamento antes de voltar.');return}
     archiveMode='list';archiveDetail=null;aiPreview=null;aiPreviewStatus='';renderMeeting();
   };
 
