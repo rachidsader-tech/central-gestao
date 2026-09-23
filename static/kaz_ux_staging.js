@@ -5,6 +5,7 @@
   let uxDepFilter = 'active';
   let uxTimelineFilter = 'all';
   let uxTimelineFiles = {};
+  let uxMeetingFiles = [];
 
   function uxProjectState(p){
     const c=counts(p);
@@ -239,7 +240,8 @@
       if(m.concludedAt)items.push({at:m.concludedAt,type:'roadmap',label:'Roadmap',title:(index+1)+'. '+m.name,text:'Etapa concluída'+(m.conclusion?': '+m.conclusion:''),author:''});
       (uxTimelineFiles[m.id]||[]).forEach(function(f){items.push({at:f.createdAt||'',type:'files',label:'Arquivo',title:f.name||'Arquivo anexado',text:'Anexado à etapa '+m.name,author:f.uploadedBy||''})});
     });
-    (state.meetings||[]).filter(function(m){return m.projectId===p.id}).forEach(function(m){items.push({at:m.at||'',type:'meetings',label:'Reunião',title:'Reunião registrada',text:m.summary||m.notes||'Reunião registrada no sistema.',author:m.createdBy||''})});
+    uxMeetingFiles.forEach(function(f){items.push({at:f.createdAt||f.meetingDate||'',type:'files',label:'Arquivo da reunião',title:f.name||'Arquivo apresentado',text:'Apresentado na reunião de '+fmtDate(f.meetingDate||f.createdAt||''),author:f.uploadedBy||''})});
+    (state.meetings||[]).filter(function(m){return m.projectId===p.id}).forEach(function(m){items.push({at:m.at||'',type:'meetings',label:'Reunião',title:'Reunião registrada',text:m.summary||'Gravação e compromisso registrados no sistema.',author:m.createdBy||''})});
     (state.dependencies||[]).filter(function(d){return d.projectId===p.id}).forEach(function(d){
       (d.history||[]).forEach(function(h){items.push({at:h.at||'',type:'dependencies',label:'Pendência',title:d.subject||'Pendência',text:(h.action||'')+(h.detail?' · '+h.detail:''),author:h.actor||''})});
     });
@@ -259,13 +261,17 @@
     const p=project(currentProjectId);if(p)uxRenderTimeline(p);
   };
   async function uxLoadTimelineFiles(p){
-    uxTimelineFiles={};
+    uxTimelineFiles={};uxMeetingFiles=[];
     for(const m of (p.milestones||[])){
       try{
         const r=await fetch('/api/projects/'+encodeURIComponent(p.id)+'/milestones/'+encodeURIComponent(m.id)+'/attachments',{headers:{'X-CSRF-Token':CSRF}});
         const j=await r.json();uxTimelineFiles[m.id]=j.attachments||[];
       }catch{uxTimelineFiles[m.id]=[]}
     }
+    try{
+      const r=await fetch('/api/projects/'+encodeURIComponent(p.id)+'/meeting-attachments',{headers:{'X-CSRF-Token':CSRF}});
+      const j=await r.json();if(r.ok)uxMeetingFiles=j.attachments||[];
+    }catch{uxMeetingFiles=[]}
     if(currentTab==='history'&&currentProjectId===p.id)uxRenderTimeline(p);
   }
 
