@@ -189,3 +189,28 @@ button{cursor:pointer}
 .roadmap-audio-part b{display:block;font-size:12px;margin-bottom:6px}
 .roadmap-audio-part audio{width:100%}
 @media(max-width:960px){.meeting-ai-grid{grid-template-columns:1fr}.meeting-ai-grid .full{grid-column:auto}.meeting-recording-beacon{right:10px;left:10px;top:auto;bottom:12px;justify-content:center}}
+
+
+/* Arquivo executivo de reuniões */
+.meeting-archive-table-wrap{overflow:auto}
+.meeting-archive-table td{vertical-align:middle}
+.meeting-archive-head{align-items:center}
+.meeting-archive-section{display:grid;grid-template-columns:48px minmax(0,1fr);gap:14px;margin:18px 0}
+.archive-step-number{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#edf4ff;color:#1d4ed8;font-weight:900;font-size:14px;margin-top:2px}
+.archive-step-body h2{margin:0 0 4px;font-size:18px}
+.meeting-read-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.meeting-read-grid .full{grid-column:1/-1}
+.readonly-value{min-height:78px;border:1px solid #dfe5ec;background:#f8fafc;border-radius:9px;padding:11px 12px;font-size:12px;line-height:1.55;white-space:normal}
+.readonly-value.empty-value{color:#8a96a4;font-style:italic}
+.archive-label{font-weight:850;letter-spacing:.04em;margin-bottom:7px}
+.compact-empty{padding:14px;text-align:left}
+.archive-transcript{margin-top:12px}
+.archive-transcript summary{cursor:pointer;font-size:12px;font-weight:750;color:#31475f}
+.transcript-readonly{max-height:300px;overflow:auto;margin-top:8px;white-space:normal}
+.ai-preview-card{margin-top:22px;border-style:dashed}
+@media(max-width:960px){
+  .meeting-archive-section{grid-template-columns:1fr}
+  .archive-step-number{margin-bottom:-4px}
+  .meeting-read-grid{grid-template-columns:1fr}
+  .meeting-read-grid .full{grid-column:auto}
+}
