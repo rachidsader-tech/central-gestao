@@ -854,3 +854,7 @@ _initialize_unified_central()
 # Roadmap do Sucesso e gravação longa de reuniões
 import project_success
 project_success.register(__import__("app"))
+
+# Histórico somente leitura de reuniões
+import meeting_history
+meeting_history.register(__import__("app"))
