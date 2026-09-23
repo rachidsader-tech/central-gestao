@@ -12,6 +12,7 @@
   let archiveAudioIndex = 0;
 
   function fmtDuration(total){
+    if(total===null||total===undefined)return 'Sem áudio';
     const s=Math.max(0,Number(total)||0);
     const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=Math.floor(s%60);
     if(h)return `${h}h ${String(m).padStart(2,'0')}min`;
@@ -99,6 +100,19 @@
     archiveMode='detail';archiveDetail=null;aiPreview=null;aiPreviewStatus='';archiveLoading=true;renderMeetingArchiveDetail();
     try{
       archiveDetail=await api(`/api/meeting/history/${encodeURIComponent(sessionId)}`);
+      if(archiveDetail.aiTestPreview?.status==='success'){
+        aiPreview={
+          summary:archiveDetail.aiTestPreview.summary||'',
+          topics:archiveDetail.aiTestPreview.topics||'',
+          decisions:archiveDetail.aiTestPreview.decisions||'',
+          nextSteps:archiveDetail.aiTestPreview.nextSteps||'',
+          dependencies:archiveDetail.aiTestPreview.dependencies||'',
+          commitment:archiveDetail.aiTestPreview.commitment||''
+        };
+        aiPreviewStatus='Teste de IA já concluído nesta reunião histórica. A prévia abaixo não altera o registro oficial.';
+      }else if(archiveDetail.aiTestPreview?.status==='failed'){
+        aiPreviewStatus='O teste automático de IA desta gravação falhou anteriormente. Você pode tentar novamente.';
+      }
     }catch(e){
       archiveDetail={error:e.message};
     }finally{
