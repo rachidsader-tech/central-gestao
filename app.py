@@ -478,7 +478,7 @@ def _ensure_viewer_users():
                             INSERT INTO kaz_users
                                 (username, display_name, password_hash, role, project_id, active, created_at)
                             VALUES
-                                (:username, :display_name, :password_hash, 'viewer', NULL, TRUE, NOW())
+                                (:username, :display_name, :password_hash, 'viewer', NULL, TRUE, CURRENT_TIMESTAMP)
                             ON CONFLICT (username) DO NOTHING
                             """
                         ),
@@ -854,6 +854,11 @@ _initialize_unified_central()
 # Roadmap do Sucesso e gravação longa de reuniões
 import project_success
 project_success.register(__import__("app"))
+
+# Ambiente de homologação: restaura um snapshot sanitizado e credenciais de teste.
+if os.environ.get("STAGING_MODE") == "1":
+    import staging_bootstrap
+    staging_bootstrap.apply(__import__("app"))
 
 # Histórico somente leitura de reuniões
 import meeting_history
