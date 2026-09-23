@@ -244,19 +244,29 @@ def register(app_module):
             if len(raw) > 20 * 1024 * 1024:
                 return jsonify({'error': 'O arquivo excede 20 MB.'}), 413
             name = secure_filename(f.filename) or 'arquivo'
-            item = app_module.Attachment(
-                project_id=project_id,
-                milestone_id=str(milestone_id),
-                dependency_id=None,
-                name=name,
-                note=(request.form.get('note') or '').strip(),
-                mime_type=f.mimetype or 'application/octet-stream',
-                size=len(raw),
-                file_data=raw,
-                uploaded_by=user.display_name,
-            )
-            db.session.add(item)
-            db.session.commit()
+            try:
+                # O modelo ORM legado de Attachment ainda não declara dependency_id,
+                # embora a coluna já exista no PostgreSQL. Não passamos esse campo
+                # pelo construtor para manter compatibilidade com o modelo carregado.
+                item = app_module.Attachment(
+                    project_id=project_id,
+                    milestone_id=str(milestone_id),
+                    name=name,
+                    note=(request.form.get('note') or '').strip(),
+                    mime_type=f.mimetype or 'application/octet-stream',
+                    size=len(raw),
+                    file_data=raw,
+                    uploaded_by=user.display_name,
+                )
+                db.session.add(item)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                app.logger.exception(
+                    'Falha ao anexar arquivo no Roadmap: project=%s milestone=%s user=%s',
+                    project_id, milestone_id, user.username,
+                )
+                return jsonify({'error': 'Não foi possível salvar o arquivo. Tente novamente.'}), 500
 
         rows = app_module.Attachment.query.filter_by(
             project_id=project_id, milestone_id=str(milestone_id)
