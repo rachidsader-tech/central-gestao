@@ -19,7 +19,7 @@ except Exception as exc:
 DB_URL = os.environ.get('DATABASE_URL')
 TEMP_PASSWORD = os.environ.get('KAZ_VIEWER_TEMP_PASSWORD')
 MARKER = 'viewer-temp-password-v1'
-VIEWERS = ['julia','michele','kawe','cole','lucas','julio','felipe','lais']
+VIEWERS = ['julia','michele','kawe','cole','lucas','julio','felippe','lais']
 
 if not DB_URL or not TEMP_PASSWORD:
     print('Viewer password migration skipped: missing environment variable.')
