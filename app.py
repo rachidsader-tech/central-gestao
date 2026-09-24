@@ -461,7 +461,7 @@ _VIEWER_USERS = [
     ('cole', 'Cole'),
     ('lucas', 'Lucas'),
     ('julio', 'Julio'),
-    ('felipe', 'Felipe'),
+    ('felippe', 'Felippe Mancuzo'),
     ('lais', 'Lais'),
 ]
 
@@ -836,6 +836,104 @@ def personal_users():
     if u.username!='rachid': abort(403)
     return jsonify([public_user(x) for x in User.query.filter_by(active=True).order_by(User.display_name).all()])
 
+# one-off-project-import-material-institucional
+def _import_material_institucional_once():
+    project_id='my-material-institucional'
+    owner=User.query.filter_by(username='rachid',active=True).first()
+    if not owner:
+        raise RuntimeError('Usuário proprietário rachid não encontrado.')
+
+    responsible=User.query.filter_by(username='felippe',active=True).first()
+    legacy=User.query.filter_by(username='felipe',active=True).first()
+    if responsible and legacy and responsible.id!=legacy.id:
+        raise RuntimeError('Conflito: usuários felipe e felippe coexistem.')
+    if not responsible:
+        responsible=legacy
+    if not responsible:
+        temp_password=os.environ.get('KAZ_VIEWER_TEMP_PASSWORD')
+        if not temp_password:
+            raise RuntimeError('Usuário Felippe não encontrado e KAZ_VIEWER_TEMP_PASSWORD ausente.')
+        responsible=User(
+            username='felippe',
+            display_name='Felippe Mancuzo',
+            password_hash=generate_password_hash(temp_password),
+            role='viewer',
+            project_id=None,
+            active=True,
+        )
+        db.session.add(responsible)
+        db.session.flush()
+    else:
+        responsible.username='felippe'
+        responsible.display_name='Felippe Mancuzo'
+        responsible.active=True
+        db.session.flush()
+
+    project=db.session.get(PersonalProject,project_id)
+    if not project:
+        project=PersonalProject(
+            id=project_id,
+            name='Material institucional',
+            owner_user_id=owner.id,
+            owner_name=owner.display_name,
+            responsible_user_id=responsible.id,
+            responsible_name=responsible.display_name,
+            visibility='Delegado',
+            phase='Em definição',
+            health='Normal',
+            status='Não iniciado',
+            objective='Reestruturação completa dos materiais comerciais da empresa, focando na padronização para todas as etapas de venda. A estratégia abrange desde kits de ativação física para eventos universitários até a criação de apresentações institucionais e vídeos imersivos que reforçam a autoridade da marca. Ênfase na organização de pontos de contato, incluindo brindes personalizados, modelos de briefing, modelos de reuniões ativas e pastas impressas exclusivas para comissões de formatura. O objetivo final é garantir uma comunicação padrão e profissional, facilitando o trabalho da equipe comercial e transmitindo maior confiança aos clientes.',
+            current_state='Os materiais comerciais atuais estão desatualizados e sem padronização, dificultando uma apresentação consistente e competitiva da empresa. O comercial não possui uma central de materiais e informações para localizar rapidamente valores de locais, ativações disponíveis, fotos de referência, apresentações, materiais de estudo e demais conteúdos de apoio. O projeto precisa revisar, atualizar, padronizar e centralizar todo o material comercial para os próximos meses.',
+            last_advance='Projeto cadastrado em 24/09/2026 a partir do formulário de Novo Projeto · Transformação KAZ.',
+            next_step='Revisar o Roadmap do Sucesso e definir prioridade e aplicação.',
+            priority='Média',
+            deadline='',
+        )
+        db.session.add(project)
+        db.session.flush()
+
+        roadmap=[
+            ('Diagnóstico e Inventário Comercial concluídos','Em risco'),
+            ('Central de Materiais e Informações Comerciais estruturada e implementada','Em risco'),
+            ('Kit Institucional e Materiais do Processo de Venda revisados e atualizados','Em risco'),
+            ('Jornada de Reuniões e Experiências Comerciais estruturada e padronizada','Em risco'),
+            ('Biblioteca de Referências, Cases e Inteligência por Faculdade estruturada','Em risco'),
+            ('Materiais de Apoio, Relacionamento e Aprendizados Comerciais estruturados','Em risco'),
+            ('Sistema Contínuo de Atualização, Formação e Evolução Comercial implantado','Em risco'),
+        ]
+        for position,(name,status) in enumerate(roadmap,1):
+            db.session.add(PersonalMilestone(
+                id=f'{project_id}-m{position:02d}',
+                project_id=project_id,
+                name=name,
+                category='',
+                status=status,
+                health='',
+                responsible_user_id=None,
+                responsible_name='',
+                next_step='',
+                deadline='',
+                notes='',
+                conclusion='',
+                active=True,
+                position=position,
+            ))
+
+        db.session.add(PersonalJournal(
+            project_id=project_id,
+            title='Resultado final esperado',
+            body='O projeto será considerado concluído quando todos os materiais comerciais estiverem revisados, atualizados, padronizados e centralizados em um único local de fácil acesso para o time comercial. A central deverá reunir valores de locais, ativações, fotos de referência, apresentações, materiais de estudo e demais conteúdos de apoio, garantindo agilidade na consulta e consistência na apresentação aos clientes. O resultado esperado é uma estrutura comercial organizada, de fácil manutenção e com rotina de atualizações constantes incorporada à operação do time.',
+            next_step='Definir prioridade e aplicação.',
+            author=owner.display_name,
+        ))
+        _history(project_id,owner.display_name,'Projeto criado a partir do formulário',f'Responsável: {responsible.display_name} · 7 marcos importados')
+    else:
+        project.name='Material institucional'
+        project.responsible_user_id=responsible.id
+        project.responsible_name=responsible.display_name
+        if project.visibility=='Privado':
+            project.visibility='Delegado'
+
 def _initialize_unified_central():
     with app.app_context():
         # Apenas CREATE TABLE; nenhuma tabela ou linha KAZ é alterada.
@@ -846,6 +944,7 @@ def _initialize_unified_central():
         _reconstruct_personal_content_v7_once()
         _create_personal_v8_backup_once()
         _restore_personal_milestones_v8_once()
+        _import_material_institucional_once()
         db.session.commit()
 
 _initialize_unified_central()
