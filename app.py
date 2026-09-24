@@ -836,104 +836,6 @@ def personal_users():
     if u.username!='rachid': abort(403)
     return jsonify([public_user(x) for x in User.query.filter_by(active=True).order_by(User.display_name).all()])
 
-# one-off-project-import-kaz-reputation-360
-def _import_kaz_reputation_360_once():
-    project_id = 'my-kaz-reputacao-360'
-    if db.session.get(PersonalProject, project_id):
-        return
-
-    owner = User.query.filter_by(username='rachid', active=True).first()
-    if not owner:
-        raise RuntimeError('Usuário proprietário rachid não encontrado.')
-
-    responsible = User.query.filter_by(username='lais', active=True).first()
-    if not responsible:
-        temp_password = os.environ.get('KAZ_VIEWER_TEMP_PASSWORD')
-        if not temp_password:
-            raise RuntimeError('Usuária lais não encontrada e KAZ_VIEWER_TEMP_PASSWORD ausente.')
-        responsible = User(
-            username='lais',
-            display_name='Lais',
-            password_hash=generate_password_hash(temp_password),
-            role='viewer',
-            project_id=None,
-            active=True,
-        )
-        db.session.add(responsible)
-        db.session.flush()
-
-    project = PersonalProject(
-        id=project_id,
-        name='PROJETO KAZ REPUTAÇÃO 360 - Gestão, Monitoramento e Recuperação da Reputação Digital',
-        owner_user_id=owner.id,
-        owner_name=owner.display_name,
-        responsible_user_id=responsible.id,
-        responsible_name=responsible.display_name,
-        visibility='Delegado',
-        phase='Em definição',
-        health='Normal',
-        status='Não iniciado',
-        objective='Estruturar uma jornada de atendimento mais eficiente, preventiva e resolutiva, atuando nas causas que geram insatisfação e reclamações dos clientes.',
-        current_state='Problemas que o projeto precisa resolver: recorrência de problemas; baixa atuação na causa raiz; fragmentação da jornada; falta de clareza e previsibilidade; baixa capacidade de prevenção. A atuação atual é predominantemente reativa e muitas demandas exigem interação entre diferentes áreas.',
-        last_advance='Projeto cadastrado em 24/09/2026 a partir do formulário de Novo Projeto · Transformação KAZ.',
-        next_step='Realizar o kick-off executivo e definir o patrocinador do projeto.',
-        priority='Média',
-        deadline='',
-    )
-    db.session.add(project)
-    db.session.flush()
-
-    roadmap = [
-        ('Kick-off executivo', 'Em andamento', 'Apresentar o projeto à direção e definir patrocinador'),
-        ('Definição do Comitê 360°', 'Em andamento', 'Reunir atendimento, financeiro, comercial, produção, fotografia'),
-        ('Baseline da reputação', 'Em andamento', 'Consolidar Reclame AQUI, Google e demais canais'),
-        ('Mapa de todas as reclamações', 'Em andamento', 'Classificar cada ocorrência por tema, cliente, área e situação'),
-        ('Classificação por causa raiz', 'Em andamento', 'Separar sintoma, causa e consequência'),
-        ('Mapa da jornada do cliente', 'Não iniciado', 'Mapear desde adesão/contrato até entrega final'),
-        ('Auditoria de contratos e comunicação', 'Não iniciado', 'Revisar clareza de regras, prazos, valores e responsabilidades'),
-        ('Auditoria do atendimento', 'Não iniciado', 'Avaliar canais, linguagem, tempo e qualidade das respostas'),
-        ('Criação dos SLAs internos', 'Não iniciado', 'Definir prazo para receber, analisar, responder e solucionar'),
-        ('Central de casos críticos', 'Não iniciado', 'Criar fila especial para reclamações com alto risco'),
-        ('Protocolo de diagnóstico', 'Não iniciado', 'Contatar formando, comissão e áreas envolvidas antes da resposta final'),
-        ('Protocolo de solução', 'Não iniciado', 'Registrar soluções que funcionaram para cada tipo de problema'),
-        ('Scripts inteligentes de atendimento', 'Não iniciado', 'Criar respostas para situações recorrentes'),
-        ('Plano de prevenção de cobrança', 'Não iniciado', 'Mapear cobranças, vencimentos, reajustes, multas e divergências'),
-        ('Plano de adesão', 'Não iniciado', 'Corrigir gargalos de vagas, liberação e comunicação'),
-        ('Alinhamento de expectativa dos eventos', 'Não iniciado', 'Reforçar informações sobre estrutura, convidados e funcionamento'),
-        ('Comunicação preventiva', 'Não iniciado', 'Informar cliente antes que ele precise reclamar'),
-        ('Sistema de acompanhamento de status', 'Não iniciado', 'Criar visão do andamento de cada solicitação'),
-        ('Recuperação de clientes insatisfeitos', 'Não iniciado', 'Criar estratégia específica para casos críticos'),
-        ('Gestão do Google', 'Não iniciado', 'Monitorar avaliações, responder e identificar padrões'),
-        ('Monitoramento diário 360°', 'Não iniciado', 'Acompanhar novas reclamações, avaliações e sinais de insatisfação'),
-        ('Ciclo permanente de reputação', 'Não iniciado', 'Reclamação → diagnóstico → solução → causa raiz → prevenção → medição'),
-    ]
-    for position, (name, status, context) in enumerate(roadmap, 1):
-        db.session.add(PersonalMilestone(
-            id=f'{project_id}-m{position:02d}',
-            project_id=project_id,
-            name=name,
-            category='',
-            status=status,
-            health='',
-            responsible_user_id=None,
-            responsible_name='',
-            next_step='',
-            deadline='',
-            notes=context,
-            conclusion='',
-            active=True,
-            position=position,
-        ))
-
-    db.session.add(PersonalJournal(
-        project_id=project_id,
-        title='Resultado final esperado',
-        body='Redução sustentável das reclamações por meio da eliminação ou mitigação de suas causas raiz, proporcionando uma jornada mais simples, transparente e resolutiva para o cliente e maior eficiência operacional para a empresa.',
-        next_step='Revisar o Roadmap do Sucesso com a Laís e definir o escopo.',
-        author=owner.display_name,
-    ))
-    _history(project_id, owner.display_name, 'Projeto criado a partir do formulário', f'Responsável: {responsible.display_name} · 22 marcos importados')
-
 def _initialize_unified_central():
     with app.app_context():
         # Apenas CREATE TABLE; nenhuma tabela ou linha KAZ é alterada.
@@ -944,7 +846,6 @@ def _initialize_unified_central():
         _reconstruct_personal_content_v7_once()
         _create_personal_v8_backup_once()
         _restore_personal_milestones_v8_once()
-        _import_kaz_reputation_360_once()
         db.session.commit()
 
 _initialize_unified_central()
