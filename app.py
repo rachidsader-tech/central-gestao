@@ -846,7 +846,11 @@ def _import_material_institucional_once():
     responsible=User.query.filter_by(username='felippe',active=True).first()
     legacy=User.query.filter_by(username='felipe',active=True).first()
     if responsible and legacy and responsible.id!=legacy.id:
-        raise RuntimeError('Conflito: usuários felipe e felippe coexistem.')
+        # O bootstrap chegou a criar um segundo usuário felippe antes da correção
+        # do login legado. O cadastro original deve ser preservado.
+        db.session.delete(responsible)
+        db.session.flush()
+        responsible=legacy
     if not responsible:
         responsible=legacy
     if not responsible:
