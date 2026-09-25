@@ -714,16 +714,55 @@ def register(app_module):
                     break
 
         commitment = ((meeting or {}).get('nextWeek') or '').strip()
+        previous = _previous_project_meeting(payload, project_id, session_id)
+        previous_context = 'Esta é a primeira reunião disponível deste projeto. Retorne evolution=[] sem tentar inferir histórico.'
+        if previous:
+            prev_doc = _normalize_ai_document(previous)
+            previous_context = f"""REUNIÃO ANTERIOR DO MESMO PROJETO:
+Data: {previous.get('at') or previous.get('createdAt') or 'não informada'}
+Compromisso registrado: {previous.get('nextWeek') or 'não informado'}
+Resumo executivo anterior: {prev_doc.get('executiveSummary') or previous.get('summary') or 'não disponível'}
+Próximos passos anteriores: {json.dumps(prev_doc.get('nextSteps') or [], ensure_ascii=False)}
+Pontos de atenção anteriores: {json.dumps(prev_doc.get('attentionPoints') or [], ensure_ascii=False)}
+Contexto capturado antes da reunião anterior: {json.dumps(previous.get('previousReview') or {}, ensure_ascii=False)}
+
+Use esse histórico SOMENTE para o bloco evolution. Uma evolução só pode ser classificada como completed ou advanced quando houver evidência suficiente na reunião atual. Se algo importante continuar sem resolução, pode ser pending."""
+
+        milestones = project.get('milestones') or []
         roadmap_context = []
-        for milestone in (project.get('milestones') or [])[:30]:
+        valid_milestone_ids = set()
+        milestone_name_by_id = {}
+        for milestone in milestones[:40]:
+            milestone_id = str(milestone.get('id') or '').strip()
+            if not milestone_id:
+                continue
+            valid_milestone_ids.add(milestone_id)
+            milestone_name_by_id[milestone_id] = milestone.get('name') or milestone_id
+            notes = []
+            if milestone.get('conclusion'):
+                notes.append('conclusão: ' + str(milestone.get('conclusion')))
+            memos = milestone.get('memos') or []
+            if memos:
+                last_memo = memos[-1]
+                if isinstance(last_memo, dict) and last_memo.get('text'):
+                    notes.append('último registro: ' + str(last_memo.get('text'))[:500])
             roadmap_context.append(
-                f"- {milestone.get('name') or 'Marco'} | status: {milestone.get('status') or '—'}"
+                f"- ID={milestone_id} | marco={milestone.get('name') or 'Marco'} | status={milestone.get('status') or '—'}"
+                + (f" | {' | '.join(notes)}" if notes else '')
             )
+
         project_context = f"""OBJETIVO DO PROJETO:
 {(project.get('objective') or 'Não informado.').strip()}
 
-ROADMAP DO SUCESSO — CONTEXTO, NÃO FONTE DE DECISÕES DA REUNIÃO:
-{chr(10).join(roadmap_context) if roadmap_context else 'Não informado.'}"""
+ROADMAP DO SUCESSO — MARCOS EXISTENTES:
+{chr(10).join(roadmap_context) if roadmap_context else 'Não informado.'}
+
+REGRAS DO ROADMAP:
+- roadmapImpact só pode citar IDs presentes acima.
+- Não crie, renomeie, conclua nem altere status de marco.
+- O bloco apenas registra o efeito percebido desta reunião sobre um marco existente.
+- Se não houver relação clara, retorne roadmapImpact=[].
+"""
 
         prompt = f"""Você produz o REGISTRO EXECUTIVO das reuniões da Transformação KAZ.
 
@@ -732,55 +771,68 @@ Sua função NÃO é transcrever a conversa e NÃO é simplesmente encurtar a tr
 PROJETO: {project.get('name') or project_id}
 
 PRINCÍPIOS OBRIGATÓRIOS:
-1. A TRANSCRIÇÃO é a principal fonte de verdade.
-2. Arquivos anexados e contexto do projeto servem somente para compreensão. Não transforme conteúdo de apoio em decisão da reunião se ele não tiver sido efetivamente discutido.
-3. Elimine vícios de fala, repetições, interrupções, exemplos laterais, brincadeiras e conversas sem relevância para o projeto.
-4. Não siga obrigatoriamente a ordem cronológica da conversa. Organize por importância executiva.
-5. Diferencie com rigor:
-   - discussão: tema debatido, mas sem definição;
-   - decisão: definição efetivamente tomada;
-   - pendência/próximo passo: ação que precisa acontecer;
-   - ponto de atenção: risco, bloqueio, divergência, dependência ou falta de definição.
+1. A TRANSCRIÇÃO atual é a principal fonte de verdade.
+2. Arquivos anexados, reunião anterior e contexto do projeto servem apenas para compreensão e comparação.
+3. Elimine vícios de fala, repetições, interrupções, exemplos laterais, brincadeiras e conversas sem relevância.
+4. Organize por importância executiva, não por ordem cronológica.
+5. Diferencie discussão, decisão, pendência/próximo passo e ponto de atenção.
 6. Nunca transforme hipótese, sugestão, pergunta ou comentário em decisão.
-7. Nunca invente responsável, prazo, número, decisão, risco ou conclusão.
+7. Nunca invente responsável, prazo, número, decisão, evolução, impacto ou conclusão.
 8. Quando responsável ou prazo não estiverem claros, use string vazia.
-9. Use linguagem executiva, direta, profissional e natural. Evite frases genéricas como "foi discutido que" quando for possível registrar o fato de forma objetiva.
-10. O compromisso oficial da próxima reunião é um campo do sistema. NÃO crie, altere ou deduza esse compromisso.
-11. Não mencione "transcrição", "áudio", "prompt", "IA" ou o processo de geração no conteúdo executivo.
-12. Não use markdown. Responda SOMENTE um objeto JSON válido.
+9. Use linguagem executiva, direta, profissional e natural.
+10. O compromisso oficial da próxima reunião é campo do sistema. NÃO crie, altere ou deduza esse compromisso.
+11. Não mencione transcrição, áudio, prompt, IA ou processo de geração.
+12. Não use markdown. Responda SOMENTE JSON válido.
 
-QUALIDADE ESPERADA POR BLOCO:
+BLOCOS:
 
 executiveSummary:
-- um único texto executivo de aproximadamente 80 a 130 palavras;
-- equivalente a 4–6 linhas em um documento;
-- deve explicar foco da reunião, principais avanços/definições e situação do projeto ao final;
-- não repetir todos os bullets abaixo.
+- 80 a 130 palavras;
+- foco, avanços/definições e situação do projeto ao final;
+- sem repetir todos os bullets.
+
+evolution:
+- SOMENTE comparação com a reunião anterior fornecida;
+- use status "completed" quando algo previamente assumido/pendente foi efetivamente concluído;
+- use "advanced" quando houve avanço concreto, decisão ou evolução;
+- use "pending" quando algo relevante continua sem solução;
+- se não houver reunião anterior, retorne [];
+- não invente evolução.
 
 keyPoints:
-- somente decisões e informações estratégicas importantes;
-- cada item deve ter type = "decision" ou "important";
-- textos curtos, concretos e autossuficientes;
-- em geral 3 a 8 itens, mas use menos se a reunião não justificar.
+- decisões e informações estratégicas;
+- type = "decision" ou "important";
+- em geral 3 a 8 itens.
 
 nextSteps:
-- somente pendências e próximos passos reais;
-- cada item contém text, responsible e deadline;
-- responsible e deadline ficam vazios quando não houver certeza;
-- não inclua o compromisso oficial da próxima reunião apenas porque ele aparece abaixo; só inclua uma ação se ela também estiver sustentada pela reunião.
+- ações reais decorrentes da reunião;
+- text, responsible, deadline;
+- campos desconhecidos ficam vazios.
 
 attentionPoints:
-- inclua somente riscos, dependências, bloqueios, divergências, atrasos ou pontos ainda sem definição que sejam relevantes;
-- retorne [] quando não houver nada relevante.
+- somente risco, dependência, bloqueio, atraso, divergência ou falta de definição relevante;
+- [] quando não houver.
+
+roadmapImpact:
+- relacione apenas marcos existentes do Roadmap;
+- cada item: milestoneId, milestoneName, impactType e text;
+- impactType: "advance", "decision", "pending" ou "risk";
+- NÃO altera o Roadmap; apenas descreve o impacto da reunião;
+- se a relação não for clara, não inclua.
 
 meetingSummary:
-- síntese mais completa, em 3 a 6 parágrafos curtos;
-- deve permitir que alguém que não participou entenda contexto, raciocínio, assuntos centrais, decisões e encaminhamentos em 2–3 minutos;
-- continua sendo síntese executiva, não ata e não transcrição.
+- 3 a 6 parágrafos curtos;
+- contexto, raciocínio, assuntos centrais, decisões e encaminhamentos;
+- síntese executiva, não ata.
 
 FORMATO EXATO:
 {{
   "executiveSummary": "texto",
+  "evolution": [
+    {{"status": "completed", "text": "texto"}},
+    {{"status": "advanced", "text": "texto"}},
+    {{"status": "pending", "text": "texto"}}
+  ],
   "keyPoints": [
     {{"type": "decision", "text": "texto"}},
     {{"type": "important", "text": "texto"}}
@@ -789,15 +841,20 @@ FORMATO EXATO:
     {{"text": "texto", "responsible": "nome ou vazio", "deadline": "prazo ou vazio"}}
   ],
   "attentionPoints": ["texto"],
+  "roadmapImpact": [
+    {{"milestoneId": "ID exato", "milestoneName": "nome exato", "impactType": "advance", "text": "texto"}}
+  ],
   "meetingSummary": "texto com parágrafos separados por duas quebras de linha"
 }}
 
 {project_context}
 
+{previous_context}
+
 COMPROMISSO OFICIAL DA PRÓXIMA REUNIÃO — NÃO ALTERAR NEM DEDUZIR:
 {commitment or 'Não informado.'}
 
-TRANSCRIÇÃO DA REUNIÃO:
+TRANSCRIÇÃO DA REUNIÃO ATUAL:
 {transcript}
 
 ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
@@ -811,14 +868,14 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                 timeout=240,
             )
             if response.status_code >= 400:
-                app.logger.error('Falha no resumo IA executivo V2: %s', response.text[:1000])
+                app.logger.error('Falha no resumo IA executivo V3: %s', response.text[:1000])
                 return jsonify({'error': 'A gravação foi preservada, mas a IA não conseguiu processar o registro executivo.'}), 502
 
             raw_text = _clean_json_text(_response_text(response.json()))
             try:
                 structured = json.loads(raw_text)
             except Exception:
-                app.logger.error('Resposta IA V2 não era JSON: %s', raw_text[:1000])
+                app.logger.error('Resposta IA V3 não era JSON: %s', raw_text[:1000])
                 return jsonify({'error': 'A IA respondeu, mas o registro executivo não veio no formato esperado. Tente reprocessar.'}), 502
 
             executive_summary = str(structured.get('executiveSummary') or '').strip()
@@ -827,22 +884,20 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
             key_points = []
             for item in (structured.get('keyPoints') or []):
                 if isinstance(item, dict):
-                    text_value = str(item.get('text') or '').strip()
-                    if text_value:
+                    value = str(item.get('text') or '').strip()
+                    if value:
                         key_points.append({
                             'type': item.get('type') if item.get('type') in ('decision', 'important') else 'important',
-                            'text': text_value,
+                            'text': value,
                         })
-                elif str(item).strip():
-                    key_points.append({'type': 'important', 'text': str(item).strip()})
 
             next_steps = []
             for item in (structured.get('nextSteps') or []):
                 if isinstance(item, dict):
-                    text_value = str(item.get('text') or '').strip()
-                    if text_value:
+                    value = str(item.get('text') or '').strip()
+                    if value:
                         next_steps.append({
-                            'text': text_value,
+                            'text': value,
                             'responsible': str(item.get('responsible') or '').strip(),
                             'deadline': str(item.get('deadline') or '').strip(),
                         })
@@ -852,15 +907,42 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                 attention = [line.strip(' -•\t') for line in attention.splitlines() if line.strip()]
             attention = [str(item).strip() for item in attention if str(item).strip()]
 
+            evolution = []
+            if previous:
+                for item in (structured.get('evolution') or []):
+                    if not isinstance(item, dict):
+                        continue
+                    value = str(item.get('text') or '').strip()
+                    status = str(item.get('status') or '').strip()
+                    if value and status in ('completed', 'advanced', 'pending'):
+                        evolution.append({'status': status, 'text': value})
+
+            roadmap_impact = []
+            for item in (structured.get('roadmapImpact') or []):
+                if not isinstance(item, dict):
+                    continue
+                milestone_id = str(item.get('milestoneId') or '').strip()
+                impact_type = str(item.get('impactType') or '').strip()
+                value = str(item.get('text') or '').strip()
+                if milestone_id in valid_milestone_ids and impact_type in ('advance', 'decision', 'pending', 'risk') and value:
+                    roadmap_impact.append({
+                        'milestoneId': milestone_id,
+                        'milestoneName': milestone_name_by_id.get(milestone_id, milestone_id),
+                        'impactType': impact_type,
+                        'text': value,
+                    })
+
             if not executive_summary or not meeting_summary:
                 return jsonify({'error': 'A IA não retornou conteúdo suficiente para o registro executivo.'}), 502
 
             document = {
-                'version': 2,
+                'version': 3,
                 'executiveSummary': executive_summary,
+                'evolution': evolution,
                 'keyPoints': key_points,
                 'nextSteps': next_steps,
                 'attentionPoints': attention,
+                'roadmapImpact': roadmap_impact,
                 'meetingSummary': meeting_summary,
             }
 
@@ -885,7 +967,7 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
 
             saved['summary'] = executive_summary
             saved['aiDocument'] = document
-            saved['aiDocumentVersion'] = 2
+            saved['aiDocumentVersion'] = 3
             saved['transcript'] = transcript
             saved['aiProcessed'] = True
             saved['aiSummaryStatus'] = 'success'
@@ -901,13 +983,13 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                 'configured': True,
                 'aiProcessed': True,
                 'aiSummaryStatus': 'success',
-                'aiDocumentVersion': 2,
+                'aiDocumentVersion': 3,
                 'document': document,
                 'summary': executive_summary,
                 'revision': state.revision,
             })
         except requests.RequestException:
-            app.logger.exception('Falha de comunicação com IA da reunião V2')
+            app.logger.exception('Falha de comunicação com IA da reunião V3')
             return jsonify({'error': 'Falha de comunicação com a IA da reunião.'}), 502
 
     def _pdf_escape(value):
