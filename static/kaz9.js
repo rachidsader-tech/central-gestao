@@ -30,6 +30,26 @@
   function v9Lines(value){
     return String(value||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
   }
+  function v9HighlightExecutiveText(text,highlights){
+    const source=String(text||'');
+    const marks=(highlights||[]).map(x=>String(x||'').trim()).filter(Boolean).sort((a,b)=>b.length-a.length);
+    if(!marks.length)return esc(source);
+    let out='',cursor=0;
+    while(cursor<source.length){
+      let bestIndex=-1,bestMark='';
+      for(const mark of marks){
+        const idx=source.toLowerCase().indexOf(mark.toLowerCase(),cursor);
+        if(idx>=0&&(bestIndex<0||idx<bestIndex||(idx===bestIndex&&mark.length>bestMark.length))){
+          bestIndex=idx;bestMark=mark;
+        }
+      }
+      if(bestIndex<0){out+=esc(source.slice(cursor));break}
+      out+=esc(source.slice(cursor,bestIndex));
+      out+=`<strong>${esc(source.slice(bestIndex,bestIndex+bestMark.length))}</strong>`;
+      cursor=bestIndex+bestMark.length;
+    }
+    return out;
+  }
   function v9MeetingStatusBadge(status){
     return status==='Reunião completa'
       ?'<span class="pill s-conc">Reunião completa</span>'
@@ -135,12 +155,12 @@
   function v9ExecutiveMetrics(d){
     const doc=d.aiDocument||{};
     const decisions=(doc.keyPoints||[]).filter(x=>x?.type==='decision').length;
-    const next=(doc.nextSteps||[]).length;
+    const actions=(doc.suggestedActions||[]).length;
     const attention=(doc.attentionPoints||[]).length;
     const docs=(d.attachments||[]).length;
     return `<div class="kaz-exec-metrics">
       <div><b>${decisions}</b><span>DECISÕES</span></div>
-      <div><b>${next}</b><span>PRÓXIMOS PASSOS</span></div>
+      <div><b>${actions}</b><span>AÇÕES</span></div>
       <div><b>${attention}</b><span>ATENÇÕES</span></div>
       <div><b>${docs}</b><span>DOCUMENTOS</span></div>
     </div>`;
@@ -154,8 +174,10 @@
 
     const legacy=Boolean(d.review?.isLegacyAiDocument);
     const executive=String(doc.executiveSummary||'').trim();
+    const highlights=Array.isArray(doc.executiveHighlights)?doc.executiveHighlights.filter(Boolean):[];
+    const executiveParagraphs=executive.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);
     const points=Array.isArray(doc.keyPoints)?doc.keyPoints.filter(x=>x&&String(x.text||'').trim()):[];
-    const nextSteps=Array.isArray(doc.nextSteps)?doc.nextSteps.filter(x=>x&&String(x.text||'').trim()):[];
+    const actions=Array.isArray(doc.suggestedActions)?doc.suggestedActions.filter(x=>String(x||'').trim()):[];
     const attention=Array.isArray(doc.attentionPoints)?doc.attentionPoints.filter(Boolean):[];
     const evolution=Array.isArray(doc.evolution)?doc.evolution.filter(x=>x&&String(x.text||'').trim()):[];
     const roadmap=Array.isArray(doc.roadmapImpact)?doc.roadmapImpact.filter(x=>x&&String(x.text||'').trim()):[];
@@ -182,16 +204,11 @@
         </div>`).join('')}</div>`
       :'<div class="executive-empty">Nenhuma decisão ou ponto estratégico adicional foi identificado.</div>';
 
-    const nextStepsHtml=nextSteps.length
-      ?`<div class="executive-next-table">
-        <div class="executive-next-head"><div>AÇÃO</div><div>RESPONSÁVEL</div><div>PRAZO</div></div>
-        ${nextSteps.map(item=>`<div class="executive-next-row">
-          <div><b>${esc(item.text)}</b></div>
-          <div>${esc(item.responsible||'—')}</div>
-          <div>${esc(item.deadline||'—')}</div>
-        </div>`).join('')}
-      </div>`
-      :'<div class="executive-empty">Nenhuma pendência ou próximo passo foi identificado com segurança.</div>';
+    const actionsHtml=actions.length
+      ?`<div class="kaz-action-list">${actions.map((item,index)=>`<div class="kaz-action-row">
+          <span>${String(index+1).padStart(2,'0')}</span><b>${esc(item)}</b>
+        </div>`).join('')}</div>`
+      :'<div class="executive-empty">Nenhuma ação sugerida foi identificada com segurança.</div>';
 
     const attentionHtml=attention.length
       ?`<section class="kaz-attention-block"><div class="kaz-attention-kicker">ATENÇÃO</div>
@@ -215,7 +232,9 @@
 
       <section class="kaz-exec-summary">
         <div class="kaz-exec-kicker">RESUMO EXECUTIVO</div>
-        <div class="kaz-exec-summary-text">${executive?esc(executive):'Resumo executivo não disponível.'}</div>
+        <div class="kaz-exec-summary-text">${executiveParagraphs.length
+          ?executiveParagraphs.map(p=>`<p>${v9HighlightExecutiveText(p,highlights)}</p>`).join('')
+          :'<p>Resumo executivo não disponível.</p>'}</div>
       </section>
 
       ${v9ExecutiveMetrics(d)}
@@ -227,8 +246,8 @@
       </section>
 
       <section class="kaz-exec-section">
-        <div class="kaz-exec-title">Pendências e próximos passos</div>
-        ${nextStepsHtml}
+        <div class="kaz-exec-title">Ações sugeridas</div>
+        ${actionsHtml}
       </section>
 
       ${attentionHtml}
@@ -323,13 +342,13 @@
     }catch(e){if(status)status.textContent='Falha ao anexar.';alert(e.message)}
   };
 
-  async function loadMeetingDetailV9WithRetry(sessionId,attempts=3){
+  async function loadMeetingDetailV9WithRetry(sessionId,attempts=4){
     let lastError=null;
     for(let i=0;i<attempts;i++){
       try{return await api(`/api/meeting/history/${encodeURIComponent(sessionId)}`)}
       catch(e){
         lastError=e;
-        if(i<attempts-1)await new Promise(resolve=>setTimeout(resolve,700*(i+1)));
+        if(i<attempts-1)await new Promise(resolve=>setTimeout(resolve,900*(i+1)));
       }
     }
     throw lastError||new Error('Falha ao recarregar a reunião.');
@@ -337,16 +356,38 @@
 
   async function recoverProcessedMeetingV9(d,previousProcessedAt=''){
     try{
-      const latest=await loadMeetingDetailV9WithRetry(d.id,3);
+      const latest=await loadMeetingDetailV9WithRetry(d.id,4);
       const processed=Boolean(latest?.review?.aiProcessed);
       const version=Number(latest?.review?.aiDocumentVersion||0);
       const processedAt=latest?.review?.aiProcessedAt||'';
-      if(processed&&version>=3&&(processedAt!==previousProcessedAt||!previousProcessedAt)){
+      if(processed&&version>=4&&(processedAt!==previousProcessedAt||!previousProcessedAt)){
         v9MeetingDetail=latest;
         return true;
       }
     }catch(e){}
     return false;
+  }
+
+  async function transcribeSegmentV9WithRetry(d,seg,index,total){
+    let lastError=null;
+    for(let attempt=1;attempt<=8;attempt++){
+      try{
+        v9MeetingStatus=`Transcrevendo gravação: parte ${index+1} de ${total}${attempt>1?` · tentativa ${attempt}`:''}…`;
+        renderV9MeetingDetail();
+        const tr=await api(`/api/meeting/audio-sessions/${encodeURIComponent(d.id)}/segments/${seg.position}/transcribe`,'POST',{});
+        if(tr?.transcript)return tr.transcript;
+        lastError=new Error('A transcrição retornou vazia.');
+      }catch(e){
+        lastError=e;
+        try{
+          const refreshed=await api(`/api/meeting/audio-sessions/${encodeURIComponent(d.id)}/segments`);
+          const saved=(refreshed.segments||[]).find(x=>Number(x.position)===Number(seg.position));
+          if(saved?.transcript)return saved.transcript;
+        }catch(ignore){}
+      }
+      if(attempt<8)await new Promise(resolve=>setTimeout(resolve,Math.min(8000,1500*attempt)));
+    }
+    throw lastError||new Error(`Falha na transcrição da parte ${index+1}.`);
   }
 
   window.generateV9MeetingSummary=async function(){
@@ -355,20 +396,32 @@
     v9MeetingLoading=true;v9MeetingStatus='Preparando a transcrição da gravação…';renderV9MeetingDetail();
 
     try{
-      const manifest=await api(`/api/meeting/audio-sessions/${encodeURIComponent(d.id)}/segments`);
-      const texts=[];
-      for(let i=0;i<(manifest.segments||[]).length;i++){
-        const seg=manifest.segments[i];
-        v9MeetingStatus=`Transcrevendo a gravação: parte ${i+1} de ${manifest.segments.length}…`;renderV9MeetingDetail();
-        if(seg.transcript){texts.push(seg.transcript);continue}
-        const tr=await api(`/api/meeting/audio-sessions/${encodeURIComponent(d.id)}/segments/${seg.position}/transcribe`,'POST',{});
-        if(tr.transcript)texts.push(tr.transcript);
+      let manifest=await api(`/api/meeting/audio-sessions/${encodeURIComponent(d.id)}/segments`);
+      const segments=manifest.segments||[];
+      if(!segments.length)throw new Error('A reunião não possui blocos de áudio.');
+
+      const alreadyDone=segments.filter(x=>x.transcript).length;
+      if(alreadyDone){
+        v9MeetingStatus=`Retomando transcrição: ${alreadyDone} de ${segments.length} partes já concluídas.`;
+        renderV9MeetingDetail();
       }
 
-      const transcript=texts.join('\n\n').trim()||d.transcript||'';
+      for(let i=0;i<segments.length;i++){
+        const seg=segments[i];
+        if(seg.transcript)continue;
+        seg.transcript=await transcribeSegmentV9WithRetry(d,seg,i,segments.length);
+      }
+
+      // Confirma no servidor antes de montar a transcrição final.
+      manifest=await api(`/api/meeting/audio-sessions/${encodeURIComponent(d.id)}/segments`);
+      const finalSegments=manifest.segments||[];
+      const missing=finalSegments.filter(x=>!String(x.transcript||'').trim());
+      if(missing.length)throw new Error(`Ainda faltam ${missing.length} parte(s) da gravação. Tente novamente; o progresso já foi salvo.`);
+
+      const transcript=finalSegments.map(x=>String(x.transcript||'').trim()).filter(Boolean).join('\n\n');
       if(!transcript)throw new Error('A gravação não produziu transcrição suficiente.');
 
-      v9MeetingStatus='Transcrição concluída. Processando o resumo executivo…';renderV9MeetingDetail();
+      v9MeetingStatus='Transcrição concluída. Processando o registro executivo…';renderV9MeetingDetail();
 
       let result=null;
       try{
@@ -376,12 +429,12 @@
       }catch(summaryError){
         const recovered=await recoverProcessedMeetingV9(d,previousProcessedAt);
         if(!recovered)throw summaryError;
-        v9MeetingStatus='Resumo processado com sucesso.';renderV9MeetingDetail();
+        v9MeetingStatus='Registro executivo processado com sucesso.';renderV9MeetingDetail();
         return;
       }
 
       try{
-        v9MeetingDetail=await loadMeetingDetailV9WithRetry(d.id,3);
+        v9MeetingDetail=await loadMeetingDetailV9WithRetry(d.id,4);
       }catch(reloadError){
         if(result?.document){
           v9MeetingDetail={
@@ -392,7 +445,7 @@
               ...(d.review||{}),
               aiProcessed:true,
               aiSummaryStatus:'success',
-              aiDocumentVersion:Number(result.aiDocumentVersion||3),
+              aiDocumentVersion:Number(result.aiDocumentVersion||4),
               isLegacyAiDocument:false,
               aiProcessedAt:new Date().toISOString()
             }
@@ -403,13 +456,13 @@
         }
       }
 
-      v9MeetingStatus='Resumo processado com sucesso.';renderV9MeetingDetail();
+      v9MeetingStatus='Registro executivo processado com sucesso.';renderV9MeetingDetail();
     }catch(e){
       const recovered=await recoverProcessedMeetingV9(d,previousProcessedAt);
       if(recovered){
-        v9MeetingStatus='Resumo processado com sucesso.';renderV9MeetingDetail();
+        v9MeetingStatus='Registro executivo processado com sucesso.';renderV9MeetingDetail();
       }else{
-        v9MeetingStatus='Não foi possível processar o resumo: '+e.message;
+        v9MeetingStatus='Não foi possível processar o registro: '+e.message;
         alert(v9MeetingStatus);
       }
     }finally{
@@ -442,17 +495,21 @@
 
   async function refreshProjectTabCountsV9(projectId){
     try{
-      const [docs,history]=await Promise.all([
+      const [docs,history,actions]=await Promise.all([
         api(`/api/projects/${encodeURIComponent(projectId)}/documents`),
-        api('/api/meeting/history')
+        api('/api/meeting/history'),
+        api(`/api/projects/${encodeURIComponent(projectId)}/suggested-actions`)
       ]);
       const docCount=(docs.project||[]).length+(docs.roadmap||[]).length+(docs.meetings||[]).length;
       const meetingCount=(history.meetings||[]).filter(m=>m.registered&&m.projectId===projectId).length;
-      v9TabCounts[projectId]={documents:docCount,meetings:meetingCount};
+      const actionCount=Number(actions.count||0);
+      v9TabCounts[projectId]={documents:docCount,meetings:meetingCount,actions:actionCount};
       const tabs=$('#projectView .tabs');
       const docBtn=tabs?.querySelector('[data-v9-documents]');
+      const actionBtn=tabs?.querySelector('[data-v9-actions]');
       const meetingBtn=tabs?.querySelector('[data-v9-meetings]');
       if(docBtn)docBtn.textContent=`Documentos (${docCount})`;
+      if(actionBtn)actionBtn.textContent=`Ações sugeridas (${actionCount})`;
       if(meetingBtn)meetingBtn.textContent=`Reuniões (${meetingCount})`;
     }catch(e){}
   }
@@ -472,30 +529,65 @@
       if(roadmap?.nextSibling)tabs.insertBefore(docBtn,roadmap.nextSibling);else tabs.appendChild(docBtn);
     }
 
+    let actionBtn=tabs.querySelector('[data-v9-actions]');
+    if(!actionBtn){
+      const pending=[...tabs.querySelectorAll('.tab')].find(x=>x.textContent.includes('Pendências'));
+      actionBtn=document.createElement('button');
+      actionBtn.className='tab';
+      actionBtn.dataset.v9Actions='1';
+      actionBtn.onclick=()=>projectTab('suggestedActions');
+      if(pending?.nextSibling)tabs.insertBefore(actionBtn,pending.nextSibling);else tabs.appendChild(actionBtn);
+    }
+
     let meetingBtn=tabs.querySelector('[data-v9-meetings]');
     if(!meetingBtn){
-      const pending=[...tabs.querySelectorAll('.tab')].find(x=>x.textContent.includes('Pendências'));
       meetingBtn=document.createElement('button');
       meetingBtn.className='tab';
       meetingBtn.dataset.v9Meetings='1';
       meetingBtn.onclick=()=>projectTab('meetings');
-      if(pending?.nextSibling)tabs.insertBefore(meetingBtn,pending.nextSibling);else tabs.appendChild(meetingBtn);
+      if(actionBtn?.nextSibling)tabs.insertBefore(meetingBtn,actionBtn.nextSibling);else tabs.appendChild(meetingBtn);
     }
 
     const counts=v9TabCounts[p.id]||{};
     docBtn.textContent=`Documentos (${counts.documents??'…'})`;
+    actionBtn.textContent=`Ações sugeridas (${counts.actions??'…'})`;
     meetingBtn.textContent=`Reuniões (${counts.meetings??'…'})`;
-    tabs.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',
-      currentTab==='documents'?x===docBtn:currentTab==='meetings'?x===meetingBtn:x.classList.contains('active')
-    ));
+
+    tabs.querySelectorAll('.tab').forEach(x=>{
+      if(x===docBtn)x.classList.toggle('active',currentTab==='documents');
+      else if(x===actionBtn)x.classList.toggle('active',currentTab==='suggestedActions');
+      else if(x===meetingBtn)x.classList.toggle('active',currentTab==='meetings');
+      else if(['documents','suggestedActions','meetings'].includes(currentTab))x.classList.remove('active');
+    });
     refreshProjectTabCountsV9(p.id);
   };
 
   renderProjectPanel=function(){
     if(currentTab==='documents'){renderProjectDocumentsV9();return}
+    if(currentTab==='suggestedActions'){renderProjectSuggestedActionsV9();return}
     if(currentTab==='meetings'){renderProjectMeetingsV9();return}
     previousRenderProjectPanelV9();
   };
+
+  function renderProjectSuggestedActionsV9(){
+    const p=project(currentProjectId),root=$('#projectPanel');if(!p||!root)return;
+    root.innerHTML=`<div class="section-title"><div><h2>Ações sugeridas</h2><div class="muted small">Leitura automática das reuniões. Somente consulta; não altera pendências nem Roadmap.</div></div></div>
+      <div class="card"><div class="pad" id="projectSuggestedActionsV9"><div class="empty">Carregando ações sugeridas…</div></div></div>`;
+    loadProjectSuggestedActionsV9();
+  }
+
+  async function loadProjectSuggestedActionsV9(){
+    const box=$('#projectSuggestedActionsV9');if(!box)return;
+    try{
+      const j=await api(`/api/projects/${encodeURIComponent(currentProjectId)}/suggested-actions`);
+      const rows=j.items||[];
+      if(!rows.length){box.innerHTML='<div class="empty">Nenhuma ação sugerida registrada nas reuniões deste projeto.</div>';return}
+      box.innerHTML=`<div class="project-suggested-actions-list">${rows.map(item=>`<div class="project-suggested-action-row">
+        <div class="project-suggested-action-date">${v9Date(item.meetingDate)}</div>
+        <div class="project-suggested-action-text">${esc(item.text)}</div>
+      </div>`).join('')}</div>`;
+    }catch(e){box.innerHTML=`<div class="empty">${esc(e.message)}</div>`}
+  }
 
   function renderProjectMeetingsV9(){
     const p=project(currentProjectId),root=$('#projectPanel');if(!p||!root)return;
