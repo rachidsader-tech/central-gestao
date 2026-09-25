@@ -323,9 +323,37 @@
     }catch(e){if(status)status.textContent='Falha ao anexar.';alert(e.message)}
   };
 
+  async function loadMeetingDetailV9WithRetry(sessionId,attempts=3){
+    let lastError=null;
+    for(let i=0;i<attempts;i++){
+      try{return await api(`/api/meeting/history/${encodeURIComponent(sessionId)}`)}
+      catch(e){
+        lastError=e;
+        if(i<attempts-1)await new Promise(resolve=>setTimeout(resolve,700*(i+1)));
+      }
+    }
+    throw lastError||new Error('Falha ao recarregar a reunião.');
+  }
+
+  async function recoverProcessedMeetingV9(d,previousProcessedAt=''){
+    try{
+      const latest=await loadMeetingDetailV9WithRetry(d.id,3);
+      const processed=Boolean(latest?.review?.aiProcessed);
+      const version=Number(latest?.review?.aiDocumentVersion||0);
+      const processedAt=latest?.review?.aiProcessedAt||'';
+      if(processed&&version>=3&&(processedAt!==previousProcessedAt||!previousProcessedAt)){
+        v9MeetingDetail=latest;
+        return true;
+      }
+    }catch(e){}
+    return false;
+  }
+
   window.generateV9MeetingSummary=async function(){
     const d=v9MeetingDetail;if(!d||!d.canGenerateAi||v9MeetingLoading)return;
+    const previousProcessedAt=d.review?.aiProcessedAt||'';
     v9MeetingLoading=true;v9MeetingStatus='Preparando a transcrição da gravação…';renderV9MeetingDetail();
+
     try{
       const manifest=await api(`/api/meeting/audio-sessions/${encodeURIComponent(d.id)}/segments`);
       const texts=[];
@@ -336,14 +364,58 @@
         const tr=await api(`/api/meeting/audio-sessions/${encodeURIComponent(d.id)}/segments/${seg.position}/transcribe`,'POST',{});
         if(tr.transcript)texts.push(tr.transcript);
       }
+
       const transcript=texts.join('\n\n').trim()||d.transcript||'';
       if(!transcript)throw new Error('A gravação não produziu transcrição suficiente.');
+
       v9MeetingStatus='Transcrição concluída. Processando o resumo executivo…';renderV9MeetingDetail();
-      await api('/api/meeting/summarize','POST',{projectId:d.projectId,sessionId:d.id,transcript});
-      v9MeetingDetail=await api(`/api/meeting/history/${encodeURIComponent(d.id)}`);
+
+      let result=null;
+      try{
+        result=await api('/api/meeting/summarize','POST',{projectId:d.projectId,sessionId:d.id,transcript});
+      }catch(summaryError){
+        const recovered=await recoverProcessedMeetingV9(d,previousProcessedAt);
+        if(!recovered)throw summaryError;
+        v9MeetingStatus='Resumo processado com sucesso.';renderV9MeetingDetail();
+        return;
+      }
+
+      try{
+        v9MeetingDetail=await loadMeetingDetailV9WithRetry(d.id,3);
+      }catch(reloadError){
+        if(result?.document){
+          v9MeetingDetail={
+            ...d,
+            transcript,
+            aiDocument:result.document,
+            review:{
+              ...(d.review||{}),
+              aiProcessed:true,
+              aiSummaryStatus:'success',
+              aiDocumentVersion:Number(result.aiDocumentVersion||3),
+              isLegacyAiDocument:false,
+              aiProcessedAt:new Date().toISOString()
+            }
+          };
+        }else{
+          const recovered=await recoverProcessedMeetingV9(d,previousProcessedAt);
+          if(!recovered)throw reloadError;
+        }
+      }
+
       v9MeetingStatus='Resumo processado com sucesso.';renderV9MeetingDetail();
-    }catch(e){v9MeetingStatus='Não foi possível processar o resumo: '+e.message;alert(v9MeetingStatus)}
-    finally{v9MeetingLoading=false;renderV9MeetingDetail()}
+    }catch(e){
+      const recovered=await recoverProcessedMeetingV9(d,previousProcessedAt);
+      if(recovered){
+        v9MeetingStatus='Resumo processado com sucesso.';renderV9MeetingDetail();
+      }else{
+        v9MeetingStatus='Não foi possível processar o resumo: '+e.message;
+        alert(v9MeetingStatus);
+      }
+    }finally{
+      v9MeetingLoading=false;
+      renderV9MeetingDetail();
+    }
   };
 
   window.shareV9MeetingPdf=async function(){
