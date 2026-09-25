@@ -508,7 +508,7 @@ def register(app_module):
             'attachmentCount': len(attachments),
             'canUploadAttachment': bool(app_module.can_edit_project(user, row['project_id'])),
             'canEditCommitment': bool(user and user.username == 'rachid'),
-            'canGenerateAi': bool(app_module.can_edit_project(user, row['project_id'])),
+            'canGenerateAi': bool(user and user.username == 'rachid'),
             'transcript': transcript,
             'review': {
                 'commitment': (saved or {}).get('nextWeek') or '',
@@ -574,7 +574,7 @@ def register(app_module):
         session_id = (body.get('sessionId') or '').strip()
         transcript = (body.get('transcript') or '').strip()
         user = app_module.current_user()
-        if not project_id or not app_module.can_edit_project(user, project_id):
+        if not project_id or not user or user.username != 'rachid':
             abort(403)
         api_key = os.environ.get('OPENAI_API_KEY')
         if not api_key:
