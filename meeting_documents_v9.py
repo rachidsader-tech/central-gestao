@@ -64,6 +64,63 @@ def register(app_module):
             and (not project_id or item.get('projectId') == project_id)
         ), None)
 
+    def _normalize_ai_document(saved):
+        saved = saved or {}
+        doc = saved.get('aiDocument')
+        if not isinstance(doc, dict):
+            doc = {}
+        version = int(saved.get('aiDocumentVersion') or doc.get('version') or 0)
+        if version >= 2 or any(key in doc for key in ('executiveSummary', 'keyPoints', 'nextSteps', 'attentionPoints')):
+            key_points = doc.get('keyPoints') or []
+            normalized_points = []
+            for item in key_points:
+                if isinstance(item, dict):
+                    text_value = str(item.get('text') or '').strip()
+                    if text_value:
+                        normalized_points.append({
+                            'type': item.get('type') if item.get('type') in ('decision', 'important') else 'important',
+                            'text': text_value,
+                        })
+                elif str(item).strip():
+                    normalized_points.append({'type': 'important', 'text': str(item).strip()})
+            next_steps = []
+            for item in (doc.get('nextSteps') or []):
+                if isinstance(item, dict):
+                    text_value = str(item.get('text') or '').strip()
+                    if text_value:
+                        next_steps.append({
+                            'text': text_value,
+                            'responsible': str(item.get('responsible') or '').strip(),
+                            'deadline': str(item.get('deadline') or '').strip(),
+                        })
+            attention = doc.get('attentionPoints') or []
+            if isinstance(attention, str):
+                attention = [line.strip(' -•\t') for line in attention.splitlines() if line.strip()]
+            return {
+                'version': 2,
+                'executiveSummary': str(doc.get('executiveSummary') or '').strip(),
+                'keyPoints': normalized_points,
+                'nextSteps': next_steps,
+                'attentionPoints': [str(item).strip() for item in attention if str(item).strip()],
+                'meetingSummary': str(doc.get('meetingSummary') or '').strip(),
+            }
+
+        legacy_summary = str(doc.get('summary') or saved.get('summary') or '').strip()
+        legacy_points = doc.get('importantPoints') or []
+        if isinstance(legacy_points, str):
+            legacy_points = [line.strip(' -•\t') for line in legacy_points.splitlines() if line.strip()]
+        return {
+            'version': 1,
+            'executiveSummary': legacy_summary,
+            'keyPoints': [
+                {'type': 'important', 'text': str(item).strip()}
+                for item in legacy_points if str(item).strip()
+            ],
+            'nextSteps': [],
+            'attentionPoints': [],
+            'meetingSummary': str(doc.get('meetingSummary') or legacy_summary).strip(),
+        }
+
     def _visible_project_ids(user, payload):
         if not user:
             return set()
@@ -483,14 +540,7 @@ def register(app_module):
         if not transcript:
             transcript = '\n\n'.join((s['transcript'] or '').strip() for s in segments if (s['transcript'] or '').strip())
 
-        ai_document = (saved or {}).get('aiDocument')
-        if not isinstance(ai_document, dict):
-            legacy_summary = ((saved or {}).get('summary') or '').strip()
-            ai_document = {
-                'summary': legacy_summary,
-                'importantPoints': [],
-                'meetingSummary': legacy_summary,
-            }
+        ai_document = _normalize_ai_document(saved)
 
         duration = 0
         if row['started_at']:
@@ -515,6 +565,8 @@ def register(app_module):
                 'aiProcessed': bool((saved or {}).get('aiProcessed')),
                 'aiProcessedAt': (saved or {}).get('aiProcessedAt') or '',
                 'aiSummaryStatus': (saved or {}).get('aiSummaryStatus') or ('success' if (saved or {}).get('aiProcessed') else ''),
+                'aiDocumentVersion': ai_document.get('version') or 1,
+                'isLegacyAiDocument': bool((saved or {}).get('aiProcessed') and (ai_document.get('version') or 1) < 2),
             },
             'aiDocument': ai_document,
             'pdfUrl': f'/api/meeting/history/{session_id}/pdf',
@@ -619,27 +671,93 @@ def register(app_module):
                     break
 
         commitment = ((meeting or {}).get('nextWeek') or '').strip()
-        prompt = f"""Você é o secretário executivo da Transformação KAZ.
-Analise a reunião do projeto {project.get('name') or project_id} e produza um documento executivo fiel ao que ocorreu.
+        roadmap_context = []
+        for milestone in (project.get('milestones') or [])[:30]:
+            roadmap_context.append(
+                f"- {milestone.get('name') or 'Marco'} | status: {milestone.get('status') or '—'}"
+            )
+        project_context = f"""OBJETIVO DO PROJETO:
+{(project.get('objective') or 'Não informado.').strip()}
 
-Regras:
-- Não invente fatos, decisões, responsáveis, prazos ou pendências.
-- Use a transcrição como fonte principal. Use os arquivos anexados apenas como contexto complementar.
-- O compromisso da próxima reunião foi informado manualmente e não deve ser criado pela IA.
-- Responda SOMENTE JSON válido, sem markdown.
+ROADMAP DO SUCESSO — CONTEXTO, NÃO FONTE DE DECISÕES DA REUNIÃO:
+{chr(10).join(roadmap_context) if roadmap_context else 'Não informado.'}"""
 
-Estrutura obrigatória:
-summary: string com 5 a 6 linhas curtas, resumindo a reunião de forma executiva;
-importantPoints: array de strings com os pontos importantes da reunião. Inclua somente decisões, pendências, encaminhamentos e itens estratégicos efetivamente discutidos;
-meetingSummary: string com um sumário mais completo e organizado da reunião, em texto corrido com parágrafos.
+        prompt = f"""Você produz o REGISTRO EXECUTIVO das reuniões da Transformação KAZ.
 
-COMPROMISSO OFICIAL DA PRÓXIMA REUNIÃO:
+Sua função NÃO é transcrever a conversa e NÃO é simplesmente encurtar a transcrição. Você deve interpretar a reunião como um profissional de gestão e registrar apenas o que tem valor para acompanhamento executivo do projeto.
+
+PROJETO: {project.get('name') or project_id}
+
+PRINCÍPIOS OBRIGATÓRIOS:
+1. A TRANSCRIÇÃO é a principal fonte de verdade.
+2. Arquivos anexados e contexto do projeto servem somente para compreensão. Não transforme conteúdo de apoio em decisão da reunião se ele não tiver sido efetivamente discutido.
+3. Elimine vícios de fala, repetições, interrupções, exemplos laterais, brincadeiras e conversas sem relevância para o projeto.
+4. Não siga obrigatoriamente a ordem cronológica da conversa. Organize por importância executiva.
+5. Diferencie com rigor:
+   - discussão: tema debatido, mas sem definição;
+   - decisão: definição efetivamente tomada;
+   - pendência/próximo passo: ação que precisa acontecer;
+   - ponto de atenção: risco, bloqueio, divergência, dependência ou falta de definição.
+6. Nunca transforme hipótese, sugestão, pergunta ou comentário em decisão.
+7. Nunca invente responsável, prazo, número, decisão, risco ou conclusão.
+8. Quando responsável ou prazo não estiverem claros, use string vazia.
+9. Use linguagem executiva, direta, profissional e natural. Evite frases genéricas como "foi discutido que" quando for possível registrar o fato de forma objetiva.
+10. O compromisso oficial da próxima reunião é um campo do sistema. NÃO crie, altere ou deduza esse compromisso.
+11. Não mencione "transcrição", "áudio", "prompt", "IA" ou o processo de geração no conteúdo executivo.
+12. Não use markdown. Responda SOMENTE um objeto JSON válido.
+
+QUALIDADE ESPERADA POR BLOCO:
+
+executiveSummary:
+- um único texto executivo de aproximadamente 80 a 130 palavras;
+- equivalente a 4–6 linhas em um documento;
+- deve explicar foco da reunião, principais avanços/definições e situação do projeto ao final;
+- não repetir todos os bullets abaixo.
+
+keyPoints:
+- somente decisões e informações estratégicas importantes;
+- cada item deve ter type = "decision" ou "important";
+- textos curtos, concretos e autossuficientes;
+- em geral 3 a 8 itens, mas use menos se a reunião não justificar.
+
+nextSteps:
+- somente pendências e próximos passos reais;
+- cada item contém text, responsible e deadline;
+- responsible e deadline ficam vazios quando não houver certeza;
+- não inclua o compromisso oficial da próxima reunião apenas porque ele aparece abaixo; só inclua uma ação se ela também estiver sustentada pela reunião.
+
+attentionPoints:
+- inclua somente riscos, dependências, bloqueios, divergências, atrasos ou pontos ainda sem definição que sejam relevantes;
+- retorne [] quando não houver nada relevante.
+
+meetingSummary:
+- síntese mais completa, em 3 a 6 parágrafos curtos;
+- deve permitir que alguém que não participou entenda contexto, raciocínio, assuntos centrais, decisões e encaminhamentos em 2–3 minutos;
+- continua sendo síntese executiva, não ata e não transcrição.
+
+FORMATO EXATO:
+{{
+  "executiveSummary": "texto",
+  "keyPoints": [
+    {{"type": "decision", "text": "texto"}},
+    {{"type": "important", "text": "texto"}}
+  ],
+  "nextSteps": [
+    {{"text": "texto", "responsible": "nome ou vazio", "deadline": "prazo ou vazio"}}
+  ],
+  "attentionPoints": ["texto"],
+  "meetingSummary": "texto com parágrafos separados por duas quebras de linha"
+}}
+
+{project_context}
+
+COMPROMISSO OFICIAL DA PRÓXIMA REUNIÃO — NÃO ALTERAR NEM DEDUZIR:
 {commitment or 'Não informado.'}
 
-TRANSCRIÇÃO:
+TRANSCRIÇÃO DA REUNIÃO:
 {transcript}
 
-ARQUIVOS ANEXADOS:
+ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
 {'\n\n'.join(docs) if docs else 'Nenhum arquivo com conteúdo textual extraível.'}
 """
         try:
@@ -650,36 +768,81 @@ ARQUIVOS ANEXADOS:
                 timeout=240,
             )
             if response.status_code >= 400:
-                app.logger.error('Falha no resumo IA v9: %s', response.text[:1000])
-                return jsonify({'error': 'A gravação foi preservada, mas a IA não conseguiu processar o resumo.'}), 502
+                app.logger.error('Falha no resumo IA executivo V2: %s', response.text[:1000])
+                return jsonify({'error': 'A gravação foi preservada, mas a IA não conseguiu processar o registro executivo.'}), 502
+
             raw_text = _clean_json_text(_response_text(response.json()))
             try:
                 structured = json.loads(raw_text)
             except Exception:
-                app.logger.error('Resposta IA não era JSON: %s', raw_text[:1000])
-                return jsonify({'error': 'A IA respondeu, mas o resumo não veio no formato esperado. Tente reprocessar.'}), 502
+                app.logger.error('Resposta IA V2 não era JSON: %s', raw_text[:1000])
+                return jsonify({'error': 'A IA respondeu, mas o registro executivo não veio no formato esperado. Tente reprocessar.'}), 502
 
-            summary = (structured.get('summary') or '').strip()
-            points = structured.get('importantPoints') or []
-            if isinstance(points, str):
-                points = [line.strip(' -•\t') for line in points.splitlines() if line.strip()]
-            points = [str(item).strip() for item in points if str(item).strip()]
-            meeting_summary = (structured.get('meetingSummary') or '').strip()
-            if not summary or not meeting_summary:
-                return jsonify({'error': 'A IA não retornou conteúdo suficiente para o documento da reunião.'}), 502
+            executive_summary = str(structured.get('executiveSummary') or '').strip()
+            meeting_summary = str(structured.get('meetingSummary') or '').strip()
+
+            key_points = []
+            for item in (structured.get('keyPoints') or []):
+                if isinstance(item, dict):
+                    text_value = str(item.get('text') or '').strip()
+                    if text_value:
+                        key_points.append({
+                            'type': item.get('type') if item.get('type') in ('decision', 'important') else 'important',
+                            'text': text_value,
+                        })
+                elif str(item).strip():
+                    key_points.append({'type': 'important', 'text': str(item).strip()})
+
+            next_steps = []
+            for item in (structured.get('nextSteps') or []):
+                if isinstance(item, dict):
+                    text_value = str(item.get('text') or '').strip()
+                    if text_value:
+                        next_steps.append({
+                            'text': text_value,
+                            'responsible': str(item.get('responsible') or '').strip(),
+                            'deadline': str(item.get('deadline') or '').strip(),
+                        })
+
+            attention = structured.get('attentionPoints') or []
+            if isinstance(attention, str):
+                attention = [line.strip(' -•\t') for line in attention.splitlines() if line.strip()]
+            attention = [str(item).strip() for item in attention if str(item).strip()]
+
+            if not executive_summary or not meeting_summary:
+                return jsonify({'error': 'A IA não retornou conteúdo suficiente para o registro executivo.'}), 502
+
+            document = {
+                'version': 2,
+                'executiveSummary': executive_summary,
+                'keyPoints': key_points,
+                'nextSteps': next_steps,
+                'attentionPoints': attention,
+                'meetingSummary': meeting_summary,
+            }
 
             state = _state_locked()
             payload = json.loads(json.dumps(state.payload, ensure_ascii=False))
             saved = _saved_meeting(payload, session_id, project_id)
             if not saved:
                 return jsonify({'error': 'Reunião salva não encontrada.'}), 404
-            document = {
-                'summary': summary,
-                'importantPoints': points,
-                'meetingSummary': meeting_summary,
-            }
-            saved['summary'] = summary
+
+            old_document = saved.get('aiDocument')
+            if isinstance(old_document, dict) and old_document:
+                history = saved.setdefault('aiDocumentHistory', [])
+                history.append({
+                    'document': old_document,
+                    'version': int(saved.get('aiDocumentVersion') or old_document.get('version') or 1),
+                    'processedAt': saved.get('aiProcessedAt') or '',
+                    'processedBy': saved.get('aiProcessedBy') or '',
+                    'preservedAt': app_module.now_iso(),
+                })
+                if len(history) > 5:
+                    del history[:-5]
+
+            saved['summary'] = executive_summary
             saved['aiDocument'] = document
+            saved['aiDocumentVersion'] = 2
             saved['transcript'] = transcript
             saved['aiProcessed'] = True
             saved['aiSummaryStatus'] = 'success'
@@ -690,16 +853,18 @@ ARQUIVOS ANEXADOS:
             state.updated_by = user.display_name
             state.updated_at = datetime.utcnow()
             db.session.commit()
+
             return jsonify({
                 'configured': True,
                 'aiProcessed': True,
                 'aiSummaryStatus': 'success',
+                'aiDocumentVersion': 2,
                 'document': document,
-                'summary': summary,
+                'summary': executive_summary,
                 'revision': state.revision,
             })
         except requests.RequestException:
-            app.logger.exception('Falha de comunicação com IA da reunião v9')
+            app.logger.exception('Falha de comunicação com IA da reunião V2')
             return jsonify({'error': 'Falha de comunicação com a IA da reunião.'}), 502
 
     def _pdf_escape(value):
@@ -707,151 +872,331 @@ ARQUIVOS ANEXADOS:
         encoded = raw.encode('cp1252', errors='replace').decode('latin1')
         return encoded.replace('\\', '\\\\').replace('(', '\\(').replace(')', '\\)')
 
-    def _native_meeting_pdf(project_name, date_text, created_by, meeting_status, summary, points, meeting_summary, commitment):
+    def _native_meeting_pdf(project_name, date_text, created_by, duration_text, meeting_status, document, commitment, attachments):
         width, height = 595.28, 841.89
-        left, right, top, bottom = 52.0, 52.0, 54.0, 54.0
+        left, right, top, bottom = 46.0, 46.0, 46.0, 50.0
+        content_width = width - left - right
         y = height - top
         pages = [[]]
+
+        NAVY = '#10213B'
+        BLUE = '#285BC7'
+        BLUE_SOFT = '#EEF4FF'
+        BLUE_BORDER = '#CEDBFA'
+        TEXT = '#26374A'
+        MUTED = '#6A788A'
+        LINE = '#E3E9F0'
+        GREEN = '#16805A'
+        GREEN_SOFT = '#EAF8F2'
+        AMBER = '#9A6413'
+        AMBER_SOFT = '#FFF7E7'
+        PANEL = '#F7F9FC'
+        WHITE = '#FFFFFF'
+
+        def rgb(hex_value):
+            value = hex_value.lstrip('#')
+            return tuple(int(value[i:i+2], 16) / 255.0 for i in (0, 2, 4))
 
         def new_page():
             nonlocal y
             pages.append([])
             y = height - top
 
-        def color_tuple(hex_value):
-            value = hex_value.lstrip('#')
-            return tuple(int(value[i:i+2], 16) / 255.0 for i in (0, 2, 4))
+        def ensure_space(required):
+            nonlocal y
+            if y - required < bottom + 22:
+                new_page()
+                return True
+            return False
 
-        def draw_line(x1, y1, x2, y2, hex_value='#E2E8F0', line_width=0.7):
-            r, g, b = color_tuple(hex_value)
+        def rect(x, y0, w, h, fill=None, stroke=None, line_width=0.8):
+            cmd = []
+            if fill:
+                r, g, b = rgb(fill)
+                cmd.append(f'{r:.3f} {g:.3f} {b:.3f} rg')
+            if stroke:
+                r, g, b = rgb(stroke)
+                cmd.append(f'{r:.3f} {g:.3f} {b:.3f} RG {line_width:.2f} w')
+            op = 'B' if fill and stroke else ('f' if fill else 'S')
+            cmd.append(f'{x:.2f} {y0:.2f} {w:.2f} {h:.2f} re {op}')
+            pages[-1].append(' '.join(cmd))
+
+        def line(x1, y1, x2, y2, color=LINE, line_width=0.7):
+            r, g, b = rgb(color)
             pages[-1].append(f'{line_width:.2f} w {r:.3f} {g:.3f} {b:.3f} RG {x1:.2f} {y1:.2f} m {x2:.2f} {y2:.2f} l S')
 
-        def add_text_line(value, size=10, bold=False, hex_value='#24364B', indent=0, leading=None):
-            nonlocal y
-            leading = leading or max(size * 1.45, size + 3)
-            if y - leading < bottom + 20:
-                new_page()
-            r, g, b = color_tuple(hex_value)
+        def text_line(value, x, baseline, size=10, bold=False, color=TEXT):
+            r, g, b = rgb(color)
             font = 'F2' if bold else 'F1'
-            x = left + indent
             safe = _pdf_escape(value)
             pages[-1].append(
-                f'BT /{font} {size:.2f} Tf {r:.3f} {g:.3f} {b:.3f} rg 1 0 0 1 {x:.2f} {y:.2f} Tm ({safe}) Tj ET'
+                f'BT /{font} {size:.2f} Tf {r:.3f} {g:.3f} {b:.3f} rg 1 0 0 1 {x:.2f} {baseline:.2f} Tm ({safe}) Tj ET'
             )
-            y -= leading
 
-        def wrap_text(value, size=10, indent=0, bullet_prefix=''):
+        def wrapped(value, size=10, max_width=None):
             value = str(value or '').strip()
             if not value:
                 return []
-            usable = width - left - right - indent
-            avg_char_width = max(size * 0.50, 4.6)
-            max_chars = max(24, int(usable / avg_char_width))
+            max_width = max_width or content_width
+            avg = max(size * 0.49, 4.3)
+            max_chars = max(18, int(max_width / avg))
             result = []
             for paragraph in re.split(r'\n\s*\n|\n', value):
                 paragraph = paragraph.strip()
                 if not paragraph:
                     result.append('')
                     continue
-                wrapped = textwrap.wrap(
+                result.extend(textwrap.wrap(
                     paragraph,
                     width=max_chars,
                     break_long_words=False,
                     break_on_hyphens=False,
                     replace_whitespace=True,
-                ) or ['']
-                if bullet_prefix and wrapped:
-                    result.append(bullet_prefix + wrapped[0])
-                    pad = ' ' * len(bullet_prefix)
-                    result.extend(pad + line for line in wrapped[1:])
-                else:
-                    result.extend(wrapped)
+                ) or [''])
             return result
 
-        def add_section(title):
+        def section_label(title, subtitle=''):
             nonlocal y
-            if y < bottom + 90:
-                new_page()
-            y -= 5
-            add_text_line(title.upper(), 11.5, True, '#163E72', leading=17)
-            draw_line(left, y + 5, width - right, y + 5, '#DCE4EF', 0.6)
+            ensure_space(42)
+            text_line(title.upper(), left, y, 9.2, True, BLUE)
+            y -= 14
+            if subtitle:
+                for row in wrapped(subtitle, 8.2, content_width):
+                    text_line(row, left, y, 8.2, False, MUTED)
+                    y -= 11
             y -= 4
 
-        add_text_line('Resumo da reunião', 19, True, '#12233F', leading=25)
-        add_text_line(project_name, 11, True, '#34465A', leading=16)
-        add_text_line(f'{date_text}  |  {created_by}', 8.5, False, '#64748B', leading=15)
-        y -= 3
-        add_text_line(f'{meeting_status}  |  Resumo IA processado com sucesso', 8.5, True, '#166534', leading=17)
-        y -= 7
+        def executive_card(body):
+            nonlocal y
+            rows = wrapped(body, 10.5, content_width - 40)
+            card_h = 34 + max(1, len(rows)) * 15
+            ensure_space(card_h + 16)
+            rect(left, y-card_h+8, content_width, card_h, BLUE_SOFT, BLUE_BORDER, 0.8)
+            rect(left, y-card_h+8, 5, card_h, BLUE, None)
+            text_line('RESUMO EXECUTIVO', left+20, y-13, 8.8, True, BLUE)
+            baseline = y-35
+            for row in rows:
+                if row:
+                    text_line(row, left+20, baseline, 10.5, False, TEXT)
+                baseline -= 15
+            y -= card_h + 10
 
-        add_section('Resumo da reunião')
-        for line in wrap_text(summary, 10):
-            if line:
-                add_text_line(line, 10, False, '#24364B', leading=14.5)
-            else:
-                y -= 5
+        def numbered_point(number, point_type, body):
+            nonlocal y
+            rows = wrapped(body, 9.7, content_width - 82)
+            card_h = 26 + max(1, len(rows))*13
+            ensure_space(card_h + 8)
+            rect(left, y-card_h+6, content_width, card_h, WHITE, LINE, 0.8)
+            rect(left+12, y-24, 26, 22, BLUE, None)
+            text_line(str(number).zfill(2), left+18, y-18, 8.5, True, WHITE)
+            label = 'DECISÃO' if point_type == 'decision' else 'IMPORTANTE'
+            label_color = GREEN if point_type == 'decision' else BLUE
+            text_line(label, left+52, y-12, 7.8, True, label_color)
+            baseline=y-30
+            for row in rows:
+                text_line(row, left+52, baseline, 9.7, False, TEXT)
+                baseline -= 13
+            y -= card_h + 6
 
-        add_section('Pontos importantes')
+        def next_steps_table(items):
+            nonlocal y
+            if not items:
+                ensure_space(34)
+                rect(left, y-26, content_width, 30, PANEL, LINE, 0.7)
+                text_line('Nenhuma pendência ou próximo passo foi identificado com segurança.', left+12, y-14, 9, False, MUTED)
+                y -= 38
+                return
+            col1 = content_width * 0.57
+            col2 = content_width * 0.23
+            col3 = content_width - col1 - col2
+            ensure_space(38)
+            rect(left, y-26, content_width, 30, NAVY, None)
+            text_line('PRÓXIMO PASSO', left+10, y-15, 7.8, True, WHITE)
+            text_line('RESPONSÁVEL', left+col1+10, y-15, 7.8, True, WHITE)
+            text_line('PRAZO', left+col1+col2+10, y-15, 7.8, True, WHITE)
+            y -= 32
+            for item in items:
+                step_lines=wrapped(item.get('text') or '', 8.8, col1-20)
+                resp_lines=wrapped(item.get('responsible') or '—', 8.5, col2-20)
+                deadline_lines=wrapped(item.get('deadline') or '—', 8.5, col3-20)
+                count=max(len(step_lines),len(resp_lines),len(deadline_lines),1)
+                row_h=16+count*12
+                ensure_space(row_h+4)
+                rect(left, y-row_h+5, content_width, row_h, WHITE, LINE, 0.6)
+                baseline=y-12
+                for idx,row in enumerate(step_lines or ['—']):
+                    text_line(row, left+10, baseline-idx*12, 8.8, False, TEXT)
+                for idx,row in enumerate(resp_lines or ['—']):
+                    text_line(row, left+col1+10, baseline-idx*12, 8.5, False, TEXT)
+                for idx,row in enumerate(deadline_lines or ['—']):
+                    text_line(row, left+col1+col2+10, baseline-idx*12, 8.5, False, TEXT)
+                y -= row_h + 3
+
+        def attention_card(items):
+            nonlocal y
+            if not items:
+                return
+            blocks=[]
+            total_lines=0
+            for item in items:
+                lines=wrapped(item,9.2,content_width-44)
+                blocks.append(lines)
+                total_lines += max(1,len(lines))
+            card_h=30+total_lines*13+len(items)*5
+            ensure_space(card_h+12)
+            rect(left,y-card_h+6,content_width,card_h,AMBER_SOFT,'#F0D7A8',0.8)
+            text_line('PONTOS DE ATENÇÃO',left+16,y-13,8.7,True,AMBER)
+            baseline=y-34
+            for lines in blocks:
+                text_line('•',left+17,baseline,9.5,True,AMBER)
+                for idx,row in enumerate(lines):
+                    text_line(row,left+31,baseline-idx*13,9.2,False,TEXT)
+                baseline -= max(1,len(lines))*13+5
+            y -= card_h+9
+
+        def body_paragraphs(value):
+            nonlocal y
+            paragraphs=[p.strip() for p in re.split(r'\n\s*\n',str(value or '')) if p.strip()]
+            for paragraph in paragraphs:
+                rows=wrapped(paragraph,9.6,content_width)
+                ensure_space(max(32,len(rows)*14+12))
+                for row in rows:
+                    text_line(row,left,y,9.6,False,TEXT)
+                    y-=14
+                y-=8
+
+        def commitment_card(value):
+            nonlocal y
+            if not value:
+                return
+            rows=wrapped(value,10,content_width-40)
+            card_h=34+len(rows)*14
+            ensure_space(card_h+12)
+            rect(left,y-card_h+6,content_width,card_h,NAVY,None)
+            text_line('PRÓXIMA REUNIÃO · COMPROMISSO',left+18,y-13,8.3,True,'#9EC1FF')
+            baseline=y-35
+            for row in rows:
+                text_line(row,left+18,baseline,10,True,WHITE)
+                baseline-=14
+            y-=card_h+10
+
+        def attachments_block(items):
+            nonlocal y
+            if not items:
+                return
+            section_label('Documentos da reunião')
+            for item in items:
+                rows=wrapped(item.get('name') or 'Arquivo',8.8,content_width-95)
+                row_h=max(30,14+len(rows)*11)
+                ensure_space(row_h+3)
+                rect(left,y-row_h+5,content_width,row_h,PANEL,LINE,0.6)
+                text_line('DOC',left+12,y-14,7.2,True,BLUE)
+                for idx,row in enumerate(rows):
+                    text_line(row,left+48,y-12-idx*11,8.8,True,TEXT)
+                meta=item.get('meta') or ''
+                if meta:
+                    text_line(meta,left+48,y-row_h+13,7.5,False,MUTED)
+                y-=row_h+4
+
+        # Cabeçalho editorial
+        header_h=124
+        rect(0,height-header_h,width,header_h,NAVY,None)
+        text_line('TRANSFORMAÇÃO KAZ',left,height-34,8.5,True,'#9EC1FF')
+        title_rows=wrapped(project_name,20,content_width-10)[:2]
+        baseline=height-62
+        for row in title_rows:
+            text_line(row,left,baseline,20,True,WHITE)
+            baseline-=24
+        text_line(f'Reunião de {date_text}',left,height-112,8.6,False,'#D8E4F6')
+        y=height-header_h-22
+
+        # Metadados
+        meta_h=52
+        rect(left,y-meta_h+6,content_width,meta_h,WHITE,LINE,0.8)
+        labels=[
+            ('RESPONSÁVEL',created_by or '—'),
+            ('DURAÇÃO',duration_text or '—'),
+            ('STATUS',meeting_status),
+            ('IA','Processado com sucesso'),
+        ]
+        col=content_width/4
+        for idx,(label,value) in enumerate(labels):
+            x=left+idx*col+10
+            text_line(label,x,y-10,6.8,True,MUTED)
+            value_color=GREEN if label in ('STATUS','IA') else TEXT
+            text_line(value,x,y-27,8.3,True,value_color)
+            if idx:
+                line(left+idx*col,y-meta_h+12,left+idx*col,y-4,LINE,0.6)
+        y-=meta_h+18
+
+        executive_card(document.get('executiveSummary') or '')
+
+        section_label('Decisões e pontos importantes')
+        points=document.get('keyPoints') or []
         if points:
-            for item in points:
-                for line in wrap_text(item, 10, indent=10, bullet_prefix='- '):
-                    add_text_line(line, 10, False, '#24364B', indent=8, leading=14.5)
-                y -= 2
+            for idx,item in enumerate(points,1):
+                numbered_point(idx,item.get('type') or 'important',item.get('text') or '')
         else:
-            add_text_line('Nenhum ponto adicional foi identificado com segurança.', 10, False, '#53657A', leading=14.5)
+            rect(left,y-26,content_width,30,PANEL,LINE,0.7)
+            text_line('Nenhuma decisão ou ponto estratégico adicional foi identificado.',left+12,y-14,9,False,MUTED)
+            y-=38
 
-        add_section('Sumário da reunião')
-        for line in wrap_text(meeting_summary, 10):
-            if line:
-                add_text_line(line, 10, False, '#24364B', leading=14.5)
-            else:
-                y -= 6
+        section_label('Pendências e próximos passos')
+        next_steps_table(document.get('nextSteps') or [])
 
-        if commitment:
-            add_section('Compromisso da próxima reunião')
-            for line in wrap_text(commitment, 10):
-                if line:
-                    add_text_line(line, 10, False, '#24364B', leading=14.5)
+        if document.get('attentionPoints'):
+            section_label('Pontos de atenção')
+            attention_card(document.get('attentionPoints') or [])
 
-        for page_index, commands in enumerate(pages, 1):
-            r, g, b = color_tuple('#94A3B8')
-            commands.append(f'0.6 w 0.886 0.910 0.941 RG {left:.2f} 39.00 m {width-right:.2f} 39.00 l S')
-            commands.append(f'BT /F1 7.5 Tf {r:.3f} {g:.3f} {b:.3f} rg 1 0 0 1 {left:.2f} 25.00 Tm (Transformação KAZ) Tj ET')
-            page_text = _pdf_escape(f'Página {page_index}')
-            commands.append(f'BT /F1 7.5 Tf {r:.3f} {g:.3f} {b:.3f} rg 1 0 0 1 {width-right-42:.2f} 25.00 Tm ({page_text}) Tj ET')
+        section_label('Sumário da reunião','Contexto consolidado para quem não participou da reunião.')
+        body_paragraphs(document.get('meetingSummary') or '')
 
-        objects = [None]
+        commitment_card(commitment)
+        attachments_block(attachments)
+
+        # Rodapé com paginação.
+        total_pages=len(pages)
+        for page_index,commands in enumerate(pages,1):
+            line_color=rgb(LINE)
+            commands.append(f'0.6 w {line_color[0]:.3f} {line_color[1]:.3f} {line_color[2]:.3f} RG {left:.2f} 36.00 m {width-right:.2f} 36.00 l S')
+            muted=rgb('#8C99A8')
+            footer_left=_pdf_escape('Transformação KAZ · Registro Executivo da Reunião')
+            footer_right=_pdf_escape(f'Página {page_index} de {total_pages}')
+            commands.append(f'BT /F1 7.2 Tf {muted[0]:.3f} {muted[1]:.3f} {muted[2]:.3f} rg 1 0 0 1 {left:.2f} 22.00 Tm ({footer_left}) Tj ET')
+            commands.append(f'BT /F1 7.2 Tf {muted[0]:.3f} {muted[1]:.3f} {muted[2]:.3f} rg 1 0 0 1 {width-right-58:.2f} 22.00 Tm ({footer_right}) Tj ET')
+
+        objects=[None]
         objects.append(b'<< /Type /Catalog /Pages 2 0 R >>')
-        page_ids = [5 + index * 2 for index in range(len(pages))]
-        kids = ' '.join(f'{obj_id} 0 R' for obj_id in page_ids)
+        page_ids=[5+index*2 for index in range(len(pages))]
+        kids=' '.join(f'{obj_id} 0 R' for obj_id in page_ids)
         objects.append(f'<< /Type /Pages /Kids [{kids}] /Count {len(pages)} >>'.encode('ascii'))
         objects.append(b'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>')
         objects.append(b'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>')
 
-        for page_index, commands in enumerate(pages):
-            page_obj_id = 5 + page_index * 2
-            content_obj_id = page_obj_id + 1
-            page_obj = (
+        for page_index,commands in enumerate(pages):
+            page_obj_id=5+page_index*2
+            content_obj_id=page_obj_id+1
+            page_obj=(
                 f'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width:.2f} {height:.2f}] '
                 f'/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents {content_obj_id} 0 R >>'
             ).encode('ascii')
-            stream = ('\n'.join(commands) + '\n').encode('latin1', errors='replace')
-            content_obj = f'<< /Length {len(stream)} >>\nstream\n'.encode('ascii') + stream + b'endstream'
+            stream=('\n'.join(commands)+'\n').encode('latin1',errors='replace')
+            content_obj=f'<< /Length {len(stream)} >>\nstream\n'.encode('ascii')+stream+b'endstream'
             objects.append(page_obj)
             objects.append(content_obj)
 
-        output = bytearray(b'%PDF-1.4\n%\xe2\xe3\xcf\xd3\n')
-        offsets = [0]
-        for obj_id in range(1, len(objects)):
+        output=bytearray(b'%PDF-1.4\n%\xe2\xe3\xcf\xd3\n')
+        offsets=[0]
+        for obj_id in range(1,len(objects)):
             offsets.append(len(output))
             output.extend(f'{obj_id} 0 obj\n'.encode('ascii'))
             output.extend(objects[obj_id])
             output.extend(b'\nendobj\n')
 
-        xref_offset = len(output)
+        xref_offset=len(output)
         output.extend(f'xref\n0 {len(objects)}\n'.encode('ascii'))
         output.extend(b'0000000000 65535 f \n')
-        for obj_id in range(1, len(objects)):
+        for obj_id in range(1,len(objects)):
             output.extend(f'{offsets[obj_id]:010d} 00000 n \n'.encode('ascii'))
         output.extend(
             f'trailer\n<< /Size {len(objects)} /Root 1 0 R >>\nstartxref\n{xref_offset}\n%%EOF\n'.encode('ascii')
@@ -865,7 +1210,7 @@ ARQUIVOS ANEXADOS:
         state = db.session.get(app_module.AppState, 1)
         payload = state.payload if state else {}
         row = db.session.execute(text("""
-            SELECT id, project_id, created_by, started_at
+            SELECT id, project_id, created_by, started_at, ended_at
               FROM kaz_meeting_audio_sessions
              WHERE id=:session_id
         """), {'session_id': session_id}).mappings().first()
@@ -873,38 +1218,50 @@ ARQUIVOS ANEXADOS:
             abort(404)
         if not _can_view_project(user, row['project_id'], payload):
             abort(403)
+
         saved = _saved_meeting(payload, session_id, row['project_id'])
         if not saved or not saved.get('aiProcessed'):
-            return jsonify({'error': 'O resumo da reunião ainda não foi processado pela IA.'}), 409
+            return jsonify({'error': 'O registro executivo da reunião ainda não foi processado pela IA.'}), 409
 
-        document = saved.get('aiDocument') or {}
-        if not isinstance(document, dict):
-            document = {}
-        summary = (document.get('summary') or saved.get('summary') or '').strip()
-        points = document.get('importantPoints') or []
-        meeting_summary = (document.get('meetingSummary') or saved.get('summary') or '').strip()
-        if isinstance(points, str):
-            points = [x.strip() for x in points.splitlines() if x.strip()]
-        points = [str(x).strip() for x in points if str(x).strip()]
-
+        document = _normalize_ai_document(saved)
         project = app_module.find_project(payload, row['project_id']) or {}
-        attachment_count = db.session.execute(text("""
-            SELECT COUNT(*) FROM kaz_meeting_attachments WHERE session_id=:session_id
-        """), {'session_id': session_id}).scalar() or 0
-        meeting_status = 'Reunião completa' if attachment_count else 'Reunião finalizada'
-        date_text = row['started_at'].strftime('%d/%m/%Y %H:%M') if row['started_at'] else '-'
+
+        attachment_rows = db.session.execute(text("""
+            SELECT name, size, uploaded_by, created_at
+              FROM kaz_meeting_attachments
+             WHERE session_id=:session_id
+             ORDER BY created_at ASC, id ASC
+        """), {'session_id': session_id}).mappings().all()
+        attachments = [{
+            'name': item['name'],
+            'meta': ' · '.join(filter(None, [
+                f"{round((item['size'] or 0)/1024)} KB" if item['size'] else '',
+                item['uploaded_by'] or '',
+                item['created_at'].strftime('%d/%m/%Y') if item['created_at'] else '',
+            ])),
+        } for item in attachment_rows]
+
+        meeting_status = 'Reunião completa' if attachment_rows else 'Reunião finalizada'
+        date_text = row['started_at'].strftime('%d/%m/%Y') if row['started_at'] else '-'
+        duration_text = '—'
+        if row['started_at']:
+            seconds = max(0, int(((row['ended_at'] or row['started_at']) - row['started_at']).total_seconds()))
+            hours, remainder = divmod(seconds, 3600)
+            minutes = remainder // 60
+            duration_text = f'{hours}h {minutes:02d}min' if hours else f'{minutes}min'
+
         commitment = (saved.get('nextWeek') or '').strip()
         pdf = _native_meeting_pdf(
             project.get('name') or row['project_id'],
             date_text,
             row['created_by'] or '',
+            duration_text,
             meeting_status,
-            summary,
-            points,
-            meeting_summary,
+            document,
             commitment,
+            attachments,
         )
-        filename = f"resumo_reuniao_{row['project_id']}_{(row['started_at'] or datetime.utcnow()).strftime('%Y-%m-%d')}.pdf"
+        filename = f"registro_executivo_{row['project_id']}_{(row['started_at'] or datetime.utcnow()).strftime('%Y-%m-%d')}.pdf"
         disposition = 'attachment' if request.args.get('download') == '1' else 'inline'
         return Response(pdf, mimetype='application/pdf', headers={
             'Content-Disposition': f'{disposition}; filename="{filename}"',
