@@ -555,6 +555,7 @@ def register(app_module):
         state = db.session.get(app_module.AppState, 1)
         payload = state.payload if state else {}
         names = {p.get('id'): p.get('name') or p.get('id') for p in (payload.get('projects') or [])}
+        project_map = {p.get('id'): p for p in (payload.get('projects') or [])}
         visible_ids = _visible_project_ids(user, payload)
         row = db.session.execute(text("""
             SELECT id, project_id, created_by, status, started_at, ended_at
