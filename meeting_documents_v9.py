@@ -221,7 +221,7 @@ def register(app_module):
             'id': target_id,
             'name': target_name,
             'owner': owner_name,
-            'status': source.status if source.status in app_module.PROJECT_STATUSES else 'Não iniciado',
+            'status': source.status if source.status in ('Não iniciado','Em andamento','Em risco','Concluído') else 'Não iniciado',
             'objective': source.objective or '',
             'validated': False,
             'scopeDefined': False,
