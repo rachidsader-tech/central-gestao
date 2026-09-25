@@ -238,3 +238,55 @@ button{cursor:pointer}
 .meeting-list-hero{align-items:center}
 .meeting-files-card{margin-bottom:0}
 @media(max-width:960px){.project-document-row{grid-template-columns:36px minmax(0,1fr)}.project-document-row>.btn{grid-column:2}.meeting-list-hero{align-items:flex-start}}
+
+
+/* Registro Executivo V2 */
+.executive-shell{overflow:hidden;border-color:#dfe6ef}
+.executive-shell-head{background:linear-gradient(135deg,#10213b 0%,#18365f 100%);color:#fff;border-bottom:0;padding:18px 20px}
+.executive-shell-head h3{margin:2px 0 4px;color:#fff;font-size:20px}
+.executive-shell-head .muted{color:#cfdaea}
+.executive-shell-kicker{font-size:9px;font-weight:900;letter-spacing:.16em;color:#9fc0ff}
+.executive-document{display:grid;gap:18px}
+.executive-summary-hero{position:relative;padding:22px 24px 22px 28px;border-radius:14px;background:linear-gradient(135deg,#eef4ff 0%,#f8fbff 100%);border:1px solid #cfdcf6;overflow:hidden}
+.executive-summary-hero:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:#285bc7}
+.executive-section-eyebrow{font-size:9px;font-weight:900;letter-spacing:.14em;color:#285bc7;margin-bottom:10px}
+.executive-summary-text{font-size:14px;line-height:1.7;color:#25374c;font-weight:550}
+.executive-section{display:grid;gap:12px}
+.executive-section-title{font-size:17px;font-weight:900;color:#142b47;letter-spacing:-.01em}
+.executive-points-grid{display:grid;gap:9px}
+.executive-point-card{display:grid;grid-template-columns:42px minmax(0,1fr);gap:12px;align-items:flex-start;padding:14px 15px;border:1px solid #e1e7ef;border-radius:12px;background:#fff}
+.executive-point-card.decision{border-color:#cee9dd;background:#fbfffd}
+.executive-point-number{width:34px;height:30px;border-radius:8px;background:#285bc7;color:#fff;display:grid;place-items:center;font-size:10px;font-weight:900;letter-spacing:.05em}
+.executive-point-card.decision .executive-point-number{background:#16805a}
+.executive-point-type{font-size:8px;font-weight:900;letter-spacing:.12em;color:#285bc7;margin:1px 0 5px}
+.executive-point-card.decision .executive-point-type{color:#16805a}
+.executive-point-text{font-size:12px;line-height:1.55;color:#2c3d50}
+.executive-next-table{border:1px solid #e0e6ee;border-radius:12px;overflow:hidden;background:#fff}
+.executive-next-head,.executive-next-row{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(120px,.7fr) minmax(100px,.55fr);gap:0}
+.executive-next-head{background:#10213b;color:#fff;font-size:8px;font-weight:900;letter-spacing:.08em}
+.executive-next-head>div{padding:10px 12px}
+.executive-next-row{border-top:1px solid #e7ebf0;font-size:11px;color:#415267}
+.executive-next-row>div{padding:12px}
+.executive-next-row b{font-weight:800;color:#26374a}
+.executive-attention{padding:17px 18px;border-radius:12px;background:#fff7e7;border:1px solid #efd8ac}
+.executive-attention .executive-section-eyebrow{color:#996313;margin-bottom:8px}
+.executive-attention ul{margin:0;padding-left:20px;display:grid;gap:7px;font-size:12px;line-height:1.5;color:#4a4030}
+.executive-long-summary{padding-top:3px}
+.executive-long-summary .meeting-full-summary{padding:16px 18px;border:1px solid #e4e9ef;border-radius:12px;background:#fff}
+.executive-long-summary .meeting-full-summary p{font-size:12.5px;line-height:1.72;color:#34465a;margin:0 0 13px}
+.executive-long-summary .meeting-full-summary p:last-child{margin-bottom:0}
+.executive-empty{padding:14px 15px;border:1px dashed #d6dee8;border-radius:10px;background:#fafbfd;color:#7a8796;font-size:11px}
+.executive-legacy-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:10px;background:#fff8e9;border:1px solid #ecd7ad;color:#74551c}
+.executive-legacy-banner b{display:block;font-size:11px;margin-bottom:2px}
+.executive-legacy-banner span{font-size:10px}
+.meeting-document-actions{padding-top:4px}
+@media(max-width:760px){
+  .executive-next-head{display:none}
+  .executive-next-row{grid-template-columns:1fr}
+  .executive-next-row>div{padding:7px 12px}
+  .executive-next-row>div:first-child{padding-top:12px}
+  .executive-next-row>div:last-child{padding-bottom:12px}
+  .executive-point-card{grid-template-columns:36px minmax(0,1fr)}
+  .executive-summary-hero{padding:18px 18px 18px 23px}
+  .executive-summary-text{font-size:13px}
+}
