@@ -132,6 +132,20 @@
       </div>`:''}</div></div>`;
   }
 
+  function v9ExecutiveMetrics(d){
+    const doc=d.aiDocument||{};
+    const decisions=(doc.keyPoints||[]).filter(x=>x?.type==='decision').length;
+    const next=(doc.nextSteps||[]).length;
+    const attention=(doc.attentionPoints||[]).length;
+    const docs=(d.attachments||[]).length;
+    return `<div class="kaz-exec-metrics">
+      <div><b>${decisions}</b><span>DECISÕES</span></div>
+      <div><b>${next}</b><span>PRÓXIMOS PASSOS</span></div>
+      <div><b>${attention}</b><span>ATENÇÕES</span></div>
+      <div><b>${docs}</b><span>DOCUMENTOS</span></div>
+    </div>`;
+  }
+
   function v9AiDocument(d){
     const doc=d.aiDocument||{},processed=Boolean(d.review?.aiProcessed);
     if(!processed){
@@ -143,15 +157,26 @@
     const points=Array.isArray(doc.keyPoints)?doc.keyPoints.filter(x=>x&&String(x.text||'').trim()):[];
     const nextSteps=Array.isArray(doc.nextSteps)?doc.nextSteps.filter(x=>x&&String(x.text||'').trim()):[];
     const attention=Array.isArray(doc.attentionPoints)?doc.attentionPoints.filter(Boolean):[];
+    const evolution=Array.isArray(doc.evolution)?doc.evolution.filter(x=>x&&String(x.text||'').trim()):[];
+    const roadmap=Array.isArray(doc.roadmapImpact)?doc.roadmapImpact.filter(x=>x&&String(x.text||'').trim()):[];
     const complete=String(doc.meetingSummary||'').trim();
     const paragraphs=complete.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);
+
+    const evoLabels={completed:'CONCLUÍDO',advanced:'AVANÇOU',pending:'PERMANECE PENDENTE'};
+    const evolutionHtml=evolution.length?`<section class="kaz-exec-section">
+      <div class="kaz-exec-title">Evolução desde a última reunião</div>
+      <div class="kaz-evolution-list">${evolution.map(item=>`<div class="kaz-evolution-item ${item.status}">
+        <div class="kaz-evolution-label">${evoLabels[item.status]||'EVOLUÇÃO'}</div>
+        <div>${esc(item.text)}</div>
+      </div>`).join('')}</div>
+    </section>`:'';
 
     const keyPointsHtml=points.length
       ?`<div class="executive-points-grid">${points.map((item,index)=>`
         <div class="executive-point-card ${item.type==='decision'?'decision':''}">
           <div class="executive-point-number">${String(index+1).padStart(2,'0')}</div>
           <div class="executive-point-content">
-            <div class="executive-point-type">${item.type==='decision'?'DECISÃO':'IMPORTANTE'}</div>
+            <div class="executive-point-type">${item.type==='decision'?'DECISÃO':'PONTO ESTRATÉGICO'}</div>
             <div class="executive-point-text">${esc(item.text)}</div>
           </div>
         </div>`).join('')}</div>`
@@ -159,7 +184,7 @@
 
     const nextStepsHtml=nextSteps.length
       ?`<div class="executive-next-table">
-        <div class="executive-next-head"><div>PRÓXIMO PASSO</div><div>RESPONSÁVEL</div><div>PRAZO</div></div>
+        <div class="executive-next-head"><div>AÇÃO</div><div>RESPONSÁVEL</div><div>PRAZO</div></div>
         ${nextSteps.map(item=>`<div class="executive-next-row">
           <div><b>${esc(item.text)}</b></div>
           <div>${esc(item.responsible||'—')}</div>
@@ -169,55 +194,73 @@
       :'<div class="executive-empty">Nenhuma pendência ou próximo passo foi identificado com segurança.</div>';
 
     const attentionHtml=attention.length
-      ?`<div class="executive-attention"><div class="executive-section-eyebrow">PONTOS DE ATENÇÃO</div>
-        <ul>${attention.map(item=>`<li>${esc(item)}</li>`).join('')}</ul></div>`
+      ?`<section class="kaz-attention-block"><div class="kaz-attention-kicker">ATENÇÃO</div>
+        <ul>${attention.map(item=>`<li>${esc(item)}</li>`).join('')}</ul></section>`
       :'';
 
-    return `<div class="meeting-ai-document executive-document">
+    const impactLabels={advance:'AVANÇO',decision:'DECISÃO',pending:'PENDÊNCIA',risk:'RISCO'};
+    const roadmapHtml=`<section class="kaz-exec-section">
+      <div class="kaz-exec-title">Impacto no Roadmap do Sucesso</div>
+      <div class="muted small" style="margin-top:-6px">Leitura executiva; não altera automaticamente o Roadmap.</div>
+      ${roadmap.length?`<div class="kaz-roadmap-impact">${roadmap.map(item=>`<div class="kaz-roadmap-impact-row ${item.impactType}">
+        <div class="kaz-impact-label">${impactLabels[item.impactType]||'IMPACTO'}</div>
+        <div><b>${esc(item.milestoneName||'Marco')}</b><p>${esc(item.text)}</p></div>
+      </div>`).join('')}</div>`:'<div class="executive-empty">Nenhum impacto claro no Roadmap do Sucesso foi identificado.</div>'}
+    </section>`;
+
+    return `<div class="meeting-ai-document executive-document kaz-exec-document">
       ${legacy?`<div class="executive-legacy-banner">
-        <div><b>Resumo no padrão anterior</b><span>Reprocesse esta reunião para aplicar o novo Registro Executivo.</span></div>
+        <div><b>Resumo no padrão anterior</b><span>Reprocesse esta reunião para aplicar o Registro Executivo completo.</span></div>
       </div>`:''}
 
-      <section class="executive-summary-hero">
-        <div class="executive-section-eyebrow">RESUMO EXECUTIVO</div>
-        <div class="executive-summary-text">${executive?esc(executive):'Resumo executivo não disponível.'}</div>
+      <section class="kaz-exec-summary">
+        <div class="kaz-exec-kicker">RESUMO EXECUTIVO</div>
+        <div class="kaz-exec-summary-text">${executive?esc(executive):'Resumo executivo não disponível.'}</div>
       </section>
 
-      <section class="executive-section">
-        <div class="executive-section-title">Decisões e pontos importantes</div>
+      ${v9ExecutiveMetrics(d)}
+      ${evolutionHtml}
+
+      <section class="kaz-exec-section">
+        <div class="kaz-exec-title">Decisões e pontos estratégicos</div>
         ${keyPointsHtml}
       </section>
 
-      <section class="executive-section">
-        <div class="executive-section-title">Pendências e próximos passos</div>
+      <section class="kaz-exec-section">
+        <div class="kaz-exec-title">Pendências e próximos passos</div>
         ${nextStepsHtml}
       </section>
 
       ${attentionHtml}
+      ${roadmapHtml}
 
-      <section class="executive-section executive-long-summary">
-        <div class="executive-section-title">Sumário da reunião</div>
+      <section class="kaz-exec-section executive-long-summary">
+        <div class="kaz-exec-title">Sumário da reunião</div>
         <div class="meeting-full-summary">${paragraphs.map(x=>`<p>${esc(x).replace(/\n/g,'<br>')}</p>`).join('')||'<p>Sumário não disponível.</p>'}</div>
       </section>
     </div>`;
   }
 
-  function v9AiBox(d){
+  function v9MeetingTopActions(d){
     const processed=Boolean(d.review?.aiProcessed);
     const legacy=Boolean(d.review?.isLegacyAiDocument);
-    const actionLabel=!processed?'Processar registro executivo':legacy?'Reprocessar no novo padrão':'↻ Reprocessar registro executivo';
-    return `<div class="card meeting-ai-card executive-shell"><div class="card-h executive-shell-head">
-      <div><div class="executive-shell-kicker">REGISTRO EXECUTIVO</div><h3>Reunião</h3><div class="muted small">Síntese de gestão gerada a partir da gravação e dos documentos anexados.</div></div>
+    const actionLabel=!processed?'Processar registro':legacy?'Reprocessar no novo padrão':'↻ Reprocessar';
+    return `<div class="kaz-meeting-top-actions">
+      ${d.canGenerateAi?`<button class="btn blue" onclick="generateV9MeetingSummary()" ${v9MeetingLoading?'disabled':''}>${actionLabel}</button>`:''}
+      ${processed?`<a class="btn light" target="_blank" href="${d.pdfUrl}">Abrir PDF</a>
+        <a class="btn light" href="${d.pdfUrl}?download=1">Baixar PDF</a>
+        <button class="btn light" onclick="shareV9MeetingPdf()">Compartilhar PDF</button>`:''}
+    </div>`;
+  }
+
+  function v9AiBox(d){
+    const processed=Boolean(d.review?.aiProcessed);
+    return `<div class="card meeting-ai-card executive-shell kaz-exec-shell"><div class="card-h executive-shell-head kaz-exec-head">
+      <div><div class="executive-shell-kicker">REGISTRO EXECUTIVO</div><h3>Resumo da reunião</h3><div class="muted small">Síntese de gestão da reunião e seu impacto no projeto.</div></div>
       <div class="flex wrap">${v9AiBadge(processed)}</div>
     </div><div class="pad">
       ${v9MeetingStatus?`<div class="info" style="margin-bottom:12px">${esc(v9MeetingStatus)}</div>`:''}
       ${v9AiDocument(d)}
-      <div class="actions meeting-document-actions">
-        ${d.canGenerateAi?`<button class="btn blue" onclick="generateV9MeetingSummary()" ${v9MeetingLoading?'disabled':''}>${actionLabel}</button>`:''}
-        ${processed?`<a class="btn light" target="_blank" href="${d.pdfUrl}">Abrir PDF executivo</a>
-          <a class="btn light" href="${d.pdfUrl}?download=1">Baixar PDF</a>
-          <button class="btn light" onclick="shareV9MeetingPdf()">Compartilhar PDF</button>`:''}
-      </div>
     </div></div>`;
   }
 
@@ -241,14 +284,18 @@
     }
     const d=v9MeetingDetail;if(!d){renderV9MeetingList();return}
     root.innerHTML=`<button class="btn light small" onclick="openMeetingHome()">← Reuniões</button>
-      <div class="detail-head meeting-archive-head" style="margin-top:15px">
-        <div><div class="muted small" style="text-transform:uppercase">Reunião</div><h1>${esc(d.projectName)}</h1>
-          <div class="muted small">${v9Date(d.date)} · ${v9Duration(d.durationSeconds)} · ${esc(d.createdBy||'')}</div></div>
-        <div class="flex wrap">${v9MeetingStatusBadge(d.meetingStatus)}${v9AiBadge(d.review?.aiProcessed)}</div>
+      <div class="kaz-meeting-exec-header">
+        <div>
+          <div class="kaz-exec-kicker">TRANSFORMAÇÃO KAZ · REUNIÃO</div>
+          <h1>${esc(d.projectName)}</h1>
+          <div class="muted small">${v9Date(d.date)} · ${v9Duration(d.durationSeconds)} · Responsável: ${esc(d.projectOwner||'—')}</div>
+          <div class="flex wrap" style="margin-top:9px">${v9MeetingStatusBadge(d.meetingStatus)}${v9AiBadge(d.review?.aiProcessed)}</div>
+        </div>
+        ${v9MeetingTopActions(d)}
       </div>
-      <div class="card" style="margin-bottom:14px"><div class="card-h"><h3>Compromisso da próxima reunião</h3></div><div class="pad">${v9CommitmentBox(d)}</div></div>
-      ${v9AttachmentsBox(d)}
-      <div style="margin-top:14px">${v9AiBox(d)}</div>
+      ${v9AiBox(d)}
+      <div class="card kaz-next-meeting-card" style="margin-top:14px"><div class="card-h"><h3>Próximo marco · compromisso</h3></div><div class="pad">${v9CommitmentBox(d)}</div></div>
+      <div style="margin-top:14px">${v9AttachmentsBox(d)}</div>
       ${v9AudioBox(d)}`;
     setupV9Audio();
   }
@@ -319,23 +366,94 @@
     audio.onended=()=>{if(v9AudioIndex<segments.length-1){v9AudioIndex++;audio.src=segments[v9AudioIndex].url;audio.play().catch(()=>{})}};
   }
 
+  const v9TabCounts={};
+
+  async function refreshProjectTabCountsV9(projectId){
+    try{
+      const [docs,history]=await Promise.all([
+        api(`/api/projects/${encodeURIComponent(projectId)}/documents`),
+        api('/api/meeting/history')
+      ]);
+      const docCount=(docs.project||[]).length+(docs.roadmap||[]).length+(docs.meetings||[]).length;
+      const meetingCount=(history.meetings||[]).filter(m=>m.registered&&m.projectId===projectId).length;
+      v9TabCounts[projectId]={documents:docCount,meetings:meetingCount};
+      const tabs=$('#projectView .tabs');
+      const docBtn=tabs?.querySelector('[data-v9-documents]');
+      const meetingBtn=tabs?.querySelector('[data-v9-meetings]');
+      if(docBtn)docBtn.textContent=`Documentos (${docCount})`;
+      if(meetingBtn)meetingBtn.textContent=`Reuniões (${meetingCount})`;
+    }catch(e){}
+  }
+
   renderProject=function(){
     previousRenderProjectV9();
     const tabs=$('#projectView .tabs');if(!tabs)return;
-    if(tabs.querySelector('[data-v9-documents]'))return;
-    const roadmap=[...tabs.querySelectorAll('.tab')].find(x=>x.textContent.includes('Roadmap do Sucesso'));
-    const btn=document.createElement('button');
-    btn.className='tab '+(currentTab==='documents'?'active':'');
-    btn.dataset.v9Documents='1';
-    btn.textContent='Documentos';
-    btn.onclick=()=>projectTab('documents');
-    if(roadmap?.nextSibling)tabs.insertBefore(btn,roadmap.nextSibling);else tabs.appendChild(btn);
-    if(currentTab==='documents')tabs.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===btn));
+    const p=project(currentProjectId);if(!p)return;
+
+    let docBtn=tabs.querySelector('[data-v9-documents]');
+    if(!docBtn){
+      const roadmap=[...tabs.querySelectorAll('.tab')].find(x=>x.textContent.includes('Roadmap do Sucesso'));
+      docBtn=document.createElement('button');
+      docBtn.className='tab';
+      docBtn.dataset.v9Documents='1';
+      docBtn.onclick=()=>projectTab('documents');
+      if(roadmap?.nextSibling)tabs.insertBefore(docBtn,roadmap.nextSibling);else tabs.appendChild(docBtn);
+    }
+
+    let meetingBtn=tabs.querySelector('[data-v9-meetings]');
+    if(!meetingBtn){
+      const pending=[...tabs.querySelectorAll('.tab')].find(x=>x.textContent.includes('Pendências'));
+      meetingBtn=document.createElement('button');
+      meetingBtn.className='tab';
+      meetingBtn.dataset.v9Meetings='1';
+      meetingBtn.onclick=()=>projectTab('meetings');
+      if(pending?.nextSibling)tabs.insertBefore(meetingBtn,pending.nextSibling);else tabs.appendChild(meetingBtn);
+    }
+
+    const counts=v9TabCounts[p.id]||{};
+    docBtn.textContent=`Documentos (${counts.documents??'…'})`;
+    meetingBtn.textContent=`Reuniões (${counts.meetings??'…'})`;
+    tabs.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',
+      currentTab==='documents'?x===docBtn:currentTab==='meetings'?x===meetingBtn:x.classList.contains('active')
+    ));
+    refreshProjectTabCountsV9(p.id);
   };
 
   renderProjectPanel=function(){
     if(currentTab==='documents'){renderProjectDocumentsV9();return}
+    if(currentTab==='meetings'){renderProjectMeetingsV9();return}
     previousRenderProjectPanelV9();
+  };
+
+  function renderProjectMeetingsV9(){
+    const p=project(currentProjectId),root=$('#projectPanel');if(!p||!root)return;
+    root.innerHTML=`<div class="section-title"><div><h2>Reuniões</h2><div class="muted small">Histórico de reuniões deste projeto.</div></div></div>
+      <div class="card"><div class="pad" id="projectMeetingsV9"><div class="empty">Carregando reuniões…</div></div></div>`;
+    loadProjectMeetingsV9();
+  }
+
+  async function loadProjectMeetingsV9(){
+    const box=$('#projectMeetingsV9');if(!box)return;
+    try{
+      const j=await api('/api/meeting/history');
+      const rows=(j.meetings||[]).filter(m=>m.registered&&m.projectId===currentProjectId);
+      if(!rows.length){box.innerHTML='<div class="empty">Nenhuma reunião registrada neste projeto.</div>';return}
+      box.innerHTML=`<div class="meeting-archive-table-wrap"><table class="project-table meeting-archive-table">
+        <thead><tr><th>Data</th><th>Duração</th><th>Status</th><th>Resumo IA</th><th></th></tr></thead>
+        <tbody>${rows.map(m=>`<tr class="clickable" onclick="openProjectMeetingV9('${m.id}')">
+          <td><b>${v9Date(m.date)}</b></td>
+          <td>${v9Duration(m.durationSeconds)}</td>
+          <td>${v9MeetingStatusBadge(m.meetingStatus)}</td>
+          <td>${v9AiBadge(m.aiProcessed)}</td>
+          <td style="text-align:right"><button class="btn light small" onclick="event.stopPropagation();openProjectMeetingV9('${m.id}')">Abrir →</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+    }catch(e){box.innerHTML=`<div class="empty">${esc(e.message)}</div>`}
+  }
+
+  window.openProjectMeetingV9=function(sessionId){
+    showView('meeting');
+    setTimeout(()=>openMeetingArchive(sessionId),0);
   };
 
   function docRow(a,meta){
