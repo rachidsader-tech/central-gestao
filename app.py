@@ -859,6 +859,10 @@ project_success.register(__import__("app"))
 import meeting_history
 meeting_history.register(__import__("app"))
 
+# Documentos do projeto + pós-reunião definitivo V9
+import meeting_documents_v9
+meeting_documents_v9.register(__import__("app"))
+
 # Validação não bloqueante da IA em uma reunião histórica migrada
 import legacy_ai_validation
 legacy_ai_validation.start()
