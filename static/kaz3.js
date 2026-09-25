@@ -192,7 +192,7 @@ function renderHelp(){
 }
 function tutorialRows(){
   const rows=isDirection?[
-    ['Início','Radar executivo dos 7 projetos, marcos, riscos e pendências ativas.'],
+    ['Início','Radar executivo dos projetos, Roadmap, riscos e pendências ativas.'],
     ['Todos os projetos','Abra qualquer projeto para consultar ou alterar seu andamento.'],
     ['Pendências da Diretoria','Caixa de entrada conjunta da Diretoria, preservando um diretor responsável por pendência.'],
     ['Modo Reunião','Conduza o ritual de quarta-feira e registre decisões e compromissos.'],
@@ -210,7 +210,7 @@ function tutorialRows(){
 let tutorialIndex=0;
 function tutorialSteps(){
   return isDirection?[
-    {title:'Início — Visão da Transformação',view:'home',text:'Aqui a Diretoria enxerga os sete projetos juntos. Use a tela como radar: situação, evolução dos marcos, riscos e pendências.'},
+    {title:'Início — Visão da Transformação',view:'home',text:'Aqui a Diretoria enxerga os projetos juntos. Use a tela como radar: situação, evolução dos marcos, riscos e pendências.'},
     {title:'Projetos',view:'projects',text:'Abra qualquer projeto para analisar objetivo, marcos, compromissos e histórico. A Diretoria pode editar todos.'},
     {title:'Pendências da Diretoria',view:'director',text:'Todas as pendências chegam aqui. Existe um único diretor responsável, mas os quatro podem analisar e responder em conjunto.'},
     {title:'Modo Reunião',view:'meeting',text:'Na quarta-feira, selecione o projeto, revise a semana anterior, ligue o microfone durante a apresentação, revise o resumo e feche a próxima semana.'},
