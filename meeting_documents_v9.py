@@ -997,26 +997,28 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
         encoded = raw.encode('cp1252', errors='replace').decode('latin1')
         return encoded.replace('\\', '\\\\').replace('(', '\\(').replace(')', '\\)')
 
-    def _native_meeting_pdf(project_name, date_text, created_by, duration_text, meeting_status, document, commitment, attachments):
+    def _native_meeting_pdf(project_name, date_text, owner_name, duration_text, meeting_status, document, commitment, attachments):
         width, height = 595.28, 841.89
-        left, right, top, bottom = 46.0, 46.0, 46.0, 50.0
+        left, right, top, bottom = 44.0, 44.0, 42.0, 48.0
         content_width = width - left - right
         y = height - top
         pages = [[]]
 
-        NAVY = '#10213B'
-        BLUE = '#285BC7'
-        BLUE_SOFT = '#EEF4FF'
-        BLUE_BORDER = '#CEDBFA'
-        TEXT = '#26374A'
-        MUTED = '#6A788A'
-        LINE = '#E3E9F0'
-        GREEN = '#16805A'
-        GREEN_SOFT = '#EAF8F2'
-        AMBER = '#9A6413'
-        AMBER_SOFT = '#FFF7E7'
-        PANEL = '#F7F9FC'
+        # Brandbook KAZ — aplicação executiva
+        FUCHSIA = '#FF0084'
+        BLACK = '#0A0C11'
+        ICE = '#F4F4F4'
         WHITE = '#FFFFFF'
+        TEXT = '#222630'
+        MUTED = '#767C87'
+        LINE = '#E4E4E6'
+        SOFT_PINK = '#FFF0F7'
+        GREEN = '#24765A'
+        GREEN_SOFT = '#EAF7F1'
+        AMBER = '#9A6514'
+        AMBER_SOFT = '#FFF6E5'
+        RED = '#A83A4A'
+        RED_SOFT = '#FFF0F2'
 
         def rgb(hex_value):
             value = hex_value.lstrip('#')
@@ -1028,13 +1030,12 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
             y = height - top
 
         def ensure_space(required):
-            nonlocal y
-            if y - required < bottom + 22:
+            if y - required < bottom + 20:
                 new_page()
                 return True
             return False
 
-        def rect(x, y0, w, h, fill=None, stroke=None, line_width=0.8):
+        def rect(x, y0, w, h, fill=None, stroke=None, line_width=0.7):
             cmd = []
             if fill:
                 r, g, b = rgb(fill)
@@ -1046,7 +1047,7 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
             cmd.append(f'{x:.2f} {y0:.2f} {w:.2f} {h:.2f} re {op}')
             pages[-1].append(' '.join(cmd))
 
-        def line(x1, y1, x2, y2, color=LINE, line_width=0.7):
+        def line(x1, y1, x2, y2, color=LINE, line_width=0.6):
             r, g, b = rgb(color)
             pages[-1].append(f'{line_width:.2f} w {r:.3f} {g:.3f} {b:.3f} RG {x1:.2f} {y1:.2f} m {x2:.2f} {y2:.2f} l S')
 
@@ -1058,12 +1059,30 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                 f'BT /{font} {size:.2f} Tf {r:.3f} {g:.3f} {b:.3f} rg 1 0 0 1 {x:.2f} {baseline:.2f} Tm ({safe}) Tj ET'
             )
 
+        def bolt(x, y0, scale=1.0, color=FUCHSIA):
+            r, g, b = rgb(color)
+            pts = [
+                (x+7*scale, y0+25*scale),
+                (x+18*scale, y0+25*scale),
+                (x+13*scale, y0+15*scale),
+                (x+22*scale, y0+15*scale),
+                (x+5*scale, y0),
+                (x+10*scale, y0+10*scale),
+                (x+2*scale, y0+10*scale),
+            ]
+            cmd = [f'{r:.3f} {g:.3f} {b:.3f} rg']
+            cmd.append(f'{pts[0][0]:.2f} {pts[0][1]:.2f} m')
+            for px, py in pts[1:]:
+                cmd.append(f'{px:.2f} {py:.2f} l')
+            cmd.append('h f')
+            pages[-1].append(' '.join(cmd))
+
         def wrapped(value, size=10, max_width=None):
             value = str(value or '').strip()
             if not value:
                 return []
             max_width = max_width or content_width
-            avg = max(size * 0.49, 4.3)
+            avg = max(size * 0.49, 4.2)
             max_chars = max(18, int(max_width / avg))
             result = []
             for paragraph in re.split(r'\n\s*\n|\n', value):
@@ -1080,215 +1099,294 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                 ) or [''])
             return result
 
-        def section_label(title, subtitle=''):
+        def section_title(title, subtitle=''):
             nonlocal y
             ensure_space(42)
-            text_line(title.upper(), left, y, 9.2, True, BLUE)
-            y -= 14
+            bolt(left, y-16, .55, FUCHSIA)
+            text_line(title.upper(), left+18, y, 10.2, True, BLACK)
+            y -= 16
             if subtitle:
-                for row in wrapped(subtitle, 8.2, content_width):
-                    text_line(row, left, y, 8.2, False, MUTED)
+                for row in wrapped(subtitle, 8.2, content_width-18):
+                    text_line(row, left+18, y, 8.2, False, MUTED)
                     y -= 11
-            y -= 4
+            y -= 5
+
+        def paragraph_block(value, size=9.5):
+            nonlocal y
+            paragraphs = [p.strip() for p in re.split(r'\n\s*\n', str(value or '')) if p.strip()]
+            for paragraph in paragraphs:
+                rows = wrapped(paragraph, size, content_width)
+                ensure_space(max(28, len(rows)*14 + 10))
+                for row in rows:
+                    text_line(row, left, y, size, False, TEXT)
+                    y -= 14
+                y -= 8
 
         def executive_card(body):
             nonlocal y
-            rows = wrapped(body, 10.5, content_width - 40)
-            card_h = 34 + max(1, len(rows)) * 15
-            ensure_space(card_h + 16)
-            rect(left, y-card_h+8, content_width, card_h, BLUE_SOFT, BLUE_BORDER, 0.8)
-            rect(left, y-card_h+8, 5, card_h, BLUE, None)
-            text_line('RESUMO EXECUTIVO', left+20, y-13, 8.8, True, BLUE)
-            baseline = y-35
+            rows = wrapped(body, 10.5, content_width-46)
+            card_h = 40 + max(1, len(rows))*15
+            ensure_space(card_h+12)
+            rect(left, y-card_h+6, content_width, card_h, ICE, LINE, 0.7)
+            rect(left, y-card_h+6, 7, card_h, FUCHSIA, None)
+            text_line('RESUMO EXECUTIVO', left+23, y-15, 8.6, True, FUCHSIA)
+            baseline = y-38
             for row in rows:
-                if row:
-                    text_line(row, left+20, baseline, 10.5, False, TEXT)
+                text_line(row, left+23, baseline, 10.5, False, BLACK)
                 baseline -= 15
             y -= card_h + 10
 
-        def numbered_point(number, point_type, body):
+        def metrics_row():
             nonlocal y
-            rows = wrapped(body, 9.7, content_width - 82)
-            card_h = 26 + max(1, len(rows))*13
-            ensure_space(card_h + 8)
-            rect(left, y-card_h+6, content_width, card_h, WHITE, LINE, 0.8)
-            rect(left+12, y-24, 26, 22, BLUE, None)
-            text_line(str(number).zfill(2), left+18, y-18, 8.5, True, WHITE)
-            label = 'DECISÃO' if point_type == 'decision' else 'IMPORTANTE'
-            label_color = GREEN if point_type == 'decision' else BLUE
-            text_line(label, left+52, y-12, 7.8, True, label_color)
-            baseline=y-30
-            for row in rows:
-                text_line(row, left+52, baseline, 9.7, False, TEXT)
-                baseline -= 13
-            y -= card_h + 6
+            decisions = len([p for p in (document.get('keyPoints') or []) if p.get('type') == 'decision'])
+            next_count = len(document.get('nextSteps') or [])
+            attention_count = len(document.get('attentionPoints') or [])
+            docs_count = len(attachments or [])
+            values = [
+                (str(decisions), 'DECISÕES'),
+                (str(next_count), 'PRÓXIMOS PASSOS'),
+                (str(attention_count), 'ATENÇÕES'),
+                (str(docs_count), 'DOCUMENTOS'),
+            ]
+            h = 52
+            ensure_space(h+12)
+            col = content_width/4
+            for idx,(value,label) in enumerate(values):
+                x = left + idx*col
+                rect(x, y-h+5, col-(4 if idx<3 else 0), h, WHITE, LINE, 0.6)
+                text_line(value, x+12, y-19, 18, True, FUCHSIA if idx==0 else BLACK)
+                text_line(label, x+12, y-36, 6.6, True, MUTED)
+            y -= h+13
+
+        def evolution_block(items):
+            nonlocal y
+            if not items:
+                return
+            labels = {
+                'completed': ('CONCLUÍDO', GREEN, GREEN_SOFT),
+                'advanced': ('AVANÇOU', FUCHSIA, SOFT_PINK),
+                'pending': ('PERMANECE PENDENTE', AMBER, AMBER_SOFT),
+            }
+            for item in items:
+                label,color,bg = labels.get(item.get('status'), ('EVOLUÇÃO', BLACK, ICE))
+                rows = wrapped(item.get('text') or '', 9.2, content_width-44)
+                h = 30 + max(1,len(rows))*13
+                ensure_space(h+6)
+                rect(left, y-h+5, content_width, h, bg, None)
+                text_line(label, left+14, y-13, 7.5, True, color)
+                baseline = y-31
+                for row in rows:
+                    text_line(row,left+14,baseline,9.2,False,TEXT)
+                    baseline -= 13
+                y -= h+5
+
+        def numbered_points(items):
+            nonlocal y
+            if not items:
+                rect(left,y-27,content_width,31,ICE,LINE,0.6)
+                text_line('Nenhuma decisão ou ponto estratégico adicional identificado.',left+12,y-15,8.8,False,MUTED)
+                y -= 40
+                return
+            for idx,item in enumerate(items,1):
+                rows = wrapped(item.get('text') or '', 9.5, content_width-92)
+                h = 28 + max(1,len(rows))*13
+                ensure_space(h+7)
+                rect(left,y-h+5,content_width,h,WHITE,LINE,0.6)
+                text_line(str(idx).zfill(2),left+13,y-18,14,True,FUCHSIA)
+                label = 'DECISÃO' if item.get('type') == 'decision' else 'PONTO ESTRATÉGICO'
+                text_line(label,left+54,y-12,7.2,True,GREEN if item.get('type')=='decision' else FUCHSIA)
+                baseline=y-31
+                for row in rows:
+                    text_line(row,left+54,baseline,9.5,False,TEXT)
+                    baseline -= 13
+                y -= h+5
 
         def next_steps_table(items):
             nonlocal y
             if not items:
-                ensure_space(34)
-                rect(left, y-26, content_width, 30, PANEL, LINE, 0.7)
-                text_line('Nenhuma pendência ou próximo passo foi identificado com segurança.', left+12, y-14, 9, False, MUTED)
-                y -= 38
+                rect(left,y-27,content_width,31,ICE,LINE,0.6)
+                text_line('Nenhuma pendência ou próximo passo identificado com segurança.',left+12,y-15,8.8,False,MUTED)
+                y -= 40
                 return
-            col1 = content_width * 0.57
-            col2 = content_width * 0.23
-            col3 = content_width - col1 - col2
-            ensure_space(38)
-            rect(left, y-26, content_width, 30, NAVY, None)
-            text_line('PRÓXIMO PASSO', left+10, y-15, 7.8, True, WHITE)
-            text_line('RESPONSÁVEL', left+col1+10, y-15, 7.8, True, WHITE)
-            text_line('PRAZO', left+col1+col2+10, y-15, 7.8, True, WHITE)
-            y -= 32
+            col1=content_width*.57
+            col2=content_width*.23
+            col3=content_width-col1-col2
+            ensure_space(34)
+            rect(left,y-25,content_width,29,BLACK,None)
+            text_line('AÇÃO',left+10,y-15,7.1,True,WHITE)
+            text_line('RESPONSÁVEL',left+col1+10,y-15,7.1,True,WHITE)
+            text_line('PRAZO',left+col1+col2+10,y-15,7.1,True,WHITE)
+            y -= 31
             for item in items:
-                step_lines=wrapped(item.get('text') or '', 8.8, col1-20)
-                resp_lines=wrapped(item.get('responsible') or '—', 8.5, col2-20)
-                deadline_lines=wrapped(item.get('deadline') or '—', 8.5, col3-20)
-                count=max(len(step_lines),len(resp_lines),len(deadline_lines),1)
-                row_h=16+count*12
-                ensure_space(row_h+4)
-                rect(left, y-row_h+5, content_width, row_h, WHITE, LINE, 0.6)
-                baseline=y-12
-                for idx,row in enumerate(step_lines or ['—']):
-                    text_line(row, left+10, baseline-idx*12, 8.8, False, TEXT)
-                for idx,row in enumerate(resp_lines or ['—']):
-                    text_line(row, left+col1+10, baseline-idx*12, 8.5, False, TEXT)
-                for idx,row in enumerate(deadline_lines or ['—']):
-                    text_line(row, left+col1+col2+10, baseline-idx*12, 8.5, False, TEXT)
-                y -= row_h + 3
+                a=wrapped(item.get('text') or '',8.7,col1-18)
+                b=wrapped(item.get('responsible') or '—',8.4,col2-18)
+                c=wrapped(item.get('deadline') or '—',8.4,col3-18)
+                count=max(len(a),len(b),len(c),1)
+                h=15+count*12
+                ensure_space(h+3)
+                rect(left,y-h+5,content_width,h,WHITE,LINE,0.55)
+                base=y-11
+                for i,row in enumerate(a or ['—']): text_line(row,left+10,base-i*12,8.7,False,TEXT)
+                for i,row in enumerate(b or ['—']): text_line(row,left+col1+10,base-i*12,8.4,False,TEXT)
+                for i,row in enumerate(c or ['—']): text_line(row,left+col1+col2+10,base-i*12,8.4,False,TEXT)
+                y -= h+2
 
-        def attention_card(items):
+        def attention_block(items):
             nonlocal y
             if not items:
                 return
-            blocks=[]
-            total_lines=0
+            total=0
+            rows_by=[]
             for item in items:
-                lines=wrapped(item,9.2,content_width-44)
-                blocks.append(lines)
-                total_lines += max(1,len(lines))
-            card_h=30+total_lines*13+len(items)*5
-            ensure_space(card_h+12)
-            rect(left,y-card_h+6,content_width,card_h,AMBER_SOFT,'#F0D7A8',0.8)
-            text_line('PONTOS DE ATENÇÃO',left+16,y-13,8.7,True,AMBER)
-            baseline=y-34
-            for lines in blocks:
-                text_line('•',left+17,baseline,9.5,True,AMBER)
-                for idx,row in enumerate(lines):
-                    text_line(row,left+31,baseline-idx*13,9.2,False,TEXT)
-                baseline -= max(1,len(lines))*13+5
-            y -= card_h+9
+                rows=wrapped(item,9.2,content_width-42)
+                rows_by.append(rows); total += max(1,len(rows))
+            h=28+total*13+len(items)*5
+            ensure_space(h+8)
+            rect(left,y-h+5,content_width,h,BLACK,None)
+            text_line('ATENÇÃO',left+14,y-13,8.2,True,FUCHSIA)
+            base=y-34
+            for rows in rows_by:
+                text_line('•',left+15,base,9.5,True,FUCHSIA)
+                for i,row in enumerate(rows):
+                    text_line(row,left+29,base-i*13,9.2,False,WHITE)
+                base -= max(1,len(rows))*13+5
+            y -= h+8
 
-        def body_paragraphs(value):
+        def roadmap_block(items):
             nonlocal y
-            paragraphs=[p.strip() for p in re.split(r'\n\s*\n',str(value or '')) if p.strip()]
-            for paragraph in paragraphs:
-                rows=wrapped(paragraph,9.6,content_width)
-                ensure_space(max(32,len(rows)*14+12))
-                for row in rows:
-                    text_line(row,left,y,9.6,False,TEXT)
-                    y-=14
-                y-=8
+            labels = {
+                'advance': ('AVANÇO', FUCHSIA),
+                'decision': ('DECISÃO', GREEN),
+                'pending': ('PENDÊNCIA', AMBER),
+                'risk': ('RISCO', RED),
+            }
+            if not items:
+                rect(left,y-27,content_width,31,ICE,LINE,0.6)
+                text_line('Nenhum impacto claro no Roadmap do Sucesso foi identificado.',left+12,y-15,8.8,False,MUTED)
+                y -= 40
+                return
+            for item in items:
+                label,color=labels.get(item.get('impactType'),('IMPACTO',BLACK))
+                title_rows=wrapped(item.get('milestoneName') or 'Marco',9.3,content_width-145)
+                body_rows=wrapped(item.get('text') or '',8.8,content_width-34)
+                h=34+len(title_rows)*12+len(body_rows)*12
+                ensure_space(h+5)
+                rect(left,y-h+5,content_width,h,ICE,None)
+                text_line(label,left+14,y-13,7.4,True,color)
+                for i,row in enumerate(title_rows):
+                    text_line(row,left+80,y-13-i*12,9.3,True,BLACK)
+                base=y-30-len(title_rows)*12
+                for i,row in enumerate(body_rows):
+                    text_line(row,left+14,base-i*12,8.8,False,TEXT)
+                y -= h+5
 
         def commitment_card(value):
             nonlocal y
             if not value:
                 return
-            rows=wrapped(value,10,content_width-40)
-            card_h=34+len(rows)*14
-            ensure_space(card_h+12)
-            rect(left,y-card_h+6,content_width,card_h,NAVY,None)
-            text_line('PRÓXIMA REUNIÃO · COMPROMISSO',left+18,y-13,8.3,True,'#9EC1FF')
-            baseline=y-35
+            rows=wrapped(value,10.2,content_width-50)
+            h=38+len(rows)*15
+            ensure_space(h+10)
+            rect(left,y-h+5,content_width,h,FUCHSIA,None)
+            bolt(left+14,y-31,.55,WHITE)
+            text_line('PRÓXIMO MARCO',left+34,y-14,8.2,True,WHITE)
+            base=y-38
             for row in rows:
-                text_line(row,left+18,baseline,10,True,WHITE)
-                baseline-=14
-            y-=card_h+10
+                text_line(row,left+18,base,10.2,True,WHITE)
+                base -= 15
+            y -= h+10
 
         def attachments_block(items):
             nonlocal y
             if not items:
                 return
-            section_label('Documentos da reunião')
-            for item in items:
-                rows=wrapped(item.get('name') or 'Arquivo',8.8,content_width-95)
-                row_h=max(30,14+len(rows)*11)
-                ensure_space(row_h+3)
-                rect(left,y-row_h+5,content_width,row_h,PANEL,LINE,0.6)
-                text_line('DOC',left+12,y-14,7.2,True,BLUE)
-                for idx,row in enumerate(rows):
-                    text_line(row,left+48,y-12-idx*11,8.8,True,TEXT)
+            for idx,item in enumerate(items,1):
+                rows=wrapped(item.get('name') or 'Arquivo',8.8,content_width-100)
+                h=max(30,15+len(rows)*11)
+                ensure_space(h+3)
+                rect(left,y-h+5,content_width,h,ICE,None)
+                text_line(str(idx).zfill(2),left+12,y-14,8.5,True,FUCHSIA)
+                for i,row in enumerate(rows):
+                    text_line(row,left+47,y-12-i*11,8.8,True,BLACK)
                 meta=item.get('meta') or ''
                 if meta:
-                    text_line(meta,left+48,y-row_h+13,7.5,False,MUTED)
-                y-=row_h+4
+                    text_line(meta,left+47,y-h+13,7.4,False,MUTED)
+                y -= h+3
 
-        # Cabeçalho editorial
-        header_h=124
-        rect(0,height-header_h,width,header_h,NAVY,None)
-        text_line('TRANSFORMAÇÃO KAZ',left,height-34,8.5,True,'#9EC1FF')
-        title_rows=wrapped(project_name,20,content_width-10)[:2]
-        baseline=height-62
+        # Capa/cabeçalho no espírito do brandbook: preto + fúcsia + tipografia de impacto.
+        header_h=148
+        rect(0,height-header_h,width,header_h,BLACK,None)
+        rect(0,height-header_h,11,header_h,FUCHSIA,None)
+        bolt(left,height-52,.95,FUCHSIA)
+        text_line('TRANSFORMAÇÃO KAZ',left+30,height-32,8.2,True,WHITE)
+        text_line('REGISTRO EXECUTIVO',left+30,height-47,7.2,True,FUCHSIA)
+        title_rows=wrapped(project_name.upper(),23,content_width-10)[:2]
+        base=height-78
         for row in title_rows:
-            text_line(row,left,baseline,20,True,WHITE)
-            baseline-=24
-        text_line(f'Reunião de {date_text}',left,height-112,8.6,False,'#D8E4F6')
-        y=height-header_h-22
+            text_line(row,left,base,23,True,WHITE)
+            base -= 26
+        text_line(f'REUNIÃO · {date_text}',left,height-132,8.5,True,ICE)
+        y=height-header_h-18
 
-        # Metadados
-        meta_h=52
-        rect(left,y-meta_h+6,content_width,meta_h,WHITE,LINE,0.8)
+        # Identificação.
+        meta_h=54
+        rect(left,y-meta_h+5,content_width,meta_h,WHITE,LINE,0.6)
         labels=[
-            ('RESPONSÁVEL',created_by or '—'),
+            ('RESPONSÁVEL DO PROJETO',owner_name or '—'),
             ('DURAÇÃO',duration_text or '—'),
             ('STATUS',meeting_status),
-            ('IA','Processado com sucesso'),
+            ('DOCUMENTOS',str(len(attachments or []))),
         ]
-        col=content_width/4
+        widths=[.38,.18,.27,.17]
+        x=left
         for idx,(label,value) in enumerate(labels):
-            x=left+idx*col+10
-            text_line(label,x,y-10,6.8,True,MUTED)
-            value_color=GREEN if label in ('STATUS','IA') else TEXT
-            text_line(value,x,y-27,8.3,True,value_color)
+            w=content_width*widths[idx]
+            text_line(label,x+10,y-11,6.2,True,MUTED)
+            text_line(value,x+10,y-29,8.4,True,FUCHSIA if label=='STATUS' else BLACK)
             if idx:
-                line(left+idx*col,y-meta_h+12,left+idx*col,y-4,LINE,0.6)
-        y-=meta_h+18
+                line(x,y-meta_h+10,x,y-4,LINE,.5)
+            x += w
+        y -= meta_h+14
 
         executive_card(document.get('executiveSummary') or '')
+        metrics_row()
 
-        section_label('Decisões e pontos importantes')
-        points=document.get('keyPoints') or []
-        if points:
-            for idx,item in enumerate(points,1):
-                numbered_point(idx,item.get('type') or 'important',item.get('text') or '')
-        else:
-            rect(left,y-26,content_width,30,PANEL,LINE,0.7)
-            text_line('Nenhuma decisão ou ponto estratégico adicional foi identificado.',left+12,y-14,9,False,MUTED)
-            y-=38
+        if document.get('evolution'):
+            section_title('Evolução desde a última reunião')
+            evolution_block(document.get('evolution') or [])
 
-        section_label('Pendências e próximos passos')
+        section_title('Decisões e pontos estratégicos')
+        numbered_points(document.get('keyPoints') or [])
+
+        section_title('Pendências e próximos passos')
         next_steps_table(document.get('nextSteps') or [])
 
         if document.get('attentionPoints'):
-            section_label('Pontos de atenção')
-            attention_card(document.get('attentionPoints') or [])
+            section_title('Pontos de atenção')
+            attention_block(document.get('attentionPoints') or [])
 
-        section_label('Sumário da reunião','Contexto consolidado para quem não participou da reunião.')
-        body_paragraphs(document.get('meetingSummary') or '')
+        section_title('Impacto no Roadmap do Sucesso','Leitura executiva. Este bloco não altera automaticamente o Roadmap.')
+        roadmap_block(document.get('roadmapImpact') or [])
 
-        commitment_card(commitment)
-        attachments_block(attachments)
+        section_title('Sumário da reunião','Contexto consolidado para quem não participou.')
+        paragraph_block(document.get('meetingSummary') or '',9.5)
 
-        # Rodapé com paginação.
+        if commitment:
+            commitment_card(commitment)
+
+        if attachments:
+            section_title('Documentos da reunião')
+            attachments_block(attachments)
+
         total_pages=len(pages)
         for page_index,commands in enumerate(pages,1):
             line_color=rgb(LINE)
-            commands.append(f'0.6 w {line_color[0]:.3f} {line_color[1]:.3f} {line_color[2]:.3f} RG {left:.2f} 36.00 m {width-right:.2f} 36.00 l S')
-            muted=rgb('#8C99A8')
-            footer_left=_pdf_escape('Transformação KAZ · Registro Executivo da Reunião')
+            commands.append(f'0.5 w {line_color[0]:.3f} {line_color[1]:.3f} {line_color[2]:.3f} RG {left:.2f} 34.00 m {width-right:.2f} 34.00 l S')
+            muted=rgb(MUTED)
+            footer_left=_pdf_escape('TRANSFORMAÇÃO KAZ · REGISTRO EXECUTIVO')
             footer_right=_pdf_escape(f'Página {page_index} de {total_pages}')
-            commands.append(f'BT /F1 7.2 Tf {muted[0]:.3f} {muted[1]:.3f} {muted[2]:.3f} rg 1 0 0 1 {left:.2f} 22.00 Tm ({footer_left}) Tj ET')
-            commands.append(f'BT /F1 7.2 Tf {muted[0]:.3f} {muted[1]:.3f} {muted[2]:.3f} rg 1 0 0 1 {width-right-58:.2f} 22.00 Tm ({footer_right}) Tj ET')
+            commands.append(f'BT /F1 7.0 Tf {muted[0]:.3f} {muted[1]:.3f} {muted[2]:.3f} rg 1 0 0 1 {left:.2f} 21.00 Tm ({footer_left}) Tj ET')
+            commands.append(f'BT /F1 7.0 Tf {muted[0]:.3f} {muted[1]:.3f} {muted[2]:.3f} rg 1 0 0 1 {width-right-58:.2f} 21.00 Tm ({footer_right}) Tj ET')
 
         objects=[None]
         objects.append(b'<< /Type /Catalog /Pages 2 0 R >>')
@@ -1317,7 +1415,6 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
             output.extend(f'{obj_id} 0 obj\n'.encode('ascii'))
             output.extend(objects[obj_id])
             output.extend(b'\nendobj\n')
-
         xref_offset=len(output)
         output.extend(f'xref\n0 {len(objects)}\n'.encode('ascii'))
         output.extend(b'0000000000 65535 f \n')
@@ -1379,7 +1476,7 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
         pdf = _native_meeting_pdf(
             project.get('name') or row['project_id'],
             date_text,
-            row['created_by'] or '',
+            project.get('owner') or '—',
             duration_text,
             meeting_status,
             document,
