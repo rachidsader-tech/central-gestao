@@ -353,3 +353,21 @@ button{cursor:pointer}
   .kaz-exec-metrics>div:nth-child(-n+2){border-bottom:1px solid #ececef}
   .kaz-roadmap-impact-row{grid-template-columns:1fr}
 }
+
+
+/* Registro Executivo V4 · ações sugeridas */
+.kaz-exec-summary-text p{margin:0 0 12px}
+.kaz-exec-summary-text p:last-child{margin-bottom:0}
+.kaz-exec-summary-text strong{font-weight:900;color:#0A0C11}
+.kaz-action-list{display:grid;gap:8px}
+.kaz-action-row{display:grid;grid-template-columns:38px minmax(0,1fr);gap:12px;align-items:start;padding:12px 14px;border:1px solid #e5e5e8;border-radius:10px;background:#fff}
+.kaz-action-row span{font-size:9px;font-weight:900;color:#FF0084;letter-spacing:.06em;padding-top:2px}
+.kaz-action-row b{font-size:12px;line-height:1.55;color:#272a31}
+.project-suggested-actions-list{display:grid;gap:0}
+.project-suggested-action-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;padding:15px 2px;border-bottom:1px solid #ececef;align-items:start}
+.project-suggested-action-row:last-child{border-bottom:0}
+.project-suggested-action-date{font-size:10px;font-weight:850;color:#7a7d85}
+.project-suggested-action-text{font-size:12px;line-height:1.55;color:#262a31;font-weight:650}
+@media(max-width:760px){
+  .project-suggested-action-row{grid-template-columns:1fr;gap:5px}
+}
