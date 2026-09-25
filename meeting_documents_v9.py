@@ -210,7 +210,7 @@ def register(app_module):
             mapped_milestones.append({
                 'id': f'{target_id}-m{pos}',
                 'name': milestone.name,
-                'status': milestone.status if milestone.status in app_module.PROJECT_STATUSES else 'Não iniciado',
+                'status': milestone.status if milestone.status in ('Não iniciado','Em andamento','Em risco','Concluído') else 'Não iniciado',
                 'deadline': milestone.deadline or '',
                 'conclusion': milestone.conclusion or '',
                 'memos': memos,
