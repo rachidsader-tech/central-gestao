@@ -70,38 +70,66 @@ def register(app_module):
         if not isinstance(doc, dict):
             doc = {}
         version = int(saved.get('aiDocumentVersion') or doc.get('version') or 0)
+
+        key_points = []
+        for item in (doc.get('keyPoints') or []):
+            if isinstance(item, dict):
+                text_value = str(item.get('text') or '').strip()
+                if text_value:
+                    key_points.append({
+                        'type': item.get('type') if item.get('type') in ('decision', 'important') else 'important',
+                        'text': text_value,
+                    })
+            elif str(item).strip():
+                key_points.append({'type': 'important', 'text': str(item).strip()})
+
+        next_steps = []
+        for item in (doc.get('nextSteps') or []):
+            if isinstance(item, dict):
+                text_value = str(item.get('text') or '').strip()
+                if text_value:
+                    next_steps.append({
+                        'text': text_value,
+                        'responsible': str(item.get('responsible') or '').strip(),
+                        'deadline': str(item.get('deadline') or '').strip(),
+                    })
+
+        attention = doc.get('attentionPoints') or []
+        if isinstance(attention, str):
+            attention = [line.strip(' -•\t') for line in attention.splitlines() if line.strip()]
+
+        evolution = []
+        for item in (doc.get('evolution') or []):
+            if isinstance(item, dict):
+                text_value = str(item.get('text') or '').strip()
+                status = str(item.get('status') or '').strip()
+                if text_value and status in ('completed', 'advanced', 'pending'):
+                    evolution.append({'status': status, 'text': text_value})
+
+        roadmap_impact = []
+        for item in (doc.get('roadmapImpact') or []):
+            if isinstance(item, dict):
+                text_value = str(item.get('text') or '').strip()
+                milestone_id = str(item.get('milestoneId') or '').strip()
+                milestone_name = str(item.get('milestoneName') or '').strip()
+                impact_type = str(item.get('impactType') or '').strip()
+                if text_value and milestone_id and impact_type in ('advance', 'decision', 'pending', 'risk'):
+                    roadmap_impact.append({
+                        'milestoneId': milestone_id,
+                        'milestoneName': milestone_name,
+                        'impactType': impact_type,
+                        'text': text_value,
+                    })
+
         if version >= 2 or any(key in doc for key in ('executiveSummary', 'keyPoints', 'nextSteps', 'attentionPoints')):
-            key_points = doc.get('keyPoints') or []
-            normalized_points = []
-            for item in key_points:
-                if isinstance(item, dict):
-                    text_value = str(item.get('text') or '').strip()
-                    if text_value:
-                        normalized_points.append({
-                            'type': item.get('type') if item.get('type') in ('decision', 'important') else 'important',
-                            'text': text_value,
-                        })
-                elif str(item).strip():
-                    normalized_points.append({'type': 'important', 'text': str(item).strip()})
-            next_steps = []
-            for item in (doc.get('nextSteps') or []):
-                if isinstance(item, dict):
-                    text_value = str(item.get('text') or '').strip()
-                    if text_value:
-                        next_steps.append({
-                            'text': text_value,
-                            'responsible': str(item.get('responsible') or '').strip(),
-                            'deadline': str(item.get('deadline') or '').strip(),
-                        })
-            attention = doc.get('attentionPoints') or []
-            if isinstance(attention, str):
-                attention = [line.strip(' -•\t') for line in attention.splitlines() if line.strip()]
             return {
-                'version': 2,
+                'version': 3 if version >= 3 or evolution or roadmap_impact else 2,
                 'executiveSummary': str(doc.get('executiveSummary') or '').strip(),
-                'keyPoints': normalized_points,
+                'keyPoints': key_points,
                 'nextSteps': next_steps,
                 'attentionPoints': [str(item).strip() for item in attention if str(item).strip()],
+                'evolution': evolution,
+                'roadmapImpact': roadmap_impact,
                 'meetingSummary': str(doc.get('meetingSummary') or '').strip(),
             }
 
@@ -112,14 +140,29 @@ def register(app_module):
         return {
             'version': 1,
             'executiveSummary': legacy_summary,
-            'keyPoints': [
-                {'type': 'important', 'text': str(item).strip()}
-                for item in legacy_points if str(item).strip()
-            ],
+            'keyPoints': [{'type': 'important', 'text': str(item).strip()} for item in legacy_points if str(item).strip()],
             'nextSteps': [],
             'attentionPoints': [],
+            'evolution': [],
+            'roadmapImpact': [],
             'meetingSummary': str(doc.get('meetingSummary') or legacy_summary).strip(),
         }
+
+    def _previous_project_meeting(payload, project_id, current_session_id):
+        meetings = [
+            item for item in (payload.get('meetings') or [])
+            if item.get('projectId') == project_id
+            and (item.get('audioSessionId') or '') != current_session_id
+        ]
+        current = _saved_meeting(payload, current_session_id, project_id)
+        current_at = (current or {}).get('at') or (current or {}).get('createdAt') or ''
+        if current_at:
+            meetings = [
+                item for item in meetings
+                if ((item.get('at') or item.get('createdAt') or '') < current_at)
+            ]
+        meetings.sort(key=lambda item: item.get('at') or item.get('createdAt') or '', reverse=True)
+        return meetings[0] if meetings else None
 
     def _visible_project_ids(user, payload):
         if not user:
