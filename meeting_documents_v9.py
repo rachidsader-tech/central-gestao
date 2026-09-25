@@ -864,21 +864,131 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
 {'\n\n'.join(docs) if docs else 'Nenhum arquivo com conteúdo textual extraível.'}
 """
         try:
+            response_schema = {
+                'type': 'object',
+                'additionalProperties': False,
+                'properties': {
+                    'executiveSummary': {'type': 'string'},
+                    'evolution': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'object',
+                            'additionalProperties': False,
+                            'properties': {
+                                'status': {'type': 'string', 'enum': ['completed', 'advanced', 'pending']},
+                                'text': {'type': 'string'},
+                            },
+                            'required': ['status', 'text'],
+                        },
+                    },
+                    'keyPoints': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'object',
+                            'additionalProperties': False,
+                            'properties': {
+                                'type': {'type': 'string', 'enum': ['decision', 'important']},
+                                'text': {'type': 'string'},
+                            },
+                            'required': ['type', 'text'],
+                        },
+                    },
+                    'nextSteps': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'object',
+                            'additionalProperties': False,
+                            'properties': {
+                                'text': {'type': 'string'},
+                                'responsible': {'type': 'string'},
+                                'deadline': {'type': 'string'},
+                            },
+                            'required': ['text', 'responsible', 'deadline'],
+                        },
+                    },
+                    'attentionPoints': {
+                        'type': 'array',
+                        'items': {'type': 'string'},
+                    },
+                    'roadmapImpact': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'object',
+                            'additionalProperties': False,
+                            'properties': {
+                                'milestoneId': {'type': 'string'},
+                                'milestoneName': {'type': 'string'},
+                                'impactType': {'type': 'string', 'enum': ['advance', 'decision', 'pending', 'risk']},
+                                'text': {'type': 'string'},
+                            },
+                            'required': ['milestoneId', 'milestoneName', 'impactType', 'text'],
+                        },
+                    },
+                    'meetingSummary': {'type': 'string'},
+                },
+                'required': [
+                    'executiveSummary',
+                    'evolution',
+                    'keyPoints',
+                    'nextSteps',
+                    'attentionPoints',
+                    'roadmapImpact',
+                    'meetingSummary',
+                ],
+            }
+            model = os.environ.get('MEETING_SUMMARY_MODEL', 'gpt-5.6-luna')
+            request_payload = {
+                'model': model,
+                'input': prompt,
+                'max_output_tokens': 7000,
+                'text': {
+                    'format': {
+                        'type': 'json_schema',
+                        'name': 'kaz_meeting_executive_record',
+                        'description': 'Registro executivo estruturado de uma reunião da Transformação KAZ.',
+                        'schema': response_schema,
+                        'strict': True,
+                    }
+                },
+            }
             response = requests.post(
                 'https://api.openai.com/v1/responses',
                 headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-                json={'model': os.environ.get('MEETING_SUMMARY_MODEL', 'gpt-5.6-luna'), 'input': prompt},
+                json=request_payload,
                 timeout=240,
             )
+
+            # Fallback seguro: se o modelo configurado não aceitar JSON Schema,
+            # ainda exigimos JSON válido com JSON mode.
+            if response.status_code == 400:
+                app.logger.warning('Structured Outputs recusado pelo modelo %s; usando JSON mode. %s', model, response.text[:500])
+                fallback_payload = {
+                    'model': model,
+                    'input': prompt,
+                    'max_output_tokens': 7000,
+                    'text': {'format': {'type': 'json_object'}},
+                }
+                response = requests.post(
+                    'https://api.openai.com/v1/responses',
+                    headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+                    json=fallback_payload,
+                    timeout=240,
+                )
+
             if response.status_code >= 400:
                 app.logger.error('Falha no resumo IA executivo V3: %s', response.text[:1000])
                 return jsonify({'error': 'A gravação foi preservada, mas a IA não conseguiu processar o registro executivo.'}), 502
 
-            raw_text = _clean_json_text(_response_text(response.json()))
+            response_payload = response.json()
+            if response_payload.get('status') == 'incomplete':
+                app.logger.error('Resposta IA V3 incompleta: %s', json.dumps(response_payload.get('incomplete_details') or {}, ensure_ascii=False))
+                return jsonify({'error': 'A IA não concluiu o registro executivo. Tente reprocessar novamente.'}), 502
+
+            raw_text = _clean_json_text(_response_text(response_payload))
             try:
                 structured = json.loads(raw_text)
             except Exception:
-                app.logger.error('Resposta IA V3 não era JSON: %s', raw_text[:1000])
+                app.logger.error('Resposta IA V3 não era JSON válido mesmo após Structured Outputs: %s', raw_text[:1500])
                 return jsonify({'error': 'A IA respondeu, mas o registro executivo não veio no formato esperado. Tente reprocessar.'}), 502
 
             executive_summary = str(structured.get('executiveSummary') or '').strip()
