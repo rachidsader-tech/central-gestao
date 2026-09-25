@@ -134,40 +134,87 @@
 
   function v9AiDocument(d){
     const doc=d.aiDocument||{},processed=Boolean(d.review?.aiProcessed);
-    const summary=v9Lines(doc.summary);
-    const points=Array.isArray(doc.importantPoints)?doc.importantPoints.filter(Boolean):v9Lines(doc.importantPoints);
-    const complete=String(doc.meetingSummary||'').trim();
     if(!processed){
-      return `<div class="meeting-ai-empty"><div>${v9AiBadge(false)}</div><p>O resumo ainda não foi processado com sucesso.</p></div>`;
+      return `<div class="meeting-ai-empty"><div>${v9AiBadge(false)}</div><p>O registro executivo ainda não foi processado com sucesso.</p></div>`;
     }
+
+    const legacy=Boolean(d.review?.isLegacyAiDocument);
+    const executive=String(doc.executiveSummary||'').trim();
+    const points=Array.isArray(doc.keyPoints)?doc.keyPoints.filter(x=>x&&String(x.text||'').trim()):[];
+    const nextSteps=Array.isArray(doc.nextSteps)?doc.nextSteps.filter(x=>x&&String(x.text||'').trim()):[];
+    const attention=Array.isArray(doc.attentionPoints)?doc.attentionPoints.filter(Boolean):[];
+    const complete=String(doc.meetingSummary||'').trim();
     const paragraphs=complete.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);
-    return `<div class="meeting-ai-document">
-      <div class="meeting-summary-section">
-        <div class="meeting-doc-kicker">RESUMO DA REUNIÃO</div>
-        <div class="meeting-summary-lines">${summary.map(line=>`<p>${esc(line)}</p>`).join('')||'<p>Resumo não disponível.</p>'}</div>
-      </div>
-      <div class="meeting-summary-section">
-        <div class="meeting-doc-kicker">PONTOS IMPORTANTES</div>
-        ${points.length?`<ul class="meeting-important-points">${points.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<div class="muted small">Nenhum ponto adicional identificado.</div>'}
-      </div>
-      <div class="meeting-summary-section">
-        <div class="meeting-doc-kicker">SUMÁRIO DA REUNIÃO</div>
+
+    const keyPointsHtml=points.length
+      ?`<div class="executive-points-grid">${points.map((item,index)=>`
+        <div class="executive-point-card ${item.type==='decision'?'decision':''}">
+          <div class="executive-point-number">${String(index+1).padStart(2,'0')}</div>
+          <div class="executive-point-content">
+            <div class="executive-point-type">${item.type==='decision'?'DECISÃO':'IMPORTANTE'}</div>
+            <div class="executive-point-text">${esc(item.text)}</div>
+          </div>
+        </div>`).join('')}</div>`
+      :'<div class="executive-empty">Nenhuma decisão ou ponto estratégico adicional foi identificado.</div>';
+
+    const nextStepsHtml=nextSteps.length
+      ?`<div class="executive-next-table">
+        <div class="executive-next-head"><div>PRÓXIMO PASSO</div><div>RESPONSÁVEL</div><div>PRAZO</div></div>
+        ${nextSteps.map(item=>`<div class="executive-next-row">
+          <div><b>${esc(item.text)}</b></div>
+          <div>${esc(item.responsible||'—')}</div>
+          <div>${esc(item.deadline||'—')}</div>
+        </div>`).join('')}
+      </div>`
+      :'<div class="executive-empty">Nenhuma pendência ou próximo passo foi identificado com segurança.</div>';
+
+    const attentionHtml=attention.length
+      ?`<div class="executive-attention"><div class="executive-section-eyebrow">PONTOS DE ATENÇÃO</div>
+        <ul>${attention.map(item=>`<li>${esc(item)}</li>`).join('')}</ul></div>`
+      :'';
+
+    return `<div class="meeting-ai-document executive-document">
+      ${legacy?`<div class="executive-legacy-banner">
+        <div><b>Resumo no padrão anterior</b><span>Reprocesse esta reunião para aplicar o novo Registro Executivo.</span></div>
+      </div>`:''}
+
+      <section class="executive-summary-hero">
+        <div class="executive-section-eyebrow">RESUMO EXECUTIVO</div>
+        <div class="executive-summary-text">${executive?esc(executive):'Resumo executivo não disponível.'}</div>
+      </section>
+
+      <section class="executive-section">
+        <div class="executive-section-title">Decisões e pontos importantes</div>
+        ${keyPointsHtml}
+      </section>
+
+      <section class="executive-section">
+        <div class="executive-section-title">Pendências e próximos passos</div>
+        ${nextStepsHtml}
+      </section>
+
+      ${attentionHtml}
+
+      <section class="executive-section executive-long-summary">
+        <div class="executive-section-title">Sumário da reunião</div>
         <div class="meeting-full-summary">${paragraphs.map(x=>`<p>${esc(x).replace(/\n/g,'<br>')}</p>`).join('')||'<p>Sumário não disponível.</p>'}</div>
-      </div>
+      </section>
     </div>`;
   }
 
   function v9AiBox(d){
     const processed=Boolean(d.review?.aiProcessed);
-    return `<div class="card meeting-ai-card"><div class="card-h">
-      <div><h3>Resumo da reunião</h3><div class="muted small">Documento executivo gerado a partir da gravação e dos arquivos anexados.</div></div>
+    const legacy=Boolean(d.review?.isLegacyAiDocument);
+    const actionLabel=!processed?'Processar registro executivo':legacy?'Reprocessar no novo padrão':'↻ Reprocessar registro executivo';
+    return `<div class="card meeting-ai-card executive-shell"><div class="card-h executive-shell-head">
+      <div><div class="executive-shell-kicker">REGISTRO EXECUTIVO</div><h3>Reunião</h3><div class="muted small">Síntese de gestão gerada a partir da gravação e dos documentos anexados.</div></div>
       <div class="flex wrap">${v9AiBadge(processed)}</div>
     </div><div class="pad">
       ${v9MeetingStatus?`<div class="info" style="margin-bottom:12px">${esc(v9MeetingStatus)}</div>`:''}
       ${v9AiDocument(d)}
       <div class="actions meeting-document-actions">
-        ${d.canGenerateAi?`<button class="btn blue" onclick="generateV9MeetingSummary()" ${v9MeetingLoading?'disabled':''}>${processed?'↻ Reprocessar resumo com IA':'Processar resumo com IA'}</button>`:''}
-        ${processed?`<a class="btn light" target="_blank" href="${d.pdfUrl}">Abrir PDF</a>
+        ${d.canGenerateAi?`<button class="btn blue" onclick="generateV9MeetingSummary()" ${v9MeetingLoading?'disabled':''}>${actionLabel}</button>`:''}
+        ${processed?`<a class="btn light" target="_blank" href="${d.pdfUrl}">Abrir PDF executivo</a>
           <a class="btn light" href="${d.pdfUrl}?download=1">Baixar PDF</a>
           <button class="btn light" onclick="shareV9MeetingPdf()">Compartilhar PDF</button>`:''}
       </div>
