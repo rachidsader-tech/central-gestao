@@ -494,24 +494,33 @@
   const v9TabCounts={};
 
   async function refreshProjectTabCountsV9(projectId){
-    try{
-      const [docs,history,actions]=await Promise.all([
-        api(`/api/projects/${encodeURIComponent(projectId)}/documents`),
-        api('/api/meeting/history'),
-        api(`/api/projects/${encodeURIComponent(projectId)}/suggested-actions`)
-      ]);
-      const docCount=(docs.project||[]).length+(docs.roadmap||[]).length+(docs.meetings||[]).length;
-      const meetingCount=(history.meetings||[]).filter(m=>m.registered&&m.projectId===projectId).length;
-      const actionCount=Number(actions.count||0);
-      v9TabCounts[projectId]={documents:docCount,meetings:meetingCount,actions:actionCount};
-      const tabs=$('#projectView .tabs');
-      const docBtn=tabs?.querySelector('[data-v9-documents]');
-      const actionBtn=tabs?.querySelector('[data-v9-actions]');
-      const meetingBtn=tabs?.querySelector('[data-v9-meetings]');
-      if(docBtn)docBtn.textContent=`Documentos (${docCount})`;
-      if(actionBtn)actionBtn.textContent=`Ações sugeridas (${actionCount})`;
-      if(meetingBtn)meetingBtn.textContent=`Reuniões (${meetingCount})`;
-    }catch(e){}
+    const tabs=$('#projectView .tabs');
+    const docBtn=tabs?.querySelector('[data-v9-documents]');
+    const actionBtn=tabs?.querySelector('[data-v9-actions]');
+    const meetingBtn=tabs?.querySelector('[data-v9-meetings]');
+
+    const counts=v9TabCounts[projectId]||{};
+    const tasks=[
+      api(`/api/projects/${encodeURIComponent(projectId)}/documents`)
+        .then(docs=>{
+          counts.documents=(docs.project||[]).length+(docs.roadmap||[]).length+(docs.meetings||[]).length;
+          if(docBtn)docBtn.textContent=`Documentos (${counts.documents})`;
+        }).catch(()=>{}),
+      api('/api/meeting/history')
+        .then(history=>{
+          counts.meetings=(history.meetings||[]).filter(m=>m.registered&&m.projectId===projectId).length;
+          if(meetingBtn)meetingBtn.textContent=`Reuniões (${counts.meetings})`;
+        }).catch(()=>{}),
+      api(`/api/projects/${encodeURIComponent(projectId)}/suggested-actions`)
+        .then(actions=>{
+          counts.actions=Number(actions.count||0);
+          if(actionBtn)actionBtn.textContent=`Ações sugeridas (${counts.actions})`;
+        }).catch(()=>{
+          if(actionBtn)actionBtn.textContent='Ações sugeridas';
+        })
+    ];
+    v9TabCounts[projectId]=counts;
+    await Promise.allSettled(tasks);
   }
 
   renderProject=function(){
