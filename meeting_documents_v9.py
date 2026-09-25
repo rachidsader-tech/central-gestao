@@ -3,6 +3,7 @@ import io
 import json
 import os
 import re
+import textwrap
 import zipfile
 from datetime import datetime
 
@@ -10,13 +11,6 @@ import requests
 from flask import request, jsonify, Response, abort
 from sqlalchemy import text
 from werkzeug.utils import secure_filename
-
-from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
 
 
 MIGRATION_MARKER = 'move-reputacao-material-to-transformacao-v1'
@@ -708,9 +702,161 @@ ARQUIVOS ANEXADOS:
             app.logger.exception('Falha de comunicação com IA da reunião v9')
             return jsonify({'error': 'Falha de comunicação com a IA da reunião.'}), 502
 
-    def _pdf_paragraph(value, style):
-        safe = html.escape(str(value or '')).replace('\n', '<br/>')
-        return Paragraph(safe, style)
+    def _pdf_escape(value):
+        raw = str(value or '').replace('\r', ' ').replace('\t', ' ')
+        encoded = raw.encode('cp1252', errors='replace').decode('latin1')
+        return encoded.replace('\\', '\\\\').replace('(', '\\(').replace(')', '\\)')
+
+    def _native_meeting_pdf(project_name, date_text, created_by, meeting_status, summary, points, meeting_summary, commitment):
+        width, height = 595.28, 841.89
+        left, right, top, bottom = 52.0, 52.0, 54.0, 54.0
+        y = height - top
+        pages = [[]]
+
+        def new_page():
+            nonlocal y
+            pages.append([])
+            y = height - top
+
+        def color_tuple(hex_value):
+            value = hex_value.lstrip('#')
+            return tuple(int(value[i:i+2], 16) / 255.0 for i in (0, 2, 4))
+
+        def draw_line(x1, y1, x2, y2, hex_value='#E2E8F0', line_width=0.7):
+            r, g, b = color_tuple(hex_value)
+            pages[-1].append(f'{line_width:.2f} w {r:.3f} {g:.3f} {b:.3f} RG {x1:.2f} {y1:.2f} m {x2:.2f} {y2:.2f} l S')
+
+        def add_text_line(value, size=10, bold=False, hex_value='#24364B', indent=0, leading=None):
+            nonlocal y
+            leading = leading or max(size * 1.45, size + 3)
+            if y - leading < bottom + 20:
+                new_page()
+            r, g, b = color_tuple(hex_value)
+            font = 'F2' if bold else 'F1'
+            x = left + indent
+            safe = _pdf_escape(value)
+            pages[-1].append(
+                f'BT /{font} {size:.2f} Tf {r:.3f} {g:.3f} {b:.3f} rg 1 0 0 1 {x:.2f} {y:.2f} Tm ({safe}) Tj ET'
+            )
+            y -= leading
+
+        def wrap_text(value, size=10, indent=0, bullet_prefix=''):
+            value = str(value or '').strip()
+            if not value:
+                return []
+            usable = width - left - right - indent
+            avg_char_width = max(size * 0.50, 4.6)
+            max_chars = max(24, int(usable / avg_char_width))
+            result = []
+            for paragraph in re.split(r'\n\s*\n|\n', value):
+                paragraph = paragraph.strip()
+                if not paragraph:
+                    result.append('')
+                    continue
+                wrapped = textwrap.wrap(
+                    paragraph,
+                    width=max_chars,
+                    break_long_words=False,
+                    break_on_hyphens=False,
+                    replace_whitespace=True,
+                ) or ['']
+                if bullet_prefix and wrapped:
+                    result.append(bullet_prefix + wrapped[0])
+                    pad = ' ' * len(bullet_prefix)
+                    result.extend(pad + line for line in wrapped[1:])
+                else:
+                    result.extend(wrapped)
+            return result
+
+        def add_section(title):
+            nonlocal y
+            if y < bottom + 90:
+                new_page()
+            y -= 5
+            add_text_line(title.upper(), 11.5, True, '#163E72', leading=17)
+            draw_line(left, y + 5, width - right, y + 5, '#DCE4EF', 0.6)
+            y -= 4
+
+        add_text_line('Resumo da reunião', 19, True, '#12233F', leading=25)
+        add_text_line(project_name, 11, True, '#34465A', leading=16)
+        add_text_line(f'{date_text}  |  {created_by}', 8.5, False, '#64748B', leading=15)
+        y -= 3
+        add_text_line(f'{meeting_status}  |  Resumo IA processado com sucesso', 8.5, True, '#166534', leading=17)
+        y -= 7
+
+        add_section('Resumo da reunião')
+        for line in wrap_text(summary, 10):
+            if line:
+                add_text_line(line, 10, False, '#24364B', leading=14.5)
+            else:
+                y -= 5
+
+        add_section('Pontos importantes')
+        if points:
+            for item in points:
+                for line in wrap_text(item, 10, indent=10, bullet_prefix='- '):
+                    add_text_line(line, 10, False, '#24364B', indent=8, leading=14.5)
+                y -= 2
+        else:
+            add_text_line('Nenhum ponto adicional foi identificado com segurança.', 10, False, '#53657A', leading=14.5)
+
+        add_section('Sumário da reunião')
+        for line in wrap_text(meeting_summary, 10):
+            if line:
+                add_text_line(line, 10, False, '#24364B', leading=14.5)
+            else:
+                y -= 6
+
+        if commitment:
+            add_section('Compromisso da próxima reunião')
+            for line in wrap_text(commitment, 10):
+                if line:
+                    add_text_line(line, 10, False, '#24364B', leading=14.5)
+
+        for page_index, commands in enumerate(pages, 1):
+            r, g, b = color_tuple('#94A3B8')
+            commands.append(f'0.6 w 0.886 0.910 0.941 RG {left:.2f} 39.00 m {width-right:.2f} 39.00 l S')
+            commands.append(f'BT /F1 7.5 Tf {r:.3f} {g:.3f} {b:.3f} rg 1 0 0 1 {left:.2f} 25.00 Tm (Transformação KAZ) Tj ET')
+            page_text = _pdf_escape(f'Página {page_index}')
+            commands.append(f'BT /F1 7.5 Tf {r:.3f} {g:.3f} {b:.3f} rg 1 0 0 1 {width-right-42:.2f} 25.00 Tm ({page_text}) Tj ET')
+
+        objects = [None]
+        objects.append(b'<< /Type /Catalog /Pages 2 0 R >>')
+        page_ids = [5 + index * 2 for index in range(len(pages))]
+        kids = ' '.join(f'{obj_id} 0 R' for obj_id in page_ids)
+        objects.append(f'<< /Type /Pages /Kids [{kids}] /Count {len(pages)} >>'.encode('ascii'))
+        objects.append(b'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>')
+        objects.append(b'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>')
+
+        for page_index, commands in enumerate(pages):
+            page_obj_id = 5 + page_index * 2
+            content_obj_id = page_obj_id + 1
+            page_obj = (
+                f'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width:.2f} {height:.2f}] '
+                f'/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents {content_obj_id} 0 R >>'
+            ).encode('ascii')
+            stream = ('\n'.join(commands) + '\n').encode('latin1', errors='replace')
+            content_obj = f'<< /Length {len(stream)} >>\nstream\n'.encode('ascii') + stream + b'endstream'
+            objects.append(page_obj)
+            objects.append(content_obj)
+
+        output = bytearray(b'%PDF-1.4\n%\xe2\xe3\xcf\xd3\n')
+        offsets = [0]
+        for obj_id in range(1, len(objects)):
+            offsets.append(len(output))
+            output.extend(f'{obj_id} 0 obj\n'.encode('ascii'))
+            output.extend(objects[obj_id])
+            output.extend(b'\nendobj\n')
+
+        xref_offset = len(output)
+        output.extend(f'xref\n0 {len(objects)}\n'.encode('ascii'))
+        output.extend(b'0000000000 65535 f \n')
+        for obj_id in range(1, len(objects)):
+            output.extend(f'{offsets[obj_id]:010d} 00000 n \n'.encode('ascii'))
+        output.extend(
+            f'trailer\n<< /Size {len(objects)} /Root 1 0 R >>\nstartxref\n{xref_offset}\n%%EOF\n'.encode('ascii')
+        )
+        return bytes(output)
 
     @app.route('/api/meeting/history/<session_id>/pdf')
     @app_module.login_required
@@ -730,6 +876,7 @@ ARQUIVOS ANEXADOS:
         saved = _saved_meeting(payload, session_id, row['project_id'])
         if not saved or not saved.get('aiProcessed'):
             return jsonify({'error': 'O resumo da reunião ainda não foi processado pela IA.'}), 409
+
         document = saved.get('aiDocument') or {}
         if not isinstance(document, dict):
             document = {}
@@ -738,107 +885,25 @@ ARQUIVOS ANEXADOS:
         meeting_summary = (document.get('meetingSummary') or saved.get('summary') or '').strip()
         if isinstance(points, str):
             points = [x.strip() for x in points.splitlines() if x.strip()]
+        points = [str(x).strip() for x in points if str(x).strip()]
+
         project = app_module.find_project(payload, row['project_id']) or {}
         attachment_count = db.session.execute(text("""
             SELECT COUNT(*) FROM kaz_meeting_attachments WHERE session_id=:session_id
         """), {'session_id': session_id}).scalar() or 0
         meeting_status = 'Reunião completa' if attachment_count else 'Reunião finalizada'
-
-        buffer = io.BytesIO()
-        doc = SimpleDocTemplate(
-            buffer, pagesize=A4,
-            rightMargin=18*mm, leftMargin=18*mm, topMargin=18*mm, bottomMargin=18*mm,
-            title=f"Resumo da reunião - {project.get('name') or row['project_id']}",
-            author='Transformação KAZ',
-        )
-        styles = getSampleStyleSheet()
-        title_style = ParagraphStyle(
-            'KazTitle', parent=styles['Title'], fontName='Helvetica-Bold',
-            fontSize=19, leading=23, textColor=colors.HexColor('#12233F'), spaceAfter=7,
-        )
-        meta_style = ParagraphStyle(
-            'KazMeta', parent=styles['Normal'], fontSize=8.5, leading=12,
-            textColor=colors.HexColor('#64748B'), spaceAfter=14,
-        )
-        section_style = ParagraphStyle(
-            'KazSection', parent=styles['Heading2'], fontName='Helvetica-Bold',
-            fontSize=12, leading=15, textColor=colors.HexColor('#163E72'),
-            spaceBefore=8, spaceAfter=7,
-        )
-        body_style = ParagraphStyle(
-            'KazBody', parent=styles['BodyText'], fontSize=10, leading=15,
-            textColor=colors.HexColor('#24364B'), spaceAfter=8,
-        )
-        small_style = ParagraphStyle(
-            'KazSmall', parent=styles['BodyText'], fontSize=8.5, leading=12,
-            textColor=colors.HexColor('#53657A'),
-        )
-        badge_style = ParagraphStyle(
-            'KazBadge', parent=small_style, alignment=TA_CENTER, fontName='Helvetica-Bold',
-            textColor=colors.HexColor('#166534'),
-        )
-        story = []
-        story.append(_pdf_paragraph('Resumo da reunião', title_style))
         date_text = row['started_at'].strftime('%d/%m/%Y %H:%M') if row['started_at'] else '-'
-        story.append(_pdf_paragraph(
-            f"{project.get('name') or row['project_id']} | {date_text} | {row['created_by'] or ''}",
-            meta_style,
-        ))
-        status_table = Table(
-            [[Paragraph(html.escape(meeting_status), badge_style),
-              Paragraph('Resumo IA processado com sucesso', badge_style)]],
-            colWidths=[55*mm, 75*mm],
-        )
-        status_table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#ECFDF3')),
-            ('BOX', (0,0), (-1,-1), 0.6, colors.HexColor('#B7E4C7')),
-            ('INNERGRID', (0,0), (-1,-1), 0.4, colors.HexColor('#D4ECDD')),
-            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-            ('TOPPADDING', (0,0), (-1,-1), 6),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-        ]))
-        story.extend([status_table, Spacer(1, 7*mm)])
-
-        story.append(_pdf_paragraph('Resumo da reunião', section_style))
-        story.append(_pdf_paragraph(summary, body_style))
-
-        story.append(_pdf_paragraph('Pontos importantes', section_style))
-        if points:
-            for item in points:
-                block = Table(
-                    [[Paragraph('-', body_style), _pdf_paragraph(item, body_style)]],
-                    colWidths=[5*mm, 160*mm],
-                )
-                block.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'TOP')]))
-                story.append(KeepTogether(block))
-        else:
-            story.append(_pdf_paragraph('Nenhum ponto adicional foi identificado com segurança.', body_style))
-
-        story.append(_pdf_paragraph('Sumário da reunião', section_style))
-        paragraphs = [p.strip() for p in re.split(r'\n\s*\n', meeting_summary) if p.strip()]
-        if not paragraphs:
-            paragraphs = [meeting_summary]
-        for paragraph in paragraphs:
-            story.append(_pdf_paragraph(paragraph, body_style))
-
         commitment = (saved.get('nextWeek') or '').strip()
-        if commitment:
-            story.append(Spacer(1, 3*mm))
-            story.append(_pdf_paragraph('Compromisso da próxima reunião', section_style))
-            story.append(_pdf_paragraph(commitment, body_style))
-
-        def footer(canvas, doc_obj):
-            canvas.saveState()
-            canvas.setStrokeColor(colors.HexColor('#E2E8F0'))
-            canvas.line(18*mm, 13*mm, A4[0]-18*mm, 13*mm)
-            canvas.setFont('Helvetica', 7.5)
-            canvas.setFillColor(colors.HexColor('#94A3B8'))
-            canvas.drawString(18*mm, 8*mm, 'Transformação KAZ')
-            canvas.drawRightString(A4[0]-18*mm, 8*mm, f'Página {doc_obj.page}')
-            canvas.restoreState()
-
-        doc.build(story, onFirstPage=footer, onLaterPages=footer)
-        pdf = buffer.getvalue()
+        pdf = _native_meeting_pdf(
+            project.get('name') or row['project_id'],
+            date_text,
+            row['created_by'] or '',
+            meeting_status,
+            summary,
+            points,
+            meeting_summary,
+            commitment,
+        )
         filename = f"resumo_reuniao_{row['project_id']}_{(row['started_at'] or datetime.utcnow()).strftime('%Y-%m-%d')}.pdf"
         disposition = 'attachment' if request.args.get('download') == '1' else 'inline'
         return Response(pdf, mimetype='application/pdf', headers={
