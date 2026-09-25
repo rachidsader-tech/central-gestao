@@ -510,6 +510,7 @@ def register(app_module):
         state = db.session.get(app_module.AppState, 1)
         payload = state.payload if state else {}
         names = {p.get('id'): p.get('name') or p.get('id') for p in (payload.get('projects') or [])}
+        project_map = {p.get('id'): p for p in (payload.get('projects') or [])}
         visible_ids = _visible_project_ids(user, payload)
         if not visible_ids:
             return jsonify({'meetings': []})
@@ -594,6 +595,7 @@ def register(app_module):
             'date': row['started_at'].isoformat() if row['started_at'] else '',
             'projectId': row['project_id'],
             'projectName': names.get(row['project_id'], row['project_id']),
+            'projectOwner': (project_map.get(row['project_id']) or {}).get('owner') or '',
             'createdBy': row['created_by'],
             'durationSeconds': duration,
             'registered': bool(saved),
@@ -609,7 +611,7 @@ def register(app_module):
                 'aiProcessedAt': (saved or {}).get('aiProcessedAt') or '',
                 'aiSummaryStatus': (saved or {}).get('aiSummaryStatus') or ('success' if (saved or {}).get('aiProcessed') else ''),
                 'aiDocumentVersion': ai_document.get('version') or 1,
-                'isLegacyAiDocument': bool((saved or {}).get('aiProcessed') and (ai_document.get('version') or 1) < 2),
+                'isLegacyAiDocument': bool((saved or {}).get('aiProcessed') and (ai_document.get('version') or 1) < 3),
             },
             'aiDocument': ai_document,
             'pdfUrl': f'/api/meeting/history/{session_id}/pdf',
