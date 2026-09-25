@@ -290,3 +290,66 @@ button{cursor:pointer}
   .executive-summary-hero{padding:18px 18px 18px 23px}
   .executive-summary-text{font-size:13px}
 }
+
+
+/* Registro Executivo V3 · KAZ Brandbook */
+.kaz-meeting-exec-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin:16px 0 14px;padding:22px 24px;background:#0A0C11;color:#fff;border-radius:14px;border-left:7px solid #FF0084}
+.kaz-meeting-exec-header h1{margin:4px 0 8px;color:#fff;font-size:28px;line-height:1.05}
+.kaz-meeting-exec-header .muted{color:#d8d8dc}
+.kaz-meeting-top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.kaz-meeting-top-actions .btn.blue{background:#FF0084;border-color:#FF0084;color:#fff}
+.kaz-exec-shell{border:1px solid #e5e5e8;box-shadow:0 10px 28px rgba(10,12,17,.06)}
+.kaz-exec-head{background:#0A0C11!important}
+.kaz-exec-head .executive-shell-kicker{color:#FF0084}
+.kaz-exec-document{gap:20px}
+.kaz-exec-summary{position:relative;padding:22px 24px 22px 30px;background:#F4F4F4;border-radius:12px;border:1px solid #e4e4e6}
+.kaz-exec-summary:before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:#FF0084;border-radius:12px 0 0 12px}
+.kaz-exec-kicker{font-size:9px;font-weight:900;letter-spacing:.15em;color:#FF0084}
+.kaz-exec-summary-text{margin-top:9px;font-size:14px;line-height:1.7;color:#171a20;font-weight:560}
+.kaz-exec-metrics{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #e5e5e8;border-radius:12px;overflow:hidden;background:#fff}
+.kaz-exec-metrics>div{padding:14px 16px;border-right:1px solid #ececef}
+.kaz-exec-metrics>div:last-child{border-right:0}
+.kaz-exec-metrics b{display:block;font-size:23px;line-height:1;color:#0A0C11}
+.kaz-exec-metrics>div:first-child b{color:#FF0084}
+.kaz-exec-metrics span{display:block;margin-top:7px;font-size:8px;font-weight:900;letter-spacing:.08em;color:#7a7d85}
+.kaz-exec-section{display:grid;gap:12px}
+.kaz-exec-title{font-size:18px;font-weight:950;color:#0A0C11;letter-spacing:-.02em}
+.kaz-evolution-list{display:grid;gap:8px}
+.kaz-evolution-item{padding:13px 15px;border-radius:10px;font-size:12px;line-height:1.55}
+.kaz-evolution-item.completed{background:#eaf7f1}
+.kaz-evolution-item.advanced{background:#fff0f7}
+.kaz-evolution-item.pending{background:#fff6e5}
+.kaz-evolution-label{font-size:8px;font-weight:900;letter-spacing:.1em;margin-bottom:5px}
+.kaz-evolution-item.completed .kaz-evolution-label{color:#24765a}
+.kaz-evolution-item.advanced .kaz-evolution-label{color:#FF0084}
+.kaz-evolution-item.pending .kaz-evolution-label{color:#9a6514}
+.kaz-exec-document .executive-point-card{border-radius:10px}
+.kaz-exec-document .executive-point-number{background:#FF0084;border-radius:6px}
+.kaz-exec-document .executive-point-card.decision .executive-point-number{background:#24765a}
+.kaz-exec-document .executive-point-type{color:#FF0084}
+.kaz-exec-document .executive-next-head{background:#0A0C11}
+.kaz-attention-block{padding:18px 19px;border-radius:12px;background:#0A0C11;color:#fff}
+.kaz-attention-kicker{font-size:9px;font-weight:900;letter-spacing:.14em;color:#FF0084;margin-bottom:10px}
+.kaz-attention-block ul{margin:0;padding-left:20px;display:grid;gap:8px;font-size:12px;line-height:1.55}
+.kaz-roadmap-impact{display:grid;gap:8px}
+.kaz-roadmap-impact-row{display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;padding:13px 14px;border-radius:10px;background:#F4F4F4}
+.kaz-impact-label{font-size:8px;font-weight:900;letter-spacing:.09em;color:#FF0084;padding-top:2px}
+.kaz-roadmap-impact-row.decision .kaz-impact-label{color:#24765a}
+.kaz-roadmap-impact-row.pending .kaz-impact-label{color:#9a6514}
+.kaz-roadmap-impact-row.risk .kaz-impact-label{color:#a83a4a}
+.kaz-roadmap-impact-row b{font-size:11px;color:#0A0C11}
+.kaz-roadmap-impact-row p{margin:4px 0 0;font-size:11px;line-height:1.5;color:#555b66}
+.kaz-next-meeting-card{border:0;background:#FF0084;color:#fff}
+.kaz-next-meeting-card .card-h{border-bottom:1px solid rgba(255,255,255,.25)}
+.kaz-next-meeting-card .card-h h3{color:#fff}
+.kaz-next-meeting-card label,.kaz-next-meeting-card .muted{color:#fff!important}
+.kaz-next-meeting-card .readonly-value{background:rgba(255,255,255,.95);color:#0A0C11;border:0}
+.kaz-next-meeting-card textarea{background:#fff}
+@media(max-width:900px){
+  .kaz-meeting-exec-header{flex-direction:column}
+  .kaz-meeting-top-actions{justify-content:flex-start}
+  .kaz-exec-metrics{grid-template-columns:1fr 1fr}
+  .kaz-exec-metrics>div:nth-child(2){border-right:0}
+  .kaz-exec-metrics>div:nth-child(-n+2){border-bottom:1px solid #ececef}
+  .kaz-roadmap-impact-row{grid-template-columns:1fr}
+}
