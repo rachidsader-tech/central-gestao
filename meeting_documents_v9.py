@@ -83,16 +83,17 @@ def register(app_module):
             elif str(item).strip():
                 key_points.append({'type': 'important', 'text': str(item).strip()})
 
-        next_steps = []
-        for item in (doc.get('nextSteps') or []):
+        suggested_actions = []
+        source_actions = doc.get('suggestedActions')
+        if source_actions is None:
+            source_actions = doc.get('nextSteps') or []
+        for item in (source_actions or []):
             if isinstance(item, dict):
                 text_value = str(item.get('text') or '').strip()
-                if text_value:
-                    next_steps.append({
-                        'text': text_value,
-                        'responsible': str(item.get('responsible') or '').strip(),
-                        'deadline': str(item.get('deadline') or '').strip(),
-                    })
+            else:
+                text_value = str(item or '').strip()
+            if text_value:
+                suggested_actions.append(text_value)
 
         attention = doc.get('attentionPoints') or []
         if isinstance(attention, str):
@@ -121,12 +122,19 @@ def register(app_module):
                         'text': text_value,
                     })
 
-        if version >= 2 or any(key in doc for key in ('executiveSummary', 'keyPoints', 'nextSteps', 'attentionPoints')):
+        highlights = doc.get('executiveHighlights') or []
+        if isinstance(highlights, str):
+            highlights = [highlights]
+        highlights = [str(item).strip() for item in highlights if str(item).strip()]
+
+        if version >= 2 or any(key in doc for key in ('executiveSummary', 'keyPoints', 'suggestedActions', 'nextSteps', 'attentionPoints')):
+            normalized_version = 4 if version >= 4 or 'suggestedActions' in doc or 'executiveHighlights' in doc else (3 if version >= 3 or evolution or roadmap_impact else 2)
             return {
-                'version': 3 if version >= 3 or evolution or roadmap_impact else 2,
+                'version': normalized_version,
                 'executiveSummary': str(doc.get('executiveSummary') or '').strip(),
+                'executiveHighlights': highlights,
                 'keyPoints': key_points,
-                'nextSteps': next_steps,
+                'suggestedActions': suggested_actions,
                 'attentionPoints': [str(item).strip() for item in attention if str(item).strip()],
                 'evolution': evolution,
                 'roadmapImpact': roadmap_impact,
@@ -140,8 +148,9 @@ def register(app_module):
         return {
             'version': 1,
             'executiveSummary': legacy_summary,
+            'executiveHighlights': [],
             'keyPoints': [{'type': 'important', 'text': str(item).strip()} for item in legacy_points if str(item).strip()],
-            'nextSteps': [],
+            'suggestedActions': [],
             'attentionPoints': [],
             'evolution': [],
             'roadmapImpact': [],
@@ -612,7 +621,7 @@ def register(app_module):
                 'aiProcessedAt': (saved or {}).get('aiProcessedAt') or '',
                 'aiSummaryStatus': (saved or {}).get('aiSummaryStatus') or ('success' if (saved or {}).get('aiProcessed') else ''),
                 'aiDocumentVersion': ai_document.get('version') or 1,
-                'isLegacyAiDocument': bool((saved or {}).get('aiProcessed') and (ai_document.get('version') or 1) < 3),
+                'isLegacyAiDocument': bool((saved or {}).get('aiProcessed') and (ai_document.get('version') or 1) < 4),
             },
             'aiDocument': ai_document,
             'pdfUrl': f'/api/meeting/history/{session_id}/pdf',
@@ -674,6 +683,7 @@ def register(app_module):
         user = app_module.current_user()
         if not project_id or not user or user.username != 'rachid':
             abort(403)
+
         api_key = os.environ.get('OPENAI_API_KEY')
         if not api_key:
             return jsonify({'configured': False, 'error': 'A IA de reunião ainda não possui credencial configurada no servidor.'}), 503
@@ -691,6 +701,7 @@ def register(app_module):
                  WHERE session_id=:session_id ORDER BY position
             """), {'session_id': session_id}).mappings().all()
             transcript = '\n\n'.join((row['transcript'] or '').strip() for row in rows if (row['transcript'] or '').strip())
+
         if not transcript:
             return jsonify({'error': 'A reunião ainda não possui transcrição suficiente para gerar o resumo.'}), 400
 
@@ -725,7 +736,7 @@ def register(app_module):
 Data: {previous.get('at') or previous.get('createdAt') or 'não informada'}
 Compromisso registrado: {previous.get('nextWeek') or 'não informado'}
 Resumo executivo anterior: {prev_doc.get('executiveSummary') or previous.get('summary') or 'não disponível'}
-Próximos passos anteriores: {json.dumps(prev_doc.get('nextSteps') or [], ensure_ascii=False)}
+Ações sugeridas anteriores: {json.dumps(prev_doc.get('suggestedActions') or [], ensure_ascii=False)}
 Pontos de atenção anteriores: {json.dumps(prev_doc.get('attentionPoints') or [], ensure_ascii=False)}
 Contexto capturado antes da reunião anterior: {json.dumps(previous.get('previousReview') or {}, ensure_ascii=False)}
 
@@ -767,6 +778,63 @@ REGRAS DO ROADMAP:
 - Se não houver relação clara, retorne roadmapImpact=[].
 """
 
+        model = os.environ.get('MEETING_SUMMARY_MODEL', 'gpt-5.6-luna')
+
+        def compact_transcript_if_needed(raw_transcript):
+            # Reuniões longas são condensadas em partes antes do registro final.
+            # Se a compactação falhar, usamos a transcrição integral como fallback.
+            if len(raw_transcript) <= 50000:
+                return raw_transcript
+
+            chunks = []
+            cursor = 0
+            chunk_size = 22000
+            overlap = 800
+            while cursor < len(raw_transcript):
+                end = min(len(raw_transcript), cursor + chunk_size)
+                piece = raw_transcript[cursor:end]
+                chunks.append(piece)
+                if end >= len(raw_transcript):
+                    break
+                cursor = max(end - overlap, cursor + 1)
+
+            condensed = []
+            for index, piece in enumerate(chunks, 1):
+                compression_prompt = f"""Condense o trecho {index} de {len(chunks)} de uma reunião da Transformação KAZ.
+Preserve fatos, números, decisões, pontos estratégicos, ações sugeridas, pendências, riscos, divergências e referências a marcos do projeto.
+Remova repetições, vícios de fala e exemplos sem efeito gerencial.
+Não invente informação. Não conclua o que não foi concluído.
+Escreva em português, em texto corrido objetivo, sem JSON e sem markdown.
+
+TRECHO:
+{piece}
+"""
+                try:
+                    compression_response = requests.post(
+                        'https://api.openai.com/v1/responses',
+                        headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+                        json={
+                            'model': model,
+                            'input': compression_prompt,
+                            'max_output_tokens': 2200,
+                        },
+                        timeout=180,
+                    )
+                    if compression_response.status_code >= 400:
+                        app.logger.warning('Falha ao condensar trecho %s/%s: %s', index, len(chunks), compression_response.text[:500])
+                        return raw_transcript
+                    piece_text = _response_text(compression_response.json()).strip()
+                    if not piece_text:
+                        return raw_transcript
+                    condensed.append(f"TRECHO CONDENSADO {index}/{len(chunks)}:\n{piece_text}")
+                except requests.RequestException:
+                    app.logger.exception('Falha de comunicação ao condensar reunião longa.')
+                    return raw_transcript
+
+            return '\n\n'.join(condensed)
+
+        transcript_for_ai = compact_transcript_if_needed(transcript)
+
         prompt = f"""Você produz o REGISTRO EXECUTIVO das reuniões da Transformação KAZ.
 
 Sua função NÃO é transcrever a conversa e NÃO é simplesmente encurtar a transcrição. Você deve interpretar a reunião como um profissional de gestão e registrar apenas o que tem valor para acompanhamento executivo do projeto.
@@ -778,21 +846,26 @@ PRINCÍPIOS OBRIGATÓRIOS:
 2. Arquivos anexados, reunião anterior e contexto do projeto servem apenas para compreensão e comparação.
 3. Elimine vícios de fala, repetições, interrupções, exemplos laterais, brincadeiras e conversas sem relevância.
 4. Organize por importância executiva, não por ordem cronológica.
-5. Diferencie discussão, decisão, pendência/próximo passo e ponto de atenção.
+5. Diferencie discussão, decisão, ação sugerida e ponto de atenção.
 6. Nunca transforme hipótese, sugestão, pergunta ou comentário em decisão.
-7. Nunca invente responsável, prazo, número, decisão, evolução, impacto ou conclusão.
-8. Quando responsável ou prazo não estiverem claros, use string vazia.
-9. Use linguagem executiva, direta, profissional e natural.
-10. O compromisso oficial da próxima reunião é campo do sistema. NÃO crie, altere ou deduza esse compromisso.
-11. Não mencione transcrição, áudio, prompt, IA ou processo de geração.
-12. Não use markdown. Responda SOMENTE JSON válido.
+7. Nunca invente número, decisão, evolução, impacto ou conclusão.
+8. Use linguagem executiva, direta, profissional e natural.
+9. O compromisso oficial da próxima reunião é campo do sistema. NÃO crie, altere ou deduza esse compromisso.
+10. Não mencione transcrição, áudio, prompt, IA ou processo de geração.
+11. Não use markdown. Responda SOMENTE JSON válido.
 
 BLOCOS:
 
 executiveSummary:
-- 80 a 130 palavras;
+- 80 a 130 palavras no total;
+- separar em 2 ou 3 parágrafos curtos, usando duas quebras de linha entre parágrafos;
 - foco, avanços/definições e situação do projeto ao final;
-- sem repetir todos os bullets.
+- não repetir todos os bullets.
+
+executiveHighlights:
+- 2 a 4 frases curtas ou expressões IMPORTANTES copiadas exatamente do executiveSummary;
+- servem apenas para destaque visual em negrito;
+- não invente texto novo.
 
 evolution:
 - SOMENTE comparação com a reunião anterior fornecida;
@@ -807,10 +880,12 @@ keyPoints:
 - type = "decision" ou "important";
 - em geral 3 a 8 itens.
 
-nextSteps:
-- ações reais decorrentes da reunião;
-- text, responsible, deadline;
-- campos desconhecidos ficam vazios.
+suggestedActions:
+- somente ações sugeridas ou encaminhamentos decorrentes da reunião;
+- retorne apenas o texto da ação;
+- NÃO atribua responsável;
+- NÃO crie prazo;
+- NÃO duplique o compromisso oficial da próxima reunião apenas porque ele aparece abaixo.
 
 attentionPoints:
 - somente risco, dependência, bloqueio, atraso, divergência ou falta de definição relevante;
@@ -830,7 +905,8 @@ meetingSummary:
 
 FORMATO EXATO:
 {{
-  "executiveSummary": "texto",
+  "executiveSummary": "parágrafo 1\\n\\nparágrafo 2",
+  "executiveHighlights": ["frase exata do resumo", "outra frase exata"],
   "evolution": [
     {{"status": "completed", "text": "texto"}},
     {{"status": "advanced", "text": "texto"}},
@@ -840,9 +916,7 @@ FORMATO EXATO:
     {{"type": "decision", "text": "texto"}},
     {{"type": "important", "text": "texto"}}
   ],
-  "nextSteps": [
-    {{"text": "texto", "responsible": "nome ou vazio", "deadline": "prazo ou vazio"}}
-  ],
+  "suggestedActions": ["ação sugerida"],
   "attentionPoints": ["texto"],
   "roadmapImpact": [
     {{"milestoneId": "ID exato", "milestoneName": "nome exato", "impactType": "advance", "text": "texto"}}
@@ -858,7 +932,7 @@ COMPROMISSO OFICIAL DA PRÓXIMA REUNIÃO — NÃO ALTERAR NEM DEDUZIR:
 {commitment or 'Não informado.'}
 
 TRANSCRIÇÃO DA REUNIÃO ATUAL:
-{transcript}
+{transcript_for_ai}
 
 ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
 {'\n\n'.join(docs) if docs else 'Nenhum arquivo com conteúdo textual extraível.'}
@@ -869,6 +943,10 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                 'additionalProperties': False,
                 'properties': {
                     'executiveSummary': {'type': 'string'},
+                    'executiveHighlights': {
+                        'type': 'array',
+                        'items': {'type': 'string'},
+                    },
                     'evolution': {
                         'type': 'array',
                         'items': {
@@ -893,18 +971,9 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                             'required': ['type', 'text'],
                         },
                     },
-                    'nextSteps': {
+                    'suggestedActions': {
                         'type': 'array',
-                        'items': {
-                            'type': 'object',
-                            'additionalProperties': False,
-                            'properties': {
-                                'text': {'type': 'string'},
-                                'responsible': {'type': 'string'},
-                                'deadline': {'type': 'string'},
-                            },
-                            'required': ['text', 'responsible', 'deadline'],
-                        },
+                        'items': {'type': 'string'},
                     },
                     'attentionPoints': {
                         'type': 'array',
@@ -928,15 +997,16 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                 },
                 'required': [
                     'executiveSummary',
+                    'executiveHighlights',
                     'evolution',
                     'keyPoints',
-                    'nextSteps',
+                    'suggestedActions',
                     'attentionPoints',
                     'roadmapImpact',
                     'meetingSummary',
                 ],
             }
-            model = os.environ.get('MEETING_SUMMARY_MODEL', 'gpt-5.6-luna')
+
             request_payload = {
                 'model': model,
                 'input': prompt,
@@ -944,13 +1014,14 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                 'text': {
                     'format': {
                         'type': 'json_schema',
-                        'name': 'kaz_meeting_executive_record',
+                        'name': 'kaz_meeting_executive_record_v4',
                         'description': 'Registro executivo estruturado de uma reunião da Transformação KAZ.',
                         'schema': response_schema,
                         'strict': True,
                     }
                 },
             }
+
             response = requests.post(
                 'https://api.openai.com/v1/responses',
                 headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
@@ -958,8 +1029,6 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                 timeout=240,
             )
 
-            # Fallback seguro: se o modelo configurado não aceitar JSON Schema,
-            # ainda exigimos JSON válido com JSON mode.
             if response.status_code == 400:
                 app.logger.warning('Structured Outputs recusado pelo modelo %s; usando JSON mode. %s', model, response.text[:500])
                 fallback_payload = {
@@ -976,22 +1045,23 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                 )
 
             if response.status_code >= 400:
-                app.logger.error('Falha no resumo IA executivo V3: %s', response.text[:1000])
+                app.logger.error('Falha no resumo IA executivo V4: %s', response.text[:1000])
                 return jsonify({'error': 'A gravação foi preservada, mas a IA não conseguiu processar o registro executivo.'}), 502
 
             response_payload = response.json()
             if response_payload.get('status') == 'incomplete':
-                app.logger.error('Resposta IA V3 incompleta: %s', json.dumps(response_payload.get('incomplete_details') or {}, ensure_ascii=False))
+                app.logger.error('Resposta IA V4 incompleta: %s', json.dumps(response_payload.get('incomplete_details') or {}, ensure_ascii=False))
                 return jsonify({'error': 'A IA não concluiu o registro executivo. Tente reprocessar novamente.'}), 502
 
             raw_text = _clean_json_text(_response_text(response_payload))
             try:
                 structured = json.loads(raw_text)
             except Exception:
-                app.logger.error('Resposta IA V3 não era JSON válido mesmo após Structured Outputs: %s', raw_text[:1500])
+                app.logger.error('Resposta IA V4 não era JSON válido: %s', raw_text[:1500])
                 return jsonify({'error': 'A IA respondeu, mas o registro executivo não veio no formato esperado. Tente reprocessar.'}), 502
 
             executive_summary = str(structured.get('executiveSummary') or '').strip()
+            executive_highlights = [str(item).strip() for item in (structured.get('executiveHighlights') or []) if str(item).strip()]
             meeting_summary = str(structured.get('meetingSummary') or '').strip()
 
             key_points = []
@@ -1004,16 +1074,11 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                             'text': value,
                         })
 
-            next_steps = []
-            for item in (structured.get('nextSteps') or []):
-                if isinstance(item, dict):
-                    value = str(item.get('text') or '').strip()
-                    if value:
-                        next_steps.append({
-                            'text': value,
-                            'responsible': str(item.get('responsible') or '').strip(),
-                            'deadline': str(item.get('deadline') or '').strip(),
-                        })
+            suggested_actions = []
+            for item in (structured.get('suggestedActions') or []):
+                value = str(item or '').strip()
+                if value:
+                    suggested_actions.append(value)
 
             attention = structured.get('attentionPoints') or []
             if isinstance(attention, str):
@@ -1049,11 +1114,12 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                 return jsonify({'error': 'A IA não retornou conteúdo suficiente para o registro executivo.'}), 502
 
             document = {
-                'version': 3,
+                'version': 4,
                 'executiveSummary': executive_summary,
+                'executiveHighlights': executive_highlights,
                 'evolution': evolution,
                 'keyPoints': key_points,
-                'nextSteps': next_steps,
+                'suggestedActions': suggested_actions,
                 'attentionPoints': attention,
                 'roadmapImpact': roadmap_impact,
                 'meetingSummary': meeting_summary,
@@ -1080,7 +1146,7 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
 
             saved['summary'] = executive_summary
             saved['aiDocument'] = document
-            saved['aiDocumentVersion'] = 3
+            saved['aiDocumentVersion'] = 4
             saved['transcript'] = transcript
             saved['aiProcessed'] = True
             saved['aiSummaryStatus'] = 'success'
@@ -1096,13 +1162,13 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                 'configured': True,
                 'aiProcessed': True,
                 'aiSummaryStatus': 'success',
-                'aiDocumentVersion': 3,
+                'aiDocumentVersion': 4,
                 'document': document,
                 'summary': executive_summary,
                 'revision': state.revision,
             })
         except requests.RequestException:
-            app.logger.exception('Falha de comunicação com IA da reunião V3')
+            app.logger.exception('Falha de comunicação com IA da reunião V4')
             return jsonify({'error': 'Falha de comunicação com a IA da reunião.'}), 502
 
     def _pdf_escape(value):
@@ -1235,29 +1301,42 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                     y -= 14
                 y -= 8
 
-        def executive_card(body):
+        def executive_card(body, highlights):
             nonlocal y
-            rows = wrapped(body, 10.5, content_width-46)
-            card_h = 40 + max(1, len(rows))*15
+            paragraphs = [p.strip() for p in re.split(r'\n\s*\n', str(body or '')) if p.strip()]
+            paragraph_rows = []
+            total_rows = 0
+            for paragraph in paragraphs or ['']:
+                rows = wrapped(paragraph, 10.5, content_width-46)
+                paragraph_rows.append(rows)
+                total_rows += max(1, len(rows))
+            extra_space = max(0, len(paragraph_rows)-1) * 8
+            card_h = 40 + total_rows*15 + extra_space
             ensure_space(card_h+12)
             rect(left, y-card_h+6, content_width, card_h, ICE, LINE, 0.7)
             rect(left, y-card_h+6, 7, card_h, FUCHSIA, None)
             text_line('RESUMO EXECUTIVO', left+23, y-15, 8.6, True, FUCHSIA)
             baseline = y-38
-            for row in rows:
-                text_line(row, left+23, baseline, 10.5, False, BLACK)
-                baseline -= 15
+            highlights_lower = [str(item).lower() for item in (highlights or []) if str(item).strip()]
+            for p_index, rows in enumerate(paragraph_rows):
+                for row in rows or ['']:
+                    row_lower = row.lower()
+                    is_highlight = any(h and h in row_lower for h in highlights_lower)
+                    text_line(row, left+23, baseline, 10.5, is_highlight, BLACK)
+                    baseline -= 15
+                if p_index < len(paragraph_rows)-1:
+                    baseline -= 8
             y -= card_h + 10
 
         def metrics_row():
             nonlocal y
             decisions = len([p for p in (document.get('keyPoints') or []) if p.get('type') == 'decision'])
-            next_count = len(document.get('nextSteps') or [])
+            next_count = len(document.get('suggestedActions') or [])
             attention_count = len(document.get('attentionPoints') or [])
             docs_count = len(attachments or [])
             values = [
                 (str(decisions), 'DECISÕES'),
-                (str(next_count), 'PRÓXIMOS PASSOS'),
+                (str(next_count), 'AÇÕES'),
                 (str(attention_count), 'ATENÇÕES'),
                 (str(docs_count), 'DOCUMENTOS'),
             ]
@@ -1314,35 +1393,23 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
                     baseline -= 13
                 y -= h+5
 
-        def next_steps_table(items):
+        def action_list(items):
             nonlocal y
             if not items:
                 rect(left,y-27,content_width,31,ICE,LINE,0.6)
-                text_line('Nenhuma pendência ou próximo passo identificado com segurança.',left+12,y-15,8.8,False,MUTED)
+                text_line('Nenhuma ação sugerida foi identificada com segurança.',left+12,y-15,8.8,False,MUTED)
                 y -= 40
                 return
-            col1=content_width*.57
-            col2=content_width*.23
-            col3=content_width-col1-col2
-            ensure_space(34)
-            rect(left,y-25,content_width,29,BLACK,None)
-            text_line('AÇÃO',left+10,y-15,7.1,True,WHITE)
-            text_line('RESPONSÁVEL',left+col1+10,y-15,7.1,True,WHITE)
-            text_line('PRAZO',left+col1+col2+10,y-15,7.1,True,WHITE)
-            y -= 31
-            for item in items:
-                a=wrapped(item.get('text') or '',8.7,col1-18)
-                b=wrapped(item.get('responsible') or '—',8.4,col2-18)
-                c=wrapped(item.get('deadline') or '—',8.4,col3-18)
-                count=max(len(a),len(b),len(c),1)
-                h=15+count*12
-                ensure_space(h+3)
+            for idx,item in enumerate(items,1):
+                rows = wrapped(str(item or ''), 9.2, content_width-58)
+                h = 24 + max(1,len(rows))*13
+                ensure_space(h+4)
                 rect(left,y-h+5,content_width,h,WHITE,LINE,0.55)
-                base=y-11
-                for i,row in enumerate(a or ['—']): text_line(row,left+10,base-i*12,8.7,False,TEXT)
-                for i,row in enumerate(b or ['—']): text_line(row,left+col1+10,base-i*12,8.4,False,TEXT)
-                for i,row in enumerate(c or ['—']): text_line(row,left+col1+col2+10,base-i*12,8.4,False,TEXT)
-                y -= h+2
+                text_line(str(idx).zfill(2),left+12,y-15,8.2,True,FUCHSIA)
+                base=y-14
+                for i,row in enumerate(rows):
+                    text_line(row,left+44,base-i*13,9.2,False,TEXT)
+                y -= h+3
 
         def attention_block(items):
             nonlocal y
@@ -1461,7 +1528,7 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
             x += w
         y -= meta_h+14
 
-        executive_card(document.get('executiveSummary') or '')
+        executive_card(document.get('executiveSummary') or '', document.get('executiveHighlights') or [])
         metrics_row()
 
         if document.get('evolution'):
@@ -1471,8 +1538,8 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
         section_title('Decisões e pontos estratégicos')
         numbered_points(document.get('keyPoints') or [])
 
-        section_title('Pendências e próximos passos')
-        next_steps_table(document.get('nextSteps') or [])
+        section_title('Ações sugeridas')
+        action_list(document.get('suggestedActions') or [])
 
         if document.get('attentionPoints'):
             section_title('Pontos de atenção')
