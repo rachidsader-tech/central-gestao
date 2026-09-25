@@ -1171,6 +1171,38 @@ ARQUIVOS ANEXADOS — APENAS CONTEXTO COMPLEMENTAR:
             app.logger.exception('Falha de comunicação com IA da reunião V4')
             return jsonify({'error': 'Falha de comunicação com a IA da reunião.'}), 502
 
+    @app.route('/api/projects/<project_id>/suggested-actions')
+    @app_module.login_required
+    def project_suggested_actions(project_id):
+        user = app_module.current_user()
+        state = db.session.get(app_module.AppState, 1)
+        payload = state.payload if state else {}
+        _project_or_404(payload, project_id)
+        if not _can_view_project(user, project_id, payload):
+            abort(403)
+
+        rows = []
+        for meeting in (payload.get('meetings') or []):
+            if meeting.get('projectId') != project_id or not meeting.get('aiProcessed'):
+                continue
+            document = _normalize_ai_document(meeting)
+            actions = document.get('suggestedActions') or []
+            if not actions:
+                continue
+            meeting_date = meeting.get('at') or meeting.get('createdAt') or ''
+            session_id = meeting.get('audioSessionId') or ''
+            for action in actions:
+                value = str(action or '').strip()
+                if value:
+                    rows.append({
+                        'text': value,
+                        'meetingDate': meeting_date,
+                        'sessionId': session_id,
+                    })
+
+        rows.sort(key=lambda item: item.get('meetingDate') or '', reverse=True)
+        return jsonify({'items': rows, 'count': len(rows)})
+
     def _pdf_escape(value):
         raw = str(value or '').replace('\r', ' ').replace('\t', ' ')
         encoded = raw.encode('cp1252', errors='replace').decode('latin1')
