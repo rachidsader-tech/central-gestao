@@ -8,6 +8,7 @@ var baseRenderSettingsV10=renderSettings;
 var baseOpenProjectV10=openProject;
 var baseRenderCurrentV10=renderCurrent;
 var organizationCacheV10=null;
+var isRachidV10=String(USER.username||'').toLowerCase()==='rachid';
 
 function workgroupsV10(){
   var rows=(state.workgroups||[]).slice();
@@ -26,7 +27,7 @@ function isAssignedToMeV10(p){
   return !!(p&&(responsibleUsernameV10(p)===String(USER.username||'').toLowerCase()||(!responsibleUsernameV10(p)&&USER.project_id===p.id)));
 }
 function assignedProjectsV10(){return (state.projects||[]).filter(isAssignedToMeV10)}
-function visibleProjectsV10(){return (isDirection||USER.role==='viewer')?(state.projects||[]):assignedProjectsV10()}
+function visibleProjectsV10(){if(isRachidV10)return state.projects||[];if(isDirection||USER.role==='viewer')return (state.projects||[]).filter(function(p){return (p.workgroupId||'sem-grupo')==='transformacao-kaz'});return assignedProjectsV10()}
 function unassignedProjectsV10(){return (state.projects||[]).filter(function(p){return !responsibleUsernameV10(p)})}
 function openDependenciesCountV10(p){return (state.dependencies||[]).filter(function(d){return d.projectId===p.id&&d.status!=='Resolvida'}).length}
 
@@ -66,8 +67,8 @@ renderHome=function(){
   var done=list.reduce(function(a,p){return a+counts(p).done},0);
   var open=(state.dependencies||[]).filter(function(d){return list.some(function(p){return p.id===d.projectId})&&d.status!=='Resolvida'}).length;
   if(isDirection){
-    root.innerHTML='<div class="hero"><div><h1>Visão dos projetos</h1><p>Todos os projetos organizados por grupo de trabalho e responsabilidade.</p></div><div class="flex wrap"><button class="btn light" onclick="openMyManagement()">Minha Gestão</button><button class="btn blue" onclick="openNewProjectV10()">＋ Novo projeto</button></div></div>'+
-    '<div class="grid-kpi"><div class="kpi"><strong>'+list.length+'</strong><span>Projetos</span></div><div class="kpi"><strong>'+done+'/'+total+'</strong><span>Roadmap concluído</span></div><div class="kpi"><strong>'+open+'</strong><span>Pendências ativas</span></div><div class="kpi"><strong>'+unassignedProjectsV10().length+'</strong><span>Minha Gestão</span></div></div>'+
+    root.innerHTML='<div class="hero"><div><h1>Visão dos projetos</h1><p>Todos os projetos organizados por grupo de trabalho e responsabilidade.</p></div><div class="flex wrap">'+(isRachidV10?'<button class="btn light" onclick="openMyManagement()">Minha Gestão</button>':'')+'<button class="btn blue" onclick="openNewProjectV10()">＋ Novo projeto</button></div></div>'+
+    '<div class="grid-kpi"><div class="kpi"><strong>'+list.length+'</strong><span>Projetos</span></div><div class="kpi"><strong>'+done+'/'+total+'</strong><span>Roadmap concluído</span></div><div class="kpi"><strong>'+open+'</strong><span>Pendências ativas</span></div>'+(isRachidV10?'<div class="kpi"><strong>'+unassignedProjectsV10().length+'</strong><span>Minha Gestão</span></div>':'')+'</div>'+
     groupedProjectsV10(list);
     return;
   }
@@ -76,7 +77,7 @@ renderHome=function(){
 
 renderProjects=function(){
   var list=visibleProjectsV10();
-  var actions=isDirection?'<div class="flex wrap"><button class="btn light" onclick="openMyManagement()">Minha Gestão</button><button class="btn blue" onclick="openNewProjectV10()">＋ Novo projeto</button></div>':'';
+  var actions=isDirection?'<div class="flex wrap">'+(isRachidV10?'<button class="btn light" onclick="openMyManagement()">Minha Gestão</button>':'')+'<button class="btn blue" onclick="openNewProjectV10()">＋ Novo projeto</button></div>':'';
   $('#projectsView').innerHTML='<div class="hero"><div><h1>Todos os projetos</h1><p>'+(isDirection?'Visão geral por grupo de trabalho. Projetos sem responsável aparecem como Minha Gestão.':'Projetos sob sua responsabilidade, separados por grupo de trabalho.')+'</p></div>'+actions+'</div>'+groupedProjectsV10(list);
 };
 
@@ -94,6 +95,7 @@ openProject=function(id,tab){
 };
 
 function renderMyManagementV10(){
+  if(!isRachidV10){showView('home');return}
   var root=$('#myManagementView'),list=unassignedProjectsV10();
   setTitle('Minha Gestão');
   root.innerHTML='<div class="hero"><div><h1>Minha Gestão</h1><p>Projetos ainda sem responsável atribuído. O grupo de trabalho é preservado independentemente da alocação.</p></div><div class="pill s-nao">'+list.length+' '+(list.length===1?'projeto':'projetos')+'</div></div>'+groupedProjectsV10(list);
@@ -177,7 +179,7 @@ async function loadGroupsSettingsV10(){
 }
 renderSettings=function(){
   baseRenderSettingsV10();
-  if(!isDirection)return;
+  if(!isRachidV10)return;
   $('#settingsView').insertAdjacentHTML('beforeend','<div class="card settings-card" style="margin-top:14px"><div class="card-h"><div><h3>Grupos de trabalho</h3><div class="muted small">Organizam os projetos sem alterar responsabilidade ou estrutura.</div></div><button class="btn blue small" onclick="newWorkgroupV10()">＋ Criar grupo</button></div><div class="pad" id="v10GroupsSettings"><div class="empty">Carregando grupos…</div></div></div>');
   loadGroupsSettingsV10();
 };
@@ -215,7 +217,7 @@ if(window.generateV9MeetingSummary){
 
 function applyNavigationV10(){
   var section=$('#personalNavSection');if(section)section.textContent='Organização';
-  var mine=$('#myManagementNav');if(mine){mine.innerHTML='◉ Minha Gestão';mine.classList.toggle('hidden',!isDirection)}
+  var mine=$('#myManagementNav');if(mine){mine.innerHTML='◉ Minha Gestão';mine.classList.toggle('hidden',!isRachidV10)}
   var integrated=$('#integratedNav');if(integrated)integrated.classList.add('hidden');
   var my=$('#myProjectNav');if(my){my.innerHTML='◎ Meus projetos';my.classList.toggle('hidden',isDirection||assignedProjectsV10().length===0)}
 }
