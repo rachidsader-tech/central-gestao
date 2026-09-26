@@ -63,12 +63,12 @@ def register(app_module):
         return p
 
     def _can_manage_project(user, project_id):
-        return bool(user and (user.username == 'rachid' or user.project_id == project_id))
+        return bool(user and app_module.can_edit_project(user, project_id))
 
     def _can_view_project(user, project_id):
         if not user:
             return False
-        return True
+        return project_id in app_module.user_project_ids(user)
 
     def _touch(state, user, payload):
         state.payload = json.loads(json.dumps(payload, ensure_ascii=False))
