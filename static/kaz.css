@@ -371,3 +371,18 @@ button{cursor:pointer}
 @media(max-width:760px){
   .project-suggested-action-row{grid-template-columns:1fr;gap:5px}
 }
+
+
+/* Projetos Unificados V10 */
+.v10-workgroup-section{margin-top:22px}
+.v10-workgroup-section:first-of-type{margin-top:12px}
+.v10-workgroup-title{margin-bottom:9px}
+.v10-workgroup-title h2{margin-bottom:2px}
+.v10-project-table-wrap{overflow:auto}
+.v10-mine-pill{background:#f1f3f6;color:#4b596b;border:1px solid #e1e5ea}
+.v10-group-list{display:grid}
+.v10-group-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 0;border-bottom:1px solid #edf0f3}
+.v10-group-row:last-child{border-bottom:0}
+@media(max-width:820px){
+  .v10-workgroup-section .project-table{min-width:760px}
+}
