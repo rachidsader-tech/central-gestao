@@ -16,17 +16,7 @@ def register(app_module):
         return {p.get('id'): p.get('name') or p.get('id') for p in (payload.get('projects') or [])}
 
     def _visible_project_ids(user, payload):
-        if not user:
-            return set()
-        if user.role in ('admin', 'direction'):
-            return {p.get('id') for p in (payload.get('projects') or [])}
-        if user.project_id:
-            return {user.project_id}
-        # Visualizadores não entram no Modo Reunião, mas se acessarem a API,
-        # preservamos a política de consulta geral já usada no sistema.
-        if user.role == 'viewer':
-            return {p.get('id') for p in (payload.get('projects') or [])}
-        return set()
+        return set(app_module.user_project_ids(user, payload))
 
     def _official_meeting(payload, session_id):
         for m in payload.get('meetings') or []:
