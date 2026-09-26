@@ -157,6 +157,16 @@ async function savePersonalResponsibility(level,targetId){
 }
 
 (async function bootUnifiedCentral(){
-  try{await refreshPersonal();const visible=personalNavVisible();$$('.personal-nav').forEach(x=>x.classList.toggle('hidden',!visible));if(!personalState.is_owner)$('#integratedNav')?.classList.add('hidden')}
-  catch(e){console.error('Falha ao carregar Minha Gestão',e);$$('.personal-nav').forEach(x=>x.classList.add('hidden'))}
+  try{
+    await refreshPersonal();
+    if(window.KAZ_PROJECTS_V10)return;
+    const visible=personalNavVisible();
+    $('.personal-nav').forEach(x=>x.classList.toggle('hidden',!visible));
+    if(!personalState.is_owner)$('#integratedNav')?.classList.add('hidden');
+  }
+  catch(e){
+    if(window.KAZ_PROJECTS_V10)return;
+    console.error('Falha ao carregar Minha Gestão',e);
+    $('.personal-nav').forEach(x=>x.classList.add('hidden'));
+  }
 })();
