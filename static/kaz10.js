@@ -1,4 +1,5 @@
 // Projetos Unificados V10
+window.KAZ_PROJECTS_V10=true;
 (function(){
 var baseRenderHomeV10=renderHome;
 var baseRenderProjectsV10=renderProjects;
