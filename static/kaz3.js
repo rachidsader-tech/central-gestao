@@ -1,5 +1,5 @@
 function renderMeeting(){
-  const allowed=isDirection?(state.projects||[]):[project(USER.project_id)].filter(Boolean);
+  const allowed=(isDirection||USER.role==='viewer')?(state.projects||[]):(state.projects||[]).filter(p=>((p.responsibleUsername||'').toLowerCase()===(USER.username||'').toLowerCase())||p.id===USER.project_id);
   if(!allowed.length){$('#meetingView').innerHTML='<div class="card empty">Nenhum projeto disponível.</div>';return}
   if(!allowed.some(p=>p.id===meetingProjectId))meetingProjectId=allowed[0].id;
   const p=project(meetingProjectId),c=counts(p);
