@@ -41,7 +41,7 @@
       $('#meetingView').insertAdjacentHTML('afterbegin','<button class="btn light small" style="margin-bottom:14px" onclick="openMeetingHome()">← Reuniões</button>');
       return;
     }
-    const allowed=isDirection?(state.projects||[]):[project(USER.project_id)].filter(Boolean);
+    const allowed=(isDirection||USER.role==='viewer')?(state.projects||[]):(state.projects||[]).filter(p=>((p.responsibleUsername||'').toLowerCase()===(USER.username||'').toLowerCase())||p.id===USER.project_id);
     if(!allowed.length){$('#meetingView').innerHTML='<div class="card empty">Nenhum projeto disponível.</div>';return}
     if(!allowed.some(p=>p.id===meetingProjectId))meetingProjectId=allowed[0].id;
     $('#meetingView').innerHTML=`<div class="hero"><div><h1>Reuniões</h1><p>Consulte gravações anteriores ou inicie uma reunião.</p></div></div>
