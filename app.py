@@ -863,6 +863,10 @@ meeting_history.register(__import__("app"))
 import meeting_documents_v9
 meeting_documents_v9.register(__import__("app"))
 
+# Arquitetura única de projetos + grupos de trabalho V10
+import project_groups_v10
+project_groups_v10.register(__import__("app"))
+
 # Validação não bloqueante da IA em uma reunião histórica migrada
 import legacy_ai_validation
 legacy_ai_validation.start()
