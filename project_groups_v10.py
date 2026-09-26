@@ -282,45 +282,37 @@ def register(app_module):
             existing_ids.add(personal.id)
             changed = True
 
-        # Pendências antigas entram no mesmo conjunto de Pendências do sistema.
-        existing_task_sources = {
-            d.get('sourcePersonalTaskId')
-            for d in payload.get('dependencies', [])
-            if d.get('sourcePersonalTaskId')
-        }
-        for task in app_module.PersonalTask.query.order_by(app_module.PersonalTask.created_at).all():
-            if task.id in existing_task_sources:
-                continue
-            status_raw = (task.status or '').strip().casefold()
-            dep_status = 'Resolvida' if status_raw.startswith('concl') else 'Aberta'
-            payload.setdefault('dependencies', []).append({
-                'id': f'personal-{task.id}',
-                'projectId': task.project_id,
-                'subject': task.title,
-                'description': '',
-                'status': dep_status,
-                'deadline': task.due if re.match(r'^\d{4}-\d{2}-\d{2}$', task.due or '') else '',
-                'director': '',
-                'requester': task.responsible_name or 'Minha Gestão',
-                'createdBy': 'sistema',
-                'createdAt': _iso(task.created_at),
-                'updatedAt': _iso(task.updated_at or task.created_at),
-                'resolution': '',
-                'comments': [],
-                'messages': [],
-                'responses': [],
-                'history': [{
-                    'at': _iso(task.created_at),
-                    'actor': 'Sistema',
-                    'action': 'Pendência migrada de Minha Gestão',
-                    'detail': task.title,
-                }],
-                'sourcePersonalTaskId': task.id,
-                'legacyPriority': task.priority or '',
-                'legacyDue': task.due or '',
-                'legacyResponsibleName': task.responsible_name or '',
-                'legacyMilestoneId': task.milestone_id or '',
-            })
+        # V11: Minha Gestão começa sem pendências herdadas da antiga estrutura.
+        # Guardamos exatamente o que foi removido para permitir auditoria/rollback,
+        # mas não voltamos a migrar personal_tasks para dependencies.
+        cleanup_key = 'cleanup-my-management-dependencies-v11'
+        if not app_module.MigrationBackup.query.filter_by(backup_key=cleanup_key).first():
+            unassigned_ids = {
+                p.get('id')
+                for p in payload.get('projects', [])
+                if p.get('id') and not (p.get('responsibleUsername') or '').strip()
+            }
+            removed_dependencies = [
+                d for d in (payload.get('dependencies') or [])
+                if d.get('projectId') in unassigned_ids
+            ]
+            snapshot = {
+                'project_ids': sorted(unassigned_ids),
+                'removed_dependencies': _deep(removed_dependencies),
+                'removed_count': len(removed_dependencies),
+                'created_at': datetime.utcnow().isoformat(),
+            }
+            raw = json.dumps(snapshot, ensure_ascii=False, sort_keys=True, default=str).encode('utf-8')
+            db.session.add(app_module.MigrationBackup(
+                backup_key=cleanup_key,
+                payload=snapshot,
+                checksum=hashlib.sha256(raw).hexdigest(),
+            ))
+            if removed_dependencies:
+                payload['dependencies'] = [
+                    d for d in (payload.get('dependencies') or [])
+                    if d.get('projectId') not in unassigned_ids
+                ]
             changed = True
 
         if changed or created_backup or payload != (state.payload or {}):
@@ -336,33 +328,100 @@ def register(app_module):
         if payload is None:
             state = db.session.get(app_module.AppState, 1)
             payload = state.payload if state else {}
+
         projects = payload.get('projects') or []
-        if user.role in ('admin', 'direction', 'viewer'):
+        username = (user.username or '').strip().lower()
+
+        # Rachid é o único sócio com visão transversal de todos os grupos.
+        if username == 'rachid':
             return {p.get('id') for p in projects if p.get('id')}
+
+        # Demais sócios/diretores e visualizadores acompanham apenas Transformação KAZ.
+        if user.role in ('admin', 'direction', 'viewer'):
+            return {
+                p.get('id') for p in projects
+                if p.get('id') and (p.get('workgroupId') or 'sem-grupo') == 'transformacao-kaz'
+            }
+
+        # Usuários operacionais veem apenas projetos efetivamente atribuídos a eles.
         ids = {
             p.get('id') for p in projects
-            if p.get('id') and (p.get('responsibleUsername') or '').strip().lower() == (user.username or '').lower()
+            if p.get('id')
+            and (p.get('responsibleUsername') or '').strip().lower() == username
         }
-        if user.project_id and any(p.get('id') == user.project_id for p in projects):
+        # Compatibilidade temporária com o campo legado project_id.
+        if user.project_id and any(
+            p.get('id') == user.project_id
+            and (
+                (p.get('responsibleUsername') or '').strip().lower() == username
+                or not (p.get('responsibleUsername') or '').strip()
+            )
+            for p in projects
+        ):
             ids.add(user.project_id)
         return ids
 
     def can_edit_project_v10(user, project_id):
         if not user:
             return False
-        if user.role in ('admin', 'direction'):
-            return True
-        if user.role == 'viewer':
-            return False
         state = db.session.get(app_module.AppState, 1)
-        project = app_module.find_project(state.payload if state else {}, project_id)
+        payload = state.payload if state else {}
+        project = app_module.find_project(payload, project_id)
         if not project:
             return False
-        username = (project.get('responsibleUsername') or '').strip().lower()
-        if username:
-            return username == (user.username or '').lower()
-        # Compatibilidade durante a transição para projetos antigos.
+
+        username = (user.username or '').strip().lower()
+        if username == 'rachid':
+            return True
+
+        if user.role in ('admin', 'direction'):
+            return (project.get('workgroupId') or 'sem-grupo') == 'transformacao-kaz'
+
+        if user.role == 'viewer':
+            return False
+
+        responsible = (project.get('responsibleUsername') or '').strip().lower()
+        if responsible:
+            return responsible == username
+
         return bool(user.project_id and user.project_id == project_id)
+
+    def _filtered_payload_for_user(payload, user):
+        data = _deep(payload or {})
+        if not user:
+            data['projects'] = []
+            data['dependencies'] = []
+            data['meetings'] = []
+            data['workgroups'] = []
+            return data
+
+        username = (user.username or '').strip().lower()
+        if username == 'rachid':
+            return data
+
+        visible_ids = user_project_ids(user, data)
+        data['projects'] = [
+            p for p in (data.get('projects') or [])
+            if p.get('id') in visible_ids
+        ]
+        data['dependencies'] = [
+            d for d in (data.get('dependencies') or [])
+            if d.get('projectId') in visible_ids
+        ]
+        data['meetings'] = [
+            m for m in (data.get('meetings') or [])
+            if m.get('projectId') in visible_ids
+        ]
+
+        visible_group_ids = {
+            (p.get('workgroupId') or 'sem-grupo')
+            for p in data.get('projects') or []
+        }
+        data['workgroups'] = [
+            g for g in (data.get('workgroups') or [])
+            if g.get('id') in visible_group_ids
+        ]
+        return data
 
     # Torna a regra disponível aos módulos antigos sem duplicar lógica.
     app_module.user_project_ids = user_project_ids
@@ -371,8 +430,79 @@ def register(app_module):
     with app.app_context():
         _migrate_once()
 
+    # Protege também o estado entregue ao navegador, não apenas a interface.
+    def _v10_index():
+        state = db.session.get(app_module.AppState, 1)
+        user = app_module.current_user()
+        payload = _filtered_payload_for_user(state.payload if state else {}, user)
+        return app_module.render_template(
+            'index.html',
+            initial_state=payload,
+            revision=state.revision if state else 0,
+            user=app_module.public_user(user),
+            csrf=app_module.session['csrf'],
+            directors=app_module.DIRECTOR_NAMES,
+        )
+    app.view_functions['index'] = app_module.login_required(_v10_index)
+
+    state_endpoint = next(
+        (
+            rule.endpoint
+            for rule in app.url_map.iter_rules()
+            if rule.rule == '/api/state' and 'GET' in rule.methods
+        ),
+        None,
+    )
+    if state_endpoint:
+        def _v10_state():
+            state = db.session.get(app_module.AppState, 1)
+            user = app_module.current_user()
+            return jsonify({
+                'state': _filtered_payload_for_user(state.payload if state else {}, user),
+                'revision': state.revision if state else 0,
+            })
+        app.view_functions[state_endpoint] = app_module.login_required(_v10_state)
+
+    @app.before_request
+    def _v10_dependency_scope_guard():
+        path = request.path or ''
+        if not path.startswith('/api/dependencies'):
+            return None
+
+        user = app_module.current_user()
+        if not user or (user.username or '').strip().lower() == 'rachid':
+            return None
+
+        state = db.session.get(app_module.AppState, 1)
+        payload = state.payload if state else {}
+        project_id = ''
+
+        if path.rstrip('/') == '/api/dependencies' and request.method == 'POST':
+            body = request.get_json(silent=True) or {}
+            project_id = (body.get('projectId') or '').strip()
+        else:
+            match = re.match(r'^/api/dependencies/([^/]+)', path)
+            if match:
+                dependency_id = match.group(1)
+                dependency = next(
+                    (
+                        item for item in (payload.get('dependencies') or [])
+                        if str(item.get('id')) == str(dependency_id)
+                    ),
+                    None,
+                )
+                project_id = (dependency or {}).get('projectId') or ''
+
+        if project_id and project_id not in user_project_ids(user, payload):
+            abort(403)
+        return None
+
     def _require_direction(user):
         if not user or user.role not in ('admin', 'direction'):
+            abort(403)
+
+    def _require_rachid(user):
+        if not user or (user.username or '').strip().lower() != 'rachid':
             abort(403)
 
     @app.route('/api/project-organization')
@@ -381,9 +511,12 @@ def register(app_module):
         user = app_module.current_user()
         state = db.session.get(app_module.AppState, 1)
         payload = state.payload if state else {}
+        groups = payload.get('workgroups') or []
+        if (user.username or '').strip().lower() != 'rachid':
+            groups = [g for g in groups if g.get('id') == 'transformacao-kaz']
         return jsonify({
             'workgroups': sorted(
-                payload.get('workgroups') or [],
+                groups,
                 key=lambda g: (int(g.get('order') or 999), str(g.get('name') or ''))
             ),
             'users': [
@@ -411,11 +544,18 @@ def register(app_module):
         if not project:
             abort(404)
 
+        is_rachid = (user.username or '').strip().lower() == 'rachid'
+        current_group_id = project.get('workgroupId') or 'sem-grupo'
+        if not is_rachid and current_group_id != 'transformacao-kaz':
+            abort(403)
+
         if 'workgroupId' in body:
             group_id = (body.get('workgroupId') or 'sem-grupo').strip()
             group = _group_map(payload).get(group_id)
             if not group:
                 return jsonify({'error': 'Grupo de trabalho não encontrado.'}), 400
+            if not is_rachid and group_id != 'transformacao-kaz':
+                abort(403)
             project['workgroupId'] = group_id
 
         if 'responsibleUsername' in body:
@@ -458,7 +598,7 @@ def register(app_module):
     def create_workgroup():
         app_module.require_csrf()
         user = app_module.current_user()
-        _require_direction(user)
+        _require_rachid(user)
         body = request.get_json(force=True) or {}
         name = (body.get('name') or '').strip()
         if not name:
@@ -490,7 +630,7 @@ def register(app_module):
     def update_workgroup(group_id):
         app_module.require_csrf()
         user = app_module.current_user()
-        _require_direction(user)
+        _require_rachid(user)
         body = request.get_json(force=True) or {}
 
         state = _state_locked()
@@ -536,6 +676,8 @@ def register(app_module):
         group_id = (body.get('workgroupId') or 'sem-grupo').strip()
         if group_id not in _group_map(payload):
             return jsonify({'error': 'Grupo de trabalho inválido.'}), 400
+        if (user.username or '').strip().lower() != 'rachid' and group_id != 'transformacao-kaz':
+            abort(403)
 
         responsible = _user_by_username(body.get('responsibleUsername'))
         base = _slug(name)
