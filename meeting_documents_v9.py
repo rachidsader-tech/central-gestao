@@ -174,20 +174,10 @@ def register(app_module):
         return meetings[0] if meetings else None
 
     def _visible_project_ids(user, payload):
-        if not user:
-            return set()
-        if user.role in ('admin', 'direction', 'viewer'):
-            return {p.get('id') for p in (payload.get('projects') or [])}
-        if user.project_id:
-            return {user.project_id}
-        return set()
+        return set(app_module.user_project_ids(user, payload))
 
     def _can_view_project(user, project_id, payload=None):
-        if not user:
-            return False
-        if user.role in ('admin', 'direction', 'viewer'):
-            return True
-        return user.project_id == project_id
+        return bool(user and project_id in app_module.user_project_ids(user, payload))
 
     def _sync_commitment(project, meeting, commitment, user):
         commitment = (commitment or '').strip()
