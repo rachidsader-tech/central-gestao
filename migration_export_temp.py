@@ -9,6 +9,17 @@ _ALLOWED = {
     "kaz_project_attachments",
 }
 
+_ENV_KEYS = [
+    "OPENAI_API_KEY",
+    "ADMIN_USERNAME",
+    "ADMIN_PASSWORD",
+    "DAILY_IMPORT_TOKEN",
+    "KAZ_VIEWER_TEMP_PASSWORD",
+    "MEETING_TRANSCRIBE_MODEL",
+    "MEETING_SUMMARY_MODEL",
+    "SECRET_KEY",
+]
+
 def register(app_module):
     app = app_module.app
     db = app_module.db
@@ -23,6 +34,12 @@ def register(app_module):
         if not _authorized():
             abort(404)
         return jsonify({"ok": True})
+
+    @app.route("/__migration-export/env")
+    def migration_export_env():
+        if not _authorized():
+            abort(404)
+        return jsonify({key: os.environ.get(key) for key in _ENV_KEYS if os.environ.get(key) is not None})
 
     @app.route("/__migration-export/<table>/<int:row_id>")
     def migration_export_binary(table, row_id):
