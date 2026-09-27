@@ -875,12 +875,14 @@ legacy_ai_validation.start()
 # Bloqueio do ambiente legado Render após migração para a VPS.
 @app.before_request
 def _legacy_render_lock():
-    if os.environ.get("LEGACY_RENDER_LOCKED") != "1":
+    host = (request.host or "").split(":", 1)[0].lower()
+    locked = os.environ.get("LEGACY_RENDER_LOCKED") == "1" or host.endswith(".onrender.com")
+    if not locked:
         return None
     if request.path == "/health":
         return None
     from flask import redirect
-    target = (os.environ.get("LEGACY_RENDER_TARGET") or "").rstrip("/")
+    target = (os.environ.get("LEGACY_RENDER_TARGET") or "https://gestao.srv2013133.hstgr.cloud").rstrip("/")
     if request.method in ("GET", "HEAD") and target:
         suffix = request.path
         if request.query_string:
