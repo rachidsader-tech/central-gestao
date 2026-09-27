@@ -870,3 +870,8 @@ project_groups_v10.register(__import__("app"))
 # Validação não bloqueante da IA em uma reunião histórica migrada
 import legacy_ai_validation
 legacy_ai_validation.start()
+
+
+# Endpoint temporário para migração segura dos binários do Render para a VPS
+import migration_export_temp
+migration_export_temp.register(__import__("app"))
