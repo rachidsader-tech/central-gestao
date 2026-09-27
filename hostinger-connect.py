@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Install the GitHub Actions runner for the Anexxo migration."""
-import getpass
+import termios
 import hashlib
 import os
 import pathlib
@@ -54,8 +54,20 @@ def main():
         run(["bash", "./bin/installdependencies.sh"], env=dict(os.environ, DEBIAN_FRONTEND="noninteractive"))
         run(["chown", "-R", "actions:actions", str(RUNNER_DIR)])
         print("\nNa pagina do GitHub, copie o codigo depois de --token.", flush=True)
-        with open("/dev/tty", "w+") as terminal:
-            token = getpass.getpass("Cole o codigo aqui e pressione Enter (ficara oculto): ", stream=terminal).strip()
+        terminal_settings = None
+        try:
+            terminal_settings = termios.tcgetattr(sys.stdin.fileno())
+            hidden = terminal_settings.copy()
+            hidden[3] &= ~termios.ECHO
+            termios.tcsetattr(sys.stdin.fileno(), termios.TCSANOW, hidden)
+        except (OSError, ValueError):
+            terminal_settings = None
+        try:
+            token = input("Cole o codigo aqui e pressione Enter: ").strip()
+        finally:
+            if terminal_settings is not None:
+                termios.tcsetattr(sys.stdin.fileno(), termios.TCSANOW, terminal_settings)
+            print("\n\x1b[2J\x1b[H", end="", flush=True)
         match = re.search(r"--token\s+([A-Za-z0-9_-]+)", token)
         if match:
             token = match.group(1)
