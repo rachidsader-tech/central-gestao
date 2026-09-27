@@ -870,3 +870,23 @@ project_groups_v10.register(__import__("app"))
 # Validação não bloqueante da IA em uma reunião histórica migrada
 import legacy_ai_validation
 legacy_ai_validation.start()
+
+
+# Bloqueio do ambiente legado Render após migração para a VPS.
+@app.before_request
+def _legacy_render_lock():
+    if os.environ.get("LEGACY_RENDER_LOCKED") != "1":
+        return None
+    if request.path == "/health":
+        return None
+    from flask import redirect
+    target = (os.environ.get("LEGACY_RENDER_TARGET") or "").rstrip("/")
+    if request.method in ("GET", "HEAD") and target:
+        suffix = request.path
+        if request.query_string:
+            suffix += "?" + request.query_string.decode("utf-8", errors="ignore")
+        return redirect(target + suffix, code=302)
+    return jsonify({
+        "error": "Ambiente legado bloqueado após migração.",
+        "new_url": target,
+    }), 410
